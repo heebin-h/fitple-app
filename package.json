@@ -1,0 +1,43 @@
+{
+  "name": "fitple-app",
+  "version": "1.0.0",
+  "description": "운동 모임 매칭 앱 FitPle — React + Vite + PWA 데모 (백엔드 없음, localStorage 기반)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heebin-h/fitple-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/heebin-h/fitple-app/issues"
+  },
+  "homepage": "https://github.com/heebin-h/fitple-app#readme",
+  "dependencies": {
+    "dayjs": "^1.11.20",
+    "lucide-react": "^1.16.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^6.30.3",
+    "vaul": "^1.1.2",
+    "zustand": "^5.0.13"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.29",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.0.2",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14",
+    "vite-plugin-pwa": "^1.3.0"
+  }
+}
