@@ -14,16 +14,19 @@ export interface Meeting {
   id: string;
   title: string;
   groupName: string;
-  sport: string;
-  image: string;            // 에셋 파일명 또는 url
-  location: string;
+  sport: string;            // one of SPORT_NAMES — see constants/sports.ts
+  image: string;            // asset filename or url
+  location: string;         // freeform Korean text (e.g. '미사 1동')
   memberCount: number;
   maxMembers: number;
-  level?: string;
+  level?: string;           // '보통' | '중급' | '상급' | ...
   date?: string;            // YYYY-MM-DD
   time?: string;            // HH:mm
   description?: string;
-  isUrgent?: boolean;
+  isUrgent?: boolean;       // surfaces "한자리 남았어요!!" badge
+  lastActiveMinutes?: number;  // "{n}분전 활동" — minutes since last group activity
+  meetingTime?: string;        // human-readable cadence, e.g. '매주 토 오전 8:00'
+  tags?: string[];
 }
 
 export interface ChatMessage {

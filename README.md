@@ -42,9 +42,13 @@ npx cap open ios          # Xcode 열림
 
 ## 문서
 
-- **`SPEC.md`** — 전체 기술 사양 (25 섹션, 1624 줄)
-- **`HANDOFF.md`** — 진행 상황 + 다음 작업 + 환경 정보 (세션 인계용)
-- 외부 계획서: `/Users/heebiny/AndroidStudioProjects/FitPle/REACT_WEB_PLAN.md`
+| 파일 | 역할 |
+|------|------|
+| **`SPEC.md`** | 전체 기술 사양 (25 섹션). 무엇을 만드는지, 어떻게 생겼는지의 단일 출처. |
+| **`BUILD.md`** | iOS 빌드/사이닝/TestFlight 절차 치트시트. |
+| **`CLAUDE.md`** | 코드베이스 가이드. AI 에이전트가 새 세션에서 빠르게 컨텍스트 잡을 때 사용. |
+| **`HANDOFF.md`** | 진행 상황 + 다음 작업 + 환경 정보 (세션 인계용). |
+| 외부 | `/Users/heebiny/AndroidStudioProjects/FitPle/REACT_WEB_PLAN.md` (Android→웹 마이그레이션 원안) |
 
 ## 기술 스택
 
