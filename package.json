@@ -20,6 +20,8 @@
   },
   "homepage": "https://github.com/heebin-h/fitple-app#readme",
   "dependencies": {
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4",
     "dayjs": "^1.11.20",
     "lucide-react": "^1.16.0",
     "react": "^18.3.1",
@@ -30,6 +32,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.3.4",
     "@types/react": "^18.3.29",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.0.2",
