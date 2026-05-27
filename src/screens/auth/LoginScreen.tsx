@@ -6,8 +6,8 @@
  *
  * 동작 (v1 데모 범위):
  *   - 카카오/Apple/Google : Toast "준비 중인 기능이에요" (소셜 로그인 데모 범위 외, §5)
- *   - 이메일로 시작하기   : ⚠️ 임시 — EmailLoginScreen(§12.3) 구현 전까지 데모 계정 즉시 로그인.
- *                           완료되면 navigate('/email-login')로 교체.
+ *   - 이메일로 시작하기   : ⚠️ 임시 데모 미리보기 — 세션 비영속(새로고침하면 로그인 화면 복귀).
+ *                           EmailLoginScreen(§12.3) 구현 시 navigate('/email-login')로 교체.
  *   - 회원가입            : Toast (회원가입 플로우 미구현 → Phase 3)
  *   - 둘러보기            : authStore.enterGuest() → /home (§11.5)
  *
@@ -76,17 +76,17 @@ export function LoginScreen() {
   const setUser = useAuthStore((s) => s.setUser);
   const enterGuest = useAuthStore((s) => s.enterGuest);
 
-  // ⚠️ 임시: EmailLoginScreen이 생기기 전까지 데모 계정 즉시 로그인.
+  // ⚠️ 임시 데모 미리보기 — 세션을 영구 저장하지 않는다(setLoggedIn 호출 안 함).
+  //    authStore(메모리)에만 유저를 올리므로 새로고침/재실행하면 사라지고 로그인 화면으로 복귀한다.
+  //    EmailLoginScreen(§12.3) 구현 시 navigate('/email-login')로 교체.
   const handleEmailStart = async () => {
     const ok = await userManager.loginUser(DEMO_EMAIL, DEMO_PASSWORD);
     if (!ok) {
       toast.error('데모 계정을 찾을 수 없어요');
       return;
     }
-    userManager.setLoggedIn(DEMO_EMAIL);
-    userManager.clearPendingSignup();
-    setUser(await userManager.getCurrentUser());
-    navigate('/home', { replace: true });
+    setUser(await userManager.getUserByEmail(DEMO_EMAIL));
+    navigate('/home');
   };
 
   const handleGuest = () => {
