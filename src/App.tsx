@@ -9,6 +9,7 @@
 
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes/AppRoutes';
+import { DevResetButton } from './components/dev/DevResetButton';
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
         position="top-center"
         toastOptions={{ duration: 2000, style: { fontSize: '14px' } }}
       />
+      {/* 개발 모드에서만 보이는 리셋 버튼 (배포 빌드엔 미포함) */}
+      {import.meta.env.DEV && <DevResetButton />}
     </>
   );
 }

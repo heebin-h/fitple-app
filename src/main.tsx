@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { resetApp } from './utils/resetApp';
 
 /**
  * 개발용 리셋 해치.
@@ -16,23 +17,11 @@ import './index.css';
  */
 function maybeResetApp(): boolean {
   if (!new URLSearchParams(window.location.search).has('reset')) return false;
-  localStorage.clear();
-  if ('serviceWorker' in navigator) {
-    void navigator.serviceWorker.getRegistrations().then((regs) =>
-      regs.forEach((r) => r.unregister()),
-    );
-  }
-  if ('caches' in window) {
-    void caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
-  }
-  window.location.replace('/');
+  resetApp();
   return true;
 }
 
-(window as Window & { fitpleReset?: () => void }).fitpleReset = () => {
-  localStorage.clear();
-  window.location.replace('/');
-};
+(window as Window & { fitpleReset?: () => void }).fitpleReset = resetApp;
 
 if (!maybeResetApp()) {
   ReactDOM.createRoot(document.getElementById('root')!).render(
