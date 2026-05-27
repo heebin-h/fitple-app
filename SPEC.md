@@ -340,11 +340,13 @@ ios/
 
 ### 6.1 Brand colours
 
-Direct port of `app/src/main/res/values/colors.xml`. Drop these into `tailwind.config.ts` under `theme.extend.colors`:
+Ported from `app/src/main/res/values/colors.xml`, then reconciled to the Figma
+design file (`스플래시/온보딩/로그인` 섹션) — **Figma is the source of truth** when the
+two disagree (2026-05-28). Drop these into `tailwind.config.ts` under `theme.extend.colors`:
 
 | Token                      | Hex        | Used for                                                |
 |----------------------------|-----------|----------------------------------------------------------|
-| `orange`                   | `#FF5722` | Brand primary, CTA, active tab indicator                 |
+| `orange`                   | `#ff5432` | Brand primary, CTA, active tab indicator (Figma `Text Icon/Primary`) |
 | `orangeTint`               | `#FFF0ED` | Sport icon backgrounds when selected                     |
 | `textPrimary`              | `#111111` | Body text                                                |
 | `textSecondary`            | `#555555` | Sub-text, captions                                       |
@@ -356,7 +358,12 @@ Direct port of `app/src/main/res/values/colors.xml`. Drop these into `tailwind.c
 | `borderError`              | `#FF4444` | Input failed validation                                  |
 | `surface`                  | `#FFFFFF` | Card / sheet background                                  |
 | `background`               | `#F2F2F2` | Page background                                          |
-| `btnKakao`                 | `#FEE500` | Kakao login button                                       |
+| `btnKakao`                 | `#fae100` | Kakao login button (Figma)                               |
+| `kakaoLabel`               | `#3c1d1e` | Kakao button label (dark brown)                          |
+| `appleBg`                  | `#0a0b0c` | Apple login button background (near-black)               |
+| `neutralLow`               | `#bdbdbd` | Figma `Text Icon/Neutral/Low Emphasis` — borders, low-emphasis |
+| `neutralMid`               | `#999999` | Low-emphasis link text (e.g. "둘러보기")                  |
+| `neutralHigh`              | `#424242` | Figma `Text Icon/Neutral/High Emphasis` — links, high-emphasis |
 | `btnDisabled`              | `#CCCCCC` | Primary button disabled state                            |
 | `blue`                     | `#2196F3` | Email verification, check icons                          |
 | `blueTint`                 | `#E3F2FD` | Card tint (signup complete preview)                      |
@@ -681,13 +688,17 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 
 ### 12.2 LoginScreen
 * **Purpose:** Entry point for non-authenticated users.
-* **Layout:**
-  * 1× hero illustration top (`sign_splash_login_emaillogin.png`).
-  * Title with brand-coloured "핏플" span: "가장 편한 방법으로\n핏플을 시작해보세요!".
-  * Trial coupon badge "회원가입하고 **1회 체험권** 받기!".
-  * 4 social buttons: 카카오 (`btnKakao`), Apple (`btnApple`), Google (`btnGoogle`), 이메일로 시작하기 (`btnEmail`).
-  * "회원가입" underlined text → `/signup/email`.
-  * "회원가입 없이 둘러보기" underlined → guest mode.
+* **Layout:** (Figma `1.로그인` 기준, 2026-05-28)
+  * Centered FitPle logo mark — 100×100 white rounded-square (radius 20, soft shadow) with the orange bolt + "F"/"P". Imported as `assets/images/login/logo_fitple.png`. (No separate hero illustration.)
+  * Title `text-hero` (26/600), centre: "가장 편한 방법으로\n핏플을 시작해보세요!" — "핏플" span `font-extrabold` in `orange`.
+  * Trial coupon speech-bubble badge "회원가입하고 **1회 체험권** 받기!" (`micro`, bubble art `login/badge.svg`).
+  * 4 social buttons (full-width `w-[346px]`, `rounded-[8px]`, label `text-label-semibold`), top-to-bottom:
+    * 카카오로 계속하기 — `bg-btnKakao`, text `kakaoLabel`, bubble icon (`login/kakao.svg`).
+    * Apple로 계속하기 — `bg-appleBg`, text white, apple icon (`login/apple.svg`).
+    * Google로 시작하기 — white bg, `border-neutralLow`, text `textPrimary`, multicolour G (`login/google*.svg`).
+    * 이메일로 시작하기 — `bg-neutralLow`, text white, envelope icon (`login/mail.svg`).
+  * "회원가입" underlined (`neutralHigh`) → `/signup/email`.
+  * "회원가입 없이 둘러보기" underlined (`neutralMid`) → guest mode.
 * **Data:** `userManager.getPendingSignupEmail()` for resume dialog (see §11.4).
 * **Interactions:**
   * Kakao / Apple / Google → toast "준비 중인 기능이에요".
@@ -1556,6 +1567,8 @@ Identical to the in-detail 채팅 tab but with a real toolbar at top instead of 
 
 | Token             | Size / Weight | Used for                                       |
 |-------------------|--------------|------------------------------------------------|
+| `hero`            | `26 / 600`   | Login hero title (Figma 2026-05-28). "핏플" span uses `font-extrabold` (800) |
+| `label-semibold`  | `14 / 600`   | Social/CTA button labels (Figma SemiBold)       |
 | `display`         | `22 / 700`   | Auth page titles, complete-screen headline      |
 | `h1`              | `19 / 700`   | PostDetail title                                |
 | `h2`              | `17 / 700`   | MyScreen nickname                               |
@@ -1575,6 +1588,8 @@ Encode this in `tailwind.config.ts` under `theme.extend.fontSize`:
 
 ```ts
 fontSize: {
+  hero:            ['26px', { lineHeight: '1.40', fontWeight: '600' }],
+  'label-semibold':['14px', { lineHeight: '1.40', fontWeight: '600' }],
   display:        ['22px', { lineHeight: '1.35', fontWeight: '700' }],
   h1:             ['19px', { lineHeight: '1.30', fontWeight: '700' }],
   h2:             ['17px', { lineHeight: '1.40', fontWeight: '700' }],

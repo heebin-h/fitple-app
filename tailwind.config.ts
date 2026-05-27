@@ -16,7 +16,9 @@ export default {
     extend: {
       colors: {
         // ── Brand primary ─────────────────────────────────────────
-        orange:       '#FF5722',
+        // 출처: Figma 변수 "Text Icon/Primary" (#ff5432). 2026-05-28 디자인 기준으로
+        // 기존 #FF5722에서 갱신 (HANDOFF §5 / SPEC §6 동시 갱신).
+        orange:       '#ff5432',
         orangeTint:   '#FFF0ED',
 
         // ── Text ──────────────────────────────────────────────────
@@ -36,9 +38,16 @@ export default {
         surface:    '#FFFFFF',
         background: '#F2F2F2',
 
-        // ── Buttons ───────────────────────────────────────────────
-        btnKakao:    '#FEE500',
+        // ── Buttons / social (Figma Login 기준) ───────────────────
+        btnKakao:    '#fae100',   // 카카오 옐로 (Figma)
+        kakaoLabel:  '#3c1d1e',   // 카카오 버튼 글자 (다크 브라운)
+        appleBg:     '#0a0b0c',   // Apple 버튼 배경 (니어 블랙)
         btnDisabled: '#CCCCCC',
+
+        // ── Neutral scale (Figma 디자인 변수 미러) ────────────────
+        neutralLow:  '#bdbdbd',   // Figma "Text Icon/Neutral/Low Emphasis" — 보더/저강조
+        neutralMid:  '#999999',   // 저강조 링크 (둘러보기)
+        neutralHigh: '#424242',   // Figma "Text Icon/Neutral/High Emphasis" — 링크/고강조
 
         // ── Semantic ─────────────────────────────────────────────
         blue:       '#2196F3',
@@ -74,8 +83,11 @@ export default {
         googleRed:    '#EA4335',
       },
 
-      // SPEC §25.20 — 14 typography tokens.
+      // SPEC §25.20 — typography tokens.
+      // hero / label-semibold 는 Figma Login 화면 기준으로 추가 (2026-05-28).
       fontSize: {
+        hero:            ['26px', { lineHeight: '1.40', fontWeight: '600' }],
+        'label-semibold':['14px', { lineHeight: '1.40', fontWeight: '600' }],
         display:         ['22px', { lineHeight: '1.35', fontWeight: '700' }],
         h1:              ['19px', { lineHeight: '1.30', fontWeight: '700' }],
         h2:              ['17px', { lineHeight: '1.40', fontWeight: '700' }],

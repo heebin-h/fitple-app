@@ -119,7 +119,7 @@ git log --oneline -5
 | 해싱 | Web Crypto SHA-256 (모두 `async`) |
 | 종목 5개 (불변) | **러닝 · 풋살 · 등산 · 사이클 · 골프** |
 | 데모 계정 | `demo@fitple.app` / `demo1234` (선호운동까지 자동 시드) |
-| 브랜드 컬러 | `#FF5722` (orange), `#FFF0ED` (orangeTint) |
+| 브랜드 컬러 | `#ff5432` (orange — Figma `Text Icon/Primary` 기준, 2026-05-28 갱신), `#FFF0ED` (orangeTint) |
 | iOS 배포 | Capacitor + Free Apple ID + Xcode → 본인 폰 7일 (무료) |
 | 친구 폰 배포 | PWA URL 공유 (Safari "홈 화면에 추가") |
 | 호스팅 | Phase 7에서 결정 (Vercel / GH Pages / Cloudflare Pages) |
