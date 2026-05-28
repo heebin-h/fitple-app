@@ -6,10 +6,11 @@
  *
  * 동작 (v1 데모 범위):
  *   - 카카오/Apple/Google : Toast "준비 중인 기능이에요" (소셜 로그인 데모 범위 외, §5)
- *   - 이메일로 시작하기   : ⚠️ 임시 데모 미리보기 — 세션 비영속(새로고침하면 로그인 화면 복귀).
- *                           EmailLoginScreen(§12.3) 구현 시 navigate('/email-login')로 교체.
- *   - 회원가입            : Toast (회원가입 플로우 미구현 → Phase 3)
+ *   - 이메일로 시작하기   : navigate('/email-login') — Android EmailLoginFragment 흐름.
+ *   - 회원가입            : navigate('/signup/email') — Android SignupEmailFragment 흐름.
  *   - 둘러보기            : authStore.enterGuest() → /home (§11.5)
+ *
+ * 데모 회원 홈 확인이 필요하면 /email-login 에서 demo@fitple.app / demo1234 입력.
  *
  * 색/타이포/간격은 모두 토큰 사용(룰 #1·#2). 에셋은 Figma 내보내기(assets/images/login/).
  */
@@ -17,7 +18,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
-import { userManager } from '../../storage/userManager';
 import { useAuthStore } from '../../store/authStore';
 import { cn } from '../../utils/cn';
 
@@ -30,9 +30,6 @@ import google1 from '../../assets/images/login/google1.svg';
 import google2 from '../../assets/images/login/google2.svg';
 import google3 from '../../assets/images/login/google3.svg';
 import google4 from '../../assets/images/login/google4.svg';
-
-const DEMO_EMAIL = 'demo@fitple.app';
-const DEMO_PASSWORD = 'demo1234';
 
 /**
  * Figma 멀티컬러 'G' — 4개 컬러 조각을 24×24 박스에 inset으로 합성.
@@ -84,21 +81,7 @@ function SocialButton({
 
 export function LoginScreen() {
   const navigate = useNavigate();
-  const setUser = useAuthStore((s) => s.setUser);
   const enterGuest = useAuthStore((s) => s.enterGuest);
-
-  // ⚠️ 임시 데모 미리보기 — 세션을 영구 저장하지 않는다(setLoggedIn 호출 안 함).
-  //    authStore(메모리)에만 유저를 올리므로 새로고침/재실행하면 사라지고 로그인 화면으로 복귀한다.
-  //    EmailLoginScreen(§12.3) 구현 시 navigate('/email-login')로 교체.
-  const handleEmailStart = async () => {
-    const ok = await userManager.loginUser(DEMO_EMAIL, DEMO_PASSWORD);
-    if (!ok) {
-      toast.error('데모 계정을 찾을 수 없어요');
-      return;
-    }
-    setUser(await userManager.getUserByEmail(DEMO_EMAIL));
-    navigate('/home');
-  };
 
   const handleGuest = () => {
     enterGuest();
@@ -154,7 +137,7 @@ export function LoginScreen() {
                 label="Google로 시작하기"
               />
               <SocialButton
-                onClick={handleEmailStart}
+                onClick={() => navigate('/email-login')}
                 className="bg-neutralLow"
                 labelClassName="text-textWhite"
                 icon={<img src={iconMail} alt="" className="h-[15px] w-[20px]" />}

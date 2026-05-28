@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { userManager } from '../../storage/userManager';
 import { isValidEmailFormat } from '../../utils/validation';
 import { cn } from '../../utils/cn';
+import { EmailSuggestions } from '../../components/auth/EmailSuggestions';
 
 type State = 'empty' | 'typing' | 'invalid' | 'taken' | 'valid';
 
@@ -54,8 +55,6 @@ export function SignupEmailScreen() {
     return 'valid';
   }, [email, hasAt, isValid, isTaken]);
 
-  const idPart = email.split('@')[0];
-  const showSuggestions = state === 'invalid' && idPart.length > 0;
   const canProceed = state === 'valid';
 
   const borderClass: Record<State, string> = {
@@ -73,8 +72,8 @@ export function SignupEmailScreen() {
   };
 
   const handleGoLogin = () => {
-    // SPEC §12.4: 이미 가입된 이메일이면 로그인 화면으로 + 이메일 prefill.
-    navigate('/login', { state: { prefillEmail: email.trim().toLowerCase() } });
+    // SPEC §12.4: 이미 가입된 이메일이면 이메일 로그인 화면으로 + 이메일 prefill.
+    navigate('/email-login', { state: { prefillEmail: email.trim().toLowerCase() } });
   };
 
   return (
@@ -133,21 +132,8 @@ export function SignupEmailScreen() {
           </p>
         )}
 
-        {/* 자동완성 (State invalid 에서만) */}
-        {showSuggestions && (
-          <div className="mt-2 flex flex-col gap-1">
-            {[`${idPart}@naver.com`, `${idPart}@gmail.com`].map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setEmail(s)}
-                className="rounded-card border border-borderDefault px-3 py-2 text-left text-caption text-textPrimary"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* 자동완성 (State invalid 에서만 — EmailSuggestions 내부에서 분기) */}
+        <EmailSuggestions email={email} onPick={setEmail} />
       </div>
 
       <div className="pb-4">
