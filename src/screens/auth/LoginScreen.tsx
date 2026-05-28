@@ -34,14 +34,25 @@ import google4 from '../../assets/images/login/google4.svg';
 const DEMO_EMAIL = 'demo@fitple.app';
 const DEMO_PASSWORD = 'demo1234';
 
-/** Figma 멀티컬러 'G' — 4개 컬러 조각을 24×24 박스에 inset으로 합성. */
+/**
+ * Figma 멀티컬러 'G' — 4개 컬러 조각을 24×24 박스에 inset으로 합성.
+ * 패턴: 외곽 span이 inset으로 위치/크기 잡고, 내부 img는 그 박스를 가득 채운다
+ * (`<img>`에 inset만 주면 SVG intrinsic 크기 때문에 길게 늘어남).
+ */
 function GoogleGlyph() {
+  const parts: { src: string; inset: string }[] = [
+    { src: google1, inset: 'inset-[40.99%_0.97%_12.07%_51.01%]' },
+    { src: google2, inset: 'inset-[59.59%_15.86%_-0.01%_6.32%]' },
+    { src: google3, inset: 'inset-[27.56%_77.06%_27.53%_1.01%]' },
+    { src: google4, inset: 'inset-[0_15.55%_59.56%_6.32%]' },
+  ];
   return (
     <span className="relative block size-6">
-      <img src={google1} alt="" className="absolute inset-[40.99%_0.97%_12.07%_51.01%]" />
-      <img src={google2} alt="" className="absolute inset-[59.59%_15.86%_-0.01%_6.32%]" />
-      <img src={google3} alt="" className="absolute inset-[27.56%_77.06%_27.53%_1.01%]" />
-      <img src={google4} alt="" className="absolute inset-[0_15.55%_59.56%_6.32%]" />
+      {parts.map((p, i) => (
+        <span key={i} className={cn('absolute block', p.inset)}>
+          <img src={p.src} alt="" className="block size-full max-w-none" />
+        </span>
+      ))}
     </span>
   );
 }
@@ -151,10 +162,10 @@ export function LoginScreen() {
               />
             </div>
 
-            {/* 회원가입 */}
+            {/* 회원가입 → 가입 흐름 시작 (§11.3 step 1) */}
             <button
               type="button"
-              onClick={notReady}
+              onClick={() => navigate('/signup/email')}
               className="text-micro text-neutralHigh underline"
             >
               회원가입

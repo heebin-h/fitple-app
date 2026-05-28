@@ -14,6 +14,7 @@ import { MainLayout } from '../components/layout/MainLayout';
 import { RequireAuth } from './RequireAuth';
 import { SplashScreen } from '../screens/SplashScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
+import { SignupEmailScreen } from '../screens/auth/SignupEmailScreen';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { ExerciseScreen } from '../screens/main/ExerciseScreen';
 import { RecommendedGroupScreen } from '../screens/main/RecommendedGroupScreen';
@@ -25,6 +26,7 @@ export function AppRoutes() {
         <Routes>
           <Route path="/" element={<SplashScreen />} />
           <Route path="/login" element={<LoginScreen />} />
+          <Route path="/signup/email" element={<SignupEmailScreen />} />
 
           <Route
             element={
