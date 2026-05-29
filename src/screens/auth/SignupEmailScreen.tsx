@@ -76,7 +76,7 @@ export function SignupEmailScreen() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
+    <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
       <SignupToolbar />
 
       <div className="flex flex-1 flex-col">

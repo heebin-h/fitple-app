@@ -51,7 +51,7 @@ export function SplashScreen() {
   }, [navigate, setUser]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-surface">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-surface">
       <h1 className="text-display text-orange">FitPle</h1>
       <Zap size={40} className="mt-3 text-orange" fill="currentColor" />
     </div>

@@ -70,7 +70,7 @@ export function EmailLoginScreen() {
         : 'border-borderActive';
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
+    <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
       <header className="flex h-12 items-center">
         <button
           type="button"

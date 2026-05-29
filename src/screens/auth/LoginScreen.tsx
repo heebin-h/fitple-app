@@ -91,7 +91,7 @@ export function LoginScreen() {
   const notReady = () => toast('준비 중인 기능이에요');
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center bg-surface px-[22px] pt-safe pb-safe">
+    <div className="relative flex min-h-dvh flex-col items-center bg-surface px-[22px] pt-safe pb-safe">
       <div className="flex w-full max-w-[346px] flex-col items-center gap-[44px] pt-[60px]">
         <div className="flex w-full flex-col items-center gap-[26px]">
           {/* 로고 마크 */}

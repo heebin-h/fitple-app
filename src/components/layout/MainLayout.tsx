@@ -12,7 +12,7 @@ import { BottomNav } from './BottomNav';
 
 export function MainLayout() {
   return (
-    <div className="relative min-h-screen pb-14">
+    <div className="relative min-h-dvh pb-14">
       <Outlet />
       <BottomNav />
     </div>

@@ -11,9 +11,11 @@
 import type { ReactNode } from 'react';
 
 export function MobileFrame({ children }: { children: ReactNode }) {
+  // iOS Safari에서 100vh가 URL 바 포함이라 실제 화면보다 커지는 문제 회피:
+  // `dvh`(dynamic viewport height)를 쓰면 URL 바 등 동적 UI를 빼고 측정 → 비율 정상.
   return (
-    <div className="flex min-h-screen w-full justify-center bg-background">
-      <div className="relative min-h-screen w-full max-w-mobile overflow-hidden bg-surface">
+    <div className="flex min-h-dvh w-full justify-center bg-background">
+      <div className="relative min-h-dvh w-full max-w-mobile overflow-hidden bg-surface">
         {children}
       </div>
     </div>

@@ -56,7 +56,7 @@ export function SignupPasswordScreen() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
+    <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
       <SignupToolbar rightLabel="다음" onRightTap={handleNext} rightActive={canProceed} />
 
       <div className="flex flex-1 flex-col">

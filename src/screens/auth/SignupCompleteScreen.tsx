@@ -19,7 +19,7 @@ export function SignupCompleteScreen() {
   const currentUser = useAuthStore((s) => s.currentUser);
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
+    <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
       <div className="flex flex-1 flex-col items-center justify-center">
         <span className="flex h-20 w-20 items-center justify-center rounded-full bg-orange text-textWhite">
           <Check size={40} strokeWidth={3} />

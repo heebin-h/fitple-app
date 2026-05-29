@@ -85,7 +85,7 @@ export function SignupPreferenceScreen() {
   if (phase === 'SELECTION') {
     const canProceed = selectedSports.length > 0;
     return (
-      <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
+      <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
         <SignupToolbar
           rightLabel="건너뛰기"
           onRightTap={() => finishSignup([], {})}
@@ -153,7 +153,7 @@ export function SignupPreferenceScreen() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
+    <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
       <SignupToolbar
         rightLabel="건너뛰기"
         onRightTap={() => finishSignup([], {})}
@@ -254,12 +254,18 @@ function SportTile({
   onTap: () => void;
   disabled?: boolean;
 }) {
+  // 상태별 룩 — 명확한 시각 계층:
+  //   idle    : SELECTION 미선택 (탭 가능, 회색)
+  //   selected: SELECTION 선택됨 (오렌지 강조)
+  //   current : DETAIL의 현재 종목 (가장 강조)
+  //   light   : DETAIL에서 선택된 종목이지만 현재 아님 (라이트 오렌지)
+  //   muted   : DETAIL에서 SELECTION 단계에 선택되지 않은 종목 (강한 회색 — 비활성)
   const styles: Record<TileState, { box: string; label: string; iconClass: string }> = {
-    idle:     { box: 'border-borderDefault bg-background',  label: 'text-textSecondary', iconClass: 'opacity-60' },
-    selected: { box: 'border-orange bg-orangeTint',         label: 'text-orange',        iconClass: '' },
-    current:  { box: 'border-orange bg-orangeTint ring-2 ring-orange/30', label: 'text-orange', iconClass: '' },
-    light:    { box: 'border-sportLightAccent bg-sportLightTint', label: 'text-sportLightAccent', iconClass: 'opacity-80' },
-    muted:    { box: 'border-borderDefault bg-background',  label: 'text-textHint',      iconClass: 'opacity-40 grayscale' },
+    idle:     { box: 'border-borderDefault bg-background',           label: 'text-textSecondary', iconClass: 'opacity-70 grayscale' },
+    selected: { box: 'border-orange bg-orangeTint',                  label: 'text-orange font-bold', iconClass: '' },
+    current:  { box: 'border-orange bg-orangeTint',                  label: 'text-orange font-bold', iconClass: '' },
+    light:    { box: 'border-sportLightAccent bg-sportLightTint',    label: 'text-sportLightAccent', iconClass: 'opacity-90' },
+    muted:    { box: 'border-borderDefault bg-background',           label: 'text-textHint',         iconClass: 'opacity-50 grayscale' },
   };
   const s = styles[state];
   return (
@@ -268,15 +274,16 @@ function SportTile({
       onClick={onTap}
       disabled={disabled}
       aria-pressed={state === 'selected' || state === 'current'}
-      className={cn('flex flex-1 flex-col items-center gap-1.5')}
+      className={cn('flex min-w-0 flex-1 flex-col items-center gap-1.5')}
     >
       <span
         className={cn(
-          'flex h-14 w-full items-center justify-center rounded-card border-2',
+          'flex aspect-square w-full items-center justify-center rounded-card border-2',
           s.box,
         )}
       >
-        <img src={icon} alt={name} className={cn('h-8 w-8', s.iconClass)} />
+        {/* 아이콘은 타일의 ~60% — 64px 타일에서 ~40px */}
+        <img src={icon} alt={name} className={cn('h-3/5 w-3/5 object-contain', s.iconClass)} />
       </span>
       <span className={cn('text-mini-strong', s.label)}>{name}</span>
     </button>
