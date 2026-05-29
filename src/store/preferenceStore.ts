@@ -51,7 +51,13 @@ export const usePreferenceStore = create<PreferenceState>((set, get) => ({
 
   beginDetail: () => {
     const { selectedSports } = get();
-    set({ phase: 'DETAIL', detailQueue: [...selectedSports], detailStep: 0 });
+    // 사용자가 풋살→러닝→골프 순으로 골라도 DETAIL 진행 순서는
+    // SPORTS 카탈로그 순서(러닝→풋살→등산→사이클→골프)로 통일.
+    const order = SPORTS.map((s) => s.name);
+    const sorted = [...selectedSports].sort(
+      (a, b) => order.indexOf(a) - order.indexOf(b),
+    );
+    set({ phase: 'DETAIL', detailQueue: sorted, detailStep: 0 });
   },
 
   setAnswer: (sport, question, optionIdx) =>

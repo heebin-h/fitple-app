@@ -166,22 +166,17 @@ export function SignupPreferenceScreen() {
           모임을 추천해 드려요
         </p>
 
-        {/* 5종목 가로 행 — 모든 종목 표시, 선택/현재/미선택 3가지 상태 */}
+        {/* 5종목 가로 행 — 현재 종목만 하이라이트, 나머지(선택했든 안했든) 전부 회색.
+            SPORTS 카탈로그 순서로 고정 표시 (사용자 선택 순서 무관). */}
         <div className="mt-6 flex gap-2">
           {SPORTS.map((sport) => {
-            const isInQueue = detailQueue.includes(sport.name);
             const isCurrent = sport.name === currentSport;
-            const state: TileState = isCurrent
-              ? 'current'
-              : isInQueue
-                ? 'light'
-                : 'muted';
             return (
               <SportTile
                 key={sport.name}
                 name={sport.name}
                 icon={ICONS[sport.name]}
-                state={state}
+                state={isCurrent ? 'current' : 'muted'}
                 onTap={() => undefined}
                 disabled
               />
