@@ -16,7 +16,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, X, AlertCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { userManager } from '../../storage/userManager';
 import { isValidEmailFormat } from '../../utils/validation';
 import { cn } from '../../utils/cn';
@@ -67,8 +66,7 @@ export function SignupEmailScreen() {
 
   const handleNext = () => {
     if (!canProceed) return;
-    // TODO(phase-2-next): navigate('/signup/password', { state: { email: email.trim().toLowerCase() } });
-    toast('비밀번호 단계는 다음 커밋에서 추가됩니다');
+    navigate('/signup/password', { state: { email: email.trim().toLowerCase() } });
   };
 
   const handleGoLogin = () => {

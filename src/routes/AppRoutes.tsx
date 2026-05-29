@@ -16,6 +16,10 @@ import { SplashScreen } from '../screens/SplashScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { EmailLoginScreen } from '../screens/auth/EmailLoginScreen';
 import { SignupEmailScreen } from '../screens/auth/SignupEmailScreen';
+import { SignupPasswordScreen } from '../screens/auth/SignupPasswordScreen';
+import { SignupNicknameScreen } from '../screens/auth/SignupNicknameScreen';
+import { SignupPreferenceScreen } from '../screens/auth/SignupPreferenceScreen';
+import { SignupCompleteScreen } from '../screens/auth/SignupCompleteScreen';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { ExerciseScreen } from '../screens/main/ExerciseScreen';
 import { RecommendedGroupScreen } from '../screens/main/RecommendedGroupScreen';
@@ -29,6 +33,10 @@ export function AppRoutes() {
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/email-login" element={<EmailLoginScreen />} />
           <Route path="/signup/email" element={<SignupEmailScreen />} />
+          <Route path="/signup/password" element={<SignupPasswordScreen />} />
+          <Route path="/signup/nickname" element={<SignupNicknameScreen />} />
+          <Route path="/signup/preference" element={<SignupPreferenceScreen />} />
+          <Route path="/signup/complete" element={<SignupCompleteScreen />} />
 
           <Route
             element={
