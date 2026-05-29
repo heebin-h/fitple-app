@@ -13,12 +13,13 @@
 
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { userManager } from '../../storage/userManager';
 import { isValidNickname } from '../../utils/validation';
 import { cn } from '../../utils/cn';
 import { TermsBottomSheet } from '../../components/auth/TermsBottomSheet';
+import { SignupToolbar } from '../../components/auth/SignupToolbar';
 
 const MAX_LEN = 10;
 
@@ -66,16 +67,7 @@ export function SignupNicknameScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
-      <header className="flex h-12 items-center">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로"
-          className="-ml-2 p-2 text-textPrimary"
-        >
-          <ArrowLeft size={24} />
-        </button>
-      </header>
+      <SignupToolbar />
 
       <div className="flex flex-1 flex-col">
         <h1 className="mt-4 text-display text-textPrimary">사용하실 닉네임을 입력해주세요</h1>

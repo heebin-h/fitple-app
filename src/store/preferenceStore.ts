@@ -1,16 +1,14 @@
 /**
- * 회원가입 Step 5 — 선호운동 상태 머신. SPEC §9 / §12.8 / Android `SignupPreferenceFragment.kt`.
+ * 회원가입 Step 5 — 선호운동 상태 머신. SPEC §9 / §12.8 / Android `SignupPreferenceFragment.kt`
+ * + 디자인 `sign_signup_preference_*.png` 기준.
  *
  * 2-phase:
- *   SELECTION : 5종목 타일에서 관심 운동 다중 선택 (선택 순서 보존)
- *   DETAIL    : 선택한 종목 순서대로, 각 종목의 질문을 1개씩 차례로 표시
+ *   SELECTION : 5종목 가로 행에서 관심 운동 다중 선택 (선택 순서 보존)
+ *   DETAIL    : 현재 종목의 **모든 질문**을 한 화면에 세로로 쌓아 표시. "다음" = 다음 종목으로.
  *
- * `detailQueue` 는 `beginDetail()` 시점에 SELECTION 결과를 `SPORTS` 카탈로그와 매칭해
- * (sport, question, options) 단위로 평탄화한 큐. `detailStep` 이 인덱스를 가리킨다.
- *
- * 화면은 phase + 현재 step의 항목 + 누적된 selections만 읽고, next/back/setAnswer 만
- * 디스패치한다. 답변은 sport별로 grouping된 `detailSelections` 에 누적 — 종료 후
- * userManager.savePreferences(email, sports, details) 에 그대로 넘긴다.
+ * `detailQueue` = 선택한 종목 이름 배열 (Android와 동일). `detailStep` = 현재 종목 인덱스.
+ * 각 종목 화면에서 답한 옵션 인덱스를 `detailSelections[sport][question] = idx` 로 누적.
+ * 마지막 종목까지 끝나면 `buildSavePayload()` 로 텍스트 변환해 savePreferences 에 넘긴다.
  */
 
 import { create } from 'zustand';
@@ -18,23 +16,17 @@ import { SPORTS } from '../constants/sports';
 
 export type Phase = 'SELECTION' | 'DETAIL';
 
-export interface DetailStep {
-  sport: string;
-  question: string;
-  options: string[];
-}
-
 interface PreferenceState {
   phase: Phase;
   selectedSports: string[];                                       // 선택 순서 보존
-  detailQueue: DetailStep[];                                      // SELECTION 결과의 평탄화
-  detailStep: number;                                             // detailQueue 인덱스
+  detailQueue: string[];                                          // = selectedSports snapshot at beginDetail
+  detailStep: number;                                             // detailQueue 인덱스 (현재 종목)
   detailSelections: Record<string, Record<string, number>>;       // sport → question → option index
 
   selectSport: (sport: string) => void;                           // toggle
   beginDetail: () => void;                                        // SELECTION 종료 → DETAIL 진입
   setAnswer: (sport: string, question: string, optionIdx: number) => void;
-  next: () => 'continue' | 'done';                                // done = 마지막 질문 답한 직후
+  next: () => 'continue' | 'done';                                // done = 마지막 종목 직후
   back: () => 'continue' | 'toSelection';                         // toSelection = step 0에서 뒤로
   reset: () => void;
 }
@@ -42,7 +34,7 @@ interface PreferenceState {
 const initial = {
   phase: 'SELECTION' as Phase,
   selectedSports: [] as string[],
-  detailQueue: [] as DetailStep[],
+  detailQueue: [] as string[],
   detailStep: 0,
   detailSelections: {} as Record<string, Record<string, number>>,
 };
@@ -59,15 +51,7 @@ export const usePreferenceStore = create<PreferenceState>((set, get) => ({
 
   beginDetail: () => {
     const { selectedSports } = get();
-    const queue: DetailStep[] = [];
-    for (const name of selectedSports) {
-      const def = SPORTS.find((s) => s.name === name);
-      if (!def) continue;
-      for (const q of def.questions) {
-        queue.push({ sport: name, question: q.question, options: q.options });
-      }
-    }
-    set({ phase: 'DETAIL', detailQueue: queue, detailStep: 0 });
+    set({ phase: 'DETAIL', detailQueue: [...selectedSports], detailStep: 0 });
   },
 
   setAnswer: (sport, question, optionIdx) =>
@@ -97,6 +81,17 @@ export const usePreferenceStore = create<PreferenceState>((set, get) => ({
 
   reset: () => set({ ...initial }),
 }));
+
+/** 종목 1개의 모든 질문이 답됐는지 — "다음" 활성화 조건. */
+export function isSportComplete(
+  sport: string,
+  detailSelections: Record<string, Record<string, number>>,
+): boolean {
+  const def = SPORTS.find((s) => s.name === sport);
+  if (!def) return true;
+  const answers = detailSelections[sport] ?? {};
+  return def.questions.every((q) => typeof answers[q.question] === 'number');
+}
 
 /**
  * 저장용 변환: `detailSelections` (option **index**) → option **text** 값.

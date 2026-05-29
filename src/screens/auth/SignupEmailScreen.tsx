@@ -15,11 +15,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, X, AlertCircle } from 'lucide-react';
+import { Check, X, AlertCircle } from 'lucide-react';
 import { userManager } from '../../storage/userManager';
 import { isValidEmailFormat } from '../../utils/validation';
 import { cn } from '../../utils/cn';
 import { EmailSuggestions } from '../../components/auth/EmailSuggestions';
+import { SignupToolbar } from '../../components/auth/SignupToolbar';
 
 type State = 'empty' | 'typing' | 'invalid' | 'taken' | 'valid';
 
@@ -76,21 +77,13 @@ export function SignupEmailScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
-      <header className="flex h-12 items-center">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로"
-          className="-ml-2 p-2 text-textPrimary"
-        >
-          <ArrowLeft size={24} />
-        </button>
-      </header>
+      <SignupToolbar />
 
       <div className="flex flex-1 flex-col">
-        <h1 className="mt-4 text-display text-textPrimary">이메일을 입력해주세요</h1>
+        <h1 className="mt-4 text-display text-textPrimary">사용하실 이메일을 입력해주세요</h1>
 
-        <div className={cn('mt-8 flex h-12 items-center gap-2 rounded-card border px-3', borderClass[state])}>
+        <label className="mt-8 block text-caption text-textSecondary">이메일 아이디</label>
+        <div className={cn('mt-1.5 flex h-12 items-center gap-2 rounded-card border px-3', borderClass[state])}>
           <input
             type="email"
             inputMode="email"
@@ -99,7 +92,7 @@ export function SignupEmailScreen() {
             spellCheck={false}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="이메일 주소"
+            placeholder="fitple@fitple.com"
             className="flex-1 bg-transparent text-body text-textPrimary outline-none placeholder:text-textHint"
           />
           {email.length > 0 && (

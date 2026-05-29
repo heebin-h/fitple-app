@@ -1,29 +1,46 @@
 /**
- * 회원가입 Step 5 — 선호운동 (SELECTION → DETAIL 2-phase). SPEC §12.8 / Android `SignupPreferenceFragment.kt`.
+ * 회원가입 Step 5 — 선호운동. SPEC §12.8 / Android `SignupPreferenceFragment.kt` +
+ * 디자인 `sign_signup_preference_*.png` 기준.
  *
- *   SELECTION:
- *     "관심있는 운동을 선택해주세요" + 5종목 타일 (2열 그리드 + 마지막 1개 중앙).
- *     1개 이상 선택 시 "다음" 활성화 → beginDetail() → DETAIL.
- *     toolbar 우측 "건너뛰기" → 빈 sports로 즉시 savePreferences → 완료 화면.
+ * SELECTION:
+ *   타이틀: "거의 다했어요! 맞춤 운동을 제공 할 수 있도록 / 몇가지만 알려주세요!"
+ *   서브:   "어떤 운동 선호하나요?(중복선택 가능해요)"
+ *   5종목 **가로 1줄** 아이콘 그리드. 선택 시 오렌지 보더 + 라이트 오렌지 배경 + 오렌지 라벨.
+ *   "다음" 활성: 1개 이상. 우상단 "건너뛰기" → 빈 sports로 직행.
  *
- *   DETAIL:
- *     선택한 종목 순서대로, 각 종목의 질문을 1개씩 carousel.
- *     상단 progress strip (선택한 종목 라벨, 현재 활성 = 주황 / 나머지 = 라이트).
- *     "다음" 활성화: 현재 질문 선택지가 골라져 있을 때.
- *     마지막 질문 답하면 → savePreferences + setLoggedIn + clearPendingSignup → /signup/complete.
- *
- * 뒤로가기: DETAIL step 0 에서 뒤로 → SELECTION 으로 복귀 (답변 보존). SELECTION 에서
- * 시스템 뒤로 → 닉네임 화면 (browser back).
+ * DETAIL:
+ *   서브: "선택 한 운동의 필터를 설정하면 / 모임을 추천해 드려요"
+ *   상단 5종목 가로 행 (선택된 종목들은 라이트 오렌지, 현재 종목은 오렌지 보더 강조,
+ *   미선택 종목은 회색). 현재 종목의 모든 질문이 세로로 쌓이고, 옵션은 가로 pill 칩.
+ *   "다음" 활성: 현재 종목의 모든 질문에 답 → next() → 다음 종목 또는 finishSignup.
  */
 
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check } from 'lucide-react';
 import { userManager } from '../../storage/userManager';
 import { useAuthStore } from '../../store/authStore';
-import { usePreferenceStore, buildSavePayload } from '../../store/preferenceStore';
+import {
+  usePreferenceStore,
+  buildSavePayload,
+  isSportComplete,
+} from '../../store/preferenceStore';
 import { SPORTS } from '../../constants/sports';
 import { cn } from '../../utils/cn';
+import { SignupToolbar } from '../../components/auth/SignupToolbar';
+
+import iconRunning from '../../assets/images/sports/sport_running.png';
+import iconFutsal from '../../assets/images/sports/sport_futsal.png';
+import iconHiking from '../../assets/images/sports/sport_hiking.png';
+import iconCycling from '../../assets/images/sports/sport_cycling.png';
+import iconGolf from '../../assets/images/sports/sport_golf.png';
+
+const ICONS: Record<string, string> = {
+  러닝: iconRunning,
+  풋살: iconFutsal,
+  등산: iconHiking,
+  사이클: iconCycling,
+  골프: iconGolf,
+};
 
 export function SignupPreferenceScreen() {
   const navigate = useNavigate();
@@ -40,7 +57,6 @@ export function SignupPreferenceScreen() {
   const beginDetail = usePreferenceStore((s) => s.beginDetail);
   const setAnswer = usePreferenceStore((s) => s.setAnswer);
   const next = usePreferenceStore((s) => s.next);
-  const back = usePreferenceStore((s) => s.back);
   const reset = usePreferenceStore((s) => s.reset);
 
   // 직접 진입 방어
@@ -48,10 +64,13 @@ export function SignupPreferenceScreen() {
     if (!email) navigate('/signup/email', { replace: true });
   }, [email, navigate]);
 
-  // 화면 이탈 시 reset (가입 완료 후 다음 회원가입 깨끗하게)
+  // 화면 이탈 시 reset (다음 회원가입 깨끗하게)
   useEffect(() => () => reset(), [reset]);
 
-  const finishSignup = async (sports: string[], details: Record<string, Record<string, string>>) => {
+  const finishSignup = async (
+    sports: string[],
+    details: Record<string, Record<string, string>>,
+  ) => {
     if (!email) return;
     await userManager.savePreferences(email, sports, details);
     userManager.setLoggedIn(email);
@@ -60,62 +79,49 @@ export function SignupPreferenceScreen() {
     navigate('/signup/complete', { replace: true });
   };
 
-  // ── SELECTION ────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────
+  // SELECTION
+  // ─────────────────────────────────────────────────────────
   if (phase === 'SELECTION') {
     const canProceed = selectedSports.length > 0;
     return (
       <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
-        <header className="flex h-12 items-center justify-between">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="뒤로"
-            className="-ml-2 p-2 text-textPrimary"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <button
-            type="button"
-            onClick={() => finishSignup([], {})}
-            className="text-caption text-neutralHigh underline"
-          >
-            건너뛰기
-          </button>
-        </header>
+        <SignupToolbar
+          rightLabel="건너뛰기"
+          onRightTap={() => finishSignup([], {})}
+        />
 
         <div className="flex flex-1 flex-col">
-          <h1 className="mt-4 text-display text-textPrimary">관심있는 운동을 선택해주세요</h1>
+          <h1 className="mt-4 text-display text-textPrimary">
+            거의 다했어요! 맞춤 운동을 제공 할 수 있도록
+            <br />
+            몇가지만 알려주세요!
+          </h1>
+          <p className="mt-6 text-label-strong text-textPrimary">
+            어떤 운동 선호하나요?<span className="text-textSecondary">(중복선택 가능해요)</span>
+          </p>
 
-          {/* 2열 그리드 + 마지막 5번째는 중앙 */}
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            {SPORTS.slice(0, 4).map((sport) => (
-              <SportTile
-                key={sport.name}
-                name={sport.name}
-                selected={selectedSports.includes(sport.name)}
-                onTap={() => selectSport(sport.name)}
-              />
-            ))}
-            {/* 5번째 중앙 */}
-            <div className="col-span-2 flex justify-center">
-              <div className="w-1/2">
+          {/* 5종목 가로 1줄 */}
+          <div className="mt-4 flex gap-2">
+            {SPORTS.map((sport) => {
+              const selected = selectedSports.includes(sport.name);
+              return (
                 <SportTile
-                  name={SPORTS[4].name}
-                  selected={selectedSports.includes(SPORTS[4].name)}
-                  onTap={() => selectSport(SPORTS[4].name)}
+                  key={sport.name}
+                  name={sport.name}
+                  icon={ICONS[sport.name]}
+                  state={selected ? 'selected' : 'idle'}
+                  onTap={() => selectSport(sport.name)}
                 />
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="pb-4">
           <button
             type="button"
-            onClick={() => {
-              if (!canProceed) return;
-              beginDetail();
-            }}
+            onClick={() => canProceed && beginDetail()}
             disabled={!canProceed}
             className={cn(
               'h-[52px] w-full rounded-card text-body-strong text-textWhite',
@@ -129,15 +135,17 @@ export function SignupPreferenceScreen() {
     );
   }
 
-  // ── DETAIL ───────────────────────────────────────────────
-  const step = detailQueue[detailStep];
-  if (!step) return null;  // 큐 비정상 — beginDetail 직후 보호
+  // ─────────────────────────────────────────────────────────
+  // DETAIL
+  // ─────────────────────────────────────────────────────────
+  const currentSport = detailQueue[detailStep];
+  const def = SPORTS.find((s) => s.name === currentSport);
+  if (!def) return null;
 
-  const answered = detailSelections[step.sport]?.[step.question];
-  const canProceed = typeof answered === 'number';
+  const sportComplete = isSportComplete(currentSport, detailSelections);
 
   const handleNext = async () => {
-    if (!canProceed) return;
+    if (!sportComplete) return;
     if (next() === 'done') {
       const { sports, details } = buildSavePayload({ selectedSports, detailSelections });
       await finishSignup(sports, details);
@@ -146,56 +154,69 @@ export function SignupPreferenceScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
-      <header className="flex h-12 items-center">
-        <button
-          type="button"
-          onClick={() => back()}
-          aria-label="뒤로"
-          className="-ml-2 p-2 text-textPrimary"
-        >
-          <ArrowLeft size={24} />
-        </button>
-      </header>
+      <SignupToolbar
+        rightLabel="건너뛰기"
+        onRightTap={() => finishSignup([], {})}
+      />
 
-      <div className="flex flex-1 flex-col">
-        {/* progress strip */}
-        <div className="mt-2 flex gap-1.5">
-          {selectedSports.map((s) => (
-            <span
-              key={s}
-              className={cn(
-                'rounded-full px-3 py-1 text-caption',
-                s === step.sport
-                  ? 'bg-orange text-textWhite'
-                  : 'bg-sportLightTint text-sportLightAccent',
-              )}
-            >
-              {s}
-            </span>
-          ))}
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        <p className="mt-4 text-display text-textPrimary">
+          선택 한 운동의 필터를 설정하면
+          <br />
+          모임을 추천해 드려요
+        </p>
+
+        {/* 5종목 가로 행 — 모든 종목 표시, 선택/현재/미선택 3가지 상태 */}
+        <div className="mt-6 flex gap-2">
+          {SPORTS.map((sport) => {
+            const isInQueue = detailQueue.includes(sport.name);
+            const isCurrent = sport.name === currentSport;
+            const state: TileState = isCurrent
+              ? 'current'
+              : isInQueue
+                ? 'light'
+                : 'muted';
+            return (
+              <SportTile
+                key={sport.name}
+                name={sport.name}
+                icon={ICONS[sport.name]}
+                state={state}
+                onTap={() => undefined}
+                disabled
+              />
+            );
+          })}
         </div>
 
-        <h1 className="mt-6 text-display text-textPrimary">
-          {step.sport} 정보를 알려주세요
-        </h1>
-        <p className="mt-1 text-label text-textSecondary">{step.question}</p>
-
-        <div className="mt-6 flex flex-col gap-2">
-          {step.options.map((opt, idx) => {
-            const selected = answered === idx;
+        {/* 현재 종목의 모든 질문 */}
+        <div className="mt-6 flex flex-col gap-5 pb-4">
+          {def.questions.map((q) => {
+            const answeredIdx = detailSelections[currentSport]?.[q.question];
             return (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => setAnswer(step.sport, step.question, idx)}
-                className={cn(
-                  'flex h-12 items-center justify-between rounded-card border px-4 text-label text-textPrimary',
-                  selected ? 'border-orange bg-orangeTint' : 'border-borderDefault bg-surface',
-                )}
-              >
-                <span>{opt}</span>
-                {selected && <Check size={18} className="text-orange" />}
-              </button>
+              <div key={q.question}>
+                <p className="text-label-strong text-textPrimary">{q.question}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {q.options.map((opt, idx) => {
+                    const sel = answeredIdx === idx;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setAnswer(currentSport, q.question, idx)}
+                        className={cn(
+                          'inline-flex h-9 items-center rounded-full border px-3 text-caption',
+                          sel
+                            ? 'border-orange bg-orangeTint text-orange'
+                            : 'border-borderDefault bg-surface text-textSecondary',
+                        )}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>
@@ -205,10 +226,10 @@ export function SignupPreferenceScreen() {
         <button
           type="button"
           onClick={handleNext}
-          disabled={!canProceed}
+          disabled={!sportComplete}
           className={cn(
             'h-[52px] w-full rounded-card text-body-strong text-textWhite',
-            canProceed ? 'bg-orange' : 'bg-btnDisabled',
+            sportComplete ? 'bg-orange' : 'bg-btnDisabled',
           )}
         >
           다음
@@ -218,32 +239,46 @@ export function SignupPreferenceScreen() {
   );
 }
 
+type TileState = 'idle' | 'selected' | 'current' | 'light' | 'muted';
+
 function SportTile({
   name,
-  selected,
+  icon,
+  state,
   onTap,
+  disabled = false,
 }: {
   name: string;
-  selected: boolean;
+  icon: string;
+  state: TileState;
   onTap: () => void;
+  disabled?: boolean;
 }) {
+  const styles: Record<TileState, { box: string; label: string; iconClass: string }> = {
+    idle:     { box: 'border-borderDefault bg-background',  label: 'text-textSecondary', iconClass: 'opacity-60' },
+    selected: { box: 'border-orange bg-orangeTint',         label: 'text-orange',        iconClass: '' },
+    current:  { box: 'border-orange bg-orangeTint ring-2 ring-orange/30', label: 'text-orange', iconClass: '' },
+    light:    { box: 'border-sportLightAccent bg-sportLightTint', label: 'text-sportLightAccent', iconClass: 'opacity-80' },
+    muted:    { box: 'border-borderDefault bg-background',  label: 'text-textHint',      iconClass: 'opacity-40 grayscale' },
+  };
+  const s = styles[state];
   return (
     <button
       type="button"
       onClick={onTap}
-      aria-pressed={selected}
-      className={cn(
-        'relative flex aspect-square w-full flex-col items-center justify-center rounded-card border-2',
-        selected ? 'border-orange bg-orangeTint' : 'border-borderDefault bg-surface',
-      )}
+      disabled={disabled}
+      aria-pressed={state === 'selected' || state === 'current'}
+      className={cn('flex flex-1 flex-col items-center gap-1.5')}
     >
-      <span className="text-h1 text-orange">{name.charAt(0)}</span>
-      <span className="mt-2 text-label text-textPrimary">{name}</span>
-      {selected && (
-        <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-orange text-textWhite">
-          <Check size={14} strokeWidth={3} />
-        </span>
-      )}
+      <span
+        className={cn(
+          'flex h-14 w-full items-center justify-center rounded-card border-2',
+          s.box,
+        )}
+      >
+        <img src={icon} alt={name} className={cn('h-8 w-8', s.iconClass)} />
+      </span>
+      <span className={cn('text-mini-strong', s.label)}>{name}</span>
     </button>
   );
 }

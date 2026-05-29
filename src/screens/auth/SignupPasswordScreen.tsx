@@ -1,20 +1,21 @@
 /**
- * 회원가입 Step 2 — 비밀번호 입력. SPEC §12.5 / Android `SignupPasswordFragment.kt`.
+ * 회원가입 Step 2 — 비밀번호 입력. SPEC §12.5 / Android `SignupPasswordFragment.kt` +
+ * 디자인 `sign_signup_password_states.png` 기준.
  *
- *   - 입력 1: 비밀번호 (regex `^(?=.*[A-Za-z])(?=.*\d).{8,20}$`)
- *   - 입력 2: 비밀번호 확인 (1번과 동일해야 함)
- *   - 비밀번호 표시 토글: 입력 1에만 적용 (확인란은 항상 마스킹 — Android와 동일)
- *   - "다음" 활성화: 둘 다 valid + 두 값 일치
- *   - 진행: `/signup/nickname` 으로 (email + password state 전달)
- *
- * 라이브 안내 chips: "영문+숫자" / "8~20자" (SPEC §12.5). 통과 시 초록.
+ *   - 헤더: < 회원가입 (중앙) + 우측 "다음" 텍스트 (활성/비활성 분기)
+ *   - 입력 1: "비밀번호" 라벨 + 입력 (regex `^(?=.*[A-Za-z])(?=.*\d).{8,20}$`)
+ *   - 라이브 안내: 통과 전엔 회색 도움말, 위반 시 빨강 에러 텍스트
+ *   - 입력 1 밑에 "비밀번호 표시" 별도 체크박스 (Android 디자인) — 1번 입력에만 적용
+ *   - 입력 2: "비밀번호 확인" 라벨 + 입력 (항상 마스킹) + 일치 검증
+ *   - 하단 풀와이드 "다음" 버튼 (활성/비활성)
  */
 
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, X, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Check, X, AlertCircle } from 'lucide-react';
 import { isValidPassword } from '../../utils/validation';
 import { cn } from '../../utils/cn';
+import { SignupToolbar } from '../../components/auth/SignupToolbar';
 
 export function SignupPasswordScreen() {
   const navigate = useNavigate();
@@ -25,14 +26,10 @@ export function SignupPasswordScreen() {
   const [pw2, setPw2] = useState('');
   const [showPw, setShowPw] = useState(false);
 
-  const ruleLetterDigit = /[A-Za-z]/.test(pw) && /\d/.test(pw);
-  const ruleLength = pw.length >= 8 && pw.length <= 20;
   const pwValid = isValidPassword(pw);
   const pwError = pw.length > 0 && !pwValid;
-
   const pw2Match = pw2.length > 0 && pw2 === pw;
   const pw2Error = pw2.length > 0 && pw2 !== pw;
-
   const canProceed = pwValid && pw2Match;
 
   const pwBorder = useMemo(() => {
@@ -60,28 +57,20 @@ export function SignupPasswordScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface px-5 pt-safe pb-safe">
-      <header className="flex h-12 items-center">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로"
-          className="-ml-2 p-2 text-textPrimary"
-        >
-          <ArrowLeft size={24} />
-        </button>
-      </header>
+      <SignupToolbar rightLabel="다음" onRightTap={handleNext} rightActive={canProceed} />
 
       <div className="flex flex-1 flex-col">
         <h1 className="mt-4 text-display text-textPrimary">사용하실 비밀번호를 입력해주세요</h1>
 
         {/* 비밀번호 */}
-        <div className={cn('mt-8 flex h-12 items-center gap-2 rounded-card border px-3', pwBorder)}>
+        <label className="mt-8 block text-caption text-textSecondary">비밀번호</label>
+        <div className={cn('mt-1.5 flex h-12 items-center gap-2 rounded-card border px-3', pwBorder)}>
           <input
             type={showPw ? 'text' : 'password'}
             autoComplete="new-password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
-            placeholder="비밀번호"
+            placeholder="비밀번호를 입력해주세요"
             className="flex-1 bg-transparent text-body text-textPrimary outline-none placeholder:text-textHint"
           />
           {pw.length > 0 && (
@@ -91,30 +80,45 @@ export function SignupPasswordScreen() {
           )}
           {pwValid && <Check size={18} className="text-blue" />}
           {pwError && <AlertCircle size={18} className="text-error" />}
-          <button
-            type="button"
-            onClick={() => setShowPw((v) => !v)}
-            aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 보이기'}
-            className={showPw ? 'text-orange' : 'text-textHint'}
-          >
-            {showPw ? <Eye size={18} /> : <EyeOff size={18} />}
-          </button>
         </div>
+        <p
+          className={cn(
+            'mt-2 text-caption',
+            pwError ? 'text-error' : 'text-textHint',
+          )}
+        >
+          영문, 숫자 조합 8~20자로 입력해주세요
+        </p>
 
-        {/* 라이브 chips */}
-        <div className="mt-3 flex gap-2">
-          <RuleChip ok={ruleLetterDigit}>영문+숫자</RuleChip>
-          <RuleChip ok={ruleLength}>8~20자</RuleChip>
-        </div>
+        {/* 비밀번호 표시 (별도 체크박스 — Android 디자인) */}
+        <button
+          type="button"
+          onClick={() => setShowPw((v) => !v)}
+          className="mt-4 inline-flex items-center gap-2 self-start"
+          aria-pressed={showPw}
+        >
+          <span
+            className={cn(
+              'flex h-5 w-5 items-center justify-center rounded-md border-2',
+              showPw ? 'border-orange bg-orange text-textWhite' : 'border-neutralLow text-transparent',
+            )}
+          >
+            <Check size={12} strokeWidth={3} />
+          </span>
+          <span className={cn('text-caption', showPw ? 'text-textPrimary' : 'text-textSecondary')}>
+            비밀번호 표시
+          </span>
+        </button>
 
         {/* 비밀번호 확인 */}
-        <div className={cn('mt-4 flex h-12 items-center gap-2 rounded-card border px-3', pw2Border)}>
+        <label className="mt-6 block text-caption text-textSecondary">비밀번호 확인</label>
+        <div className={cn('mt-1.5 flex h-12 items-center gap-2 rounded-card border px-3', pw2Border)}>
           <input
             type="password"
             autoComplete="new-password"
             value={pw2}
             onChange={(e) => setPw2(e.target.value)}
-            placeholder="비밀번호 확인"
+            placeholder="비밀번호를 한번 더 입력해주세요"
             className="flex-1 bg-transparent text-body text-textPrimary outline-none placeholder:text-textHint"
           />
           {pw2.length > 0 && (
@@ -126,7 +130,7 @@ export function SignupPasswordScreen() {
           {pw2Error && <AlertCircle size={18} className="text-error" />}
         </div>
         {pw2Error && (
-          <p className="mt-2 text-caption text-error">비밀번호가 일치하지 않아요.</p>
+          <p className="mt-2 text-caption text-error">비밀번호가 일치하지 않습니다</p>
         )}
       </div>
 
@@ -144,19 +148,5 @@ export function SignupPasswordScreen() {
         </button>
       </div>
     </div>
-  );
-}
-
-function RuleChip({ ok, children }: { ok: boolean; children: React.ReactNode }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex h-7 items-center gap-1 rounded-full px-3 text-caption',
-        ok ? 'bg-greenTint text-green' : 'bg-background text-textHint',
-      )}
-    >
-      <Check size={14} className={ok ? 'opacity-100' : 'opacity-30'} />
-      {children}
-    </span>
   );
 }

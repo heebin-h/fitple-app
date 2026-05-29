@@ -26,15 +26,17 @@ export function EmailSuggestions({ email, onPick }: Props) {
 
   const candidates = [`${idPart}@naver.com`, `${idPart}@gmail.com`];
 
+  // 디자인 `sign_signup_email_states.png` 기준: 입력 박스(흰색)보다 살짝 진한 회색.
+  // 우리 토큰 `background`(#F2F2F2)가 정확히 그 톤.
   return (
-    <div className="mt-2 overflow-hidden rounded-card border border-borderDefault bg-surface">
+    <div className="mt-2 overflow-hidden rounded-card border border-borderDefault bg-background">
       {candidates.map((s, i) => (
         <div key={s}>
-          {i > 0 && <div className="h-px bg-background" />}
+          {i > 0 && <div className="h-px bg-borderDefault/60" />}
           <button
             type="button"
             onClick={() => onPick(s)}
-            className="flex h-12 w-full items-center px-3.5 text-left text-label text-textPrimary active:bg-background"
+            className="flex h-12 w-full items-center px-3.5 text-left text-label text-textPrimary active:bg-neutralLow/30"
           >
             {s}
           </button>
