@@ -70,13 +70,13 @@ export function EmailLoginScreen() {
     return 'border-borderActive';     // @ 없이 타이핑 중
   }, [email, emailValid, emailHasError]);
 
-  const pwBorder = pwError
+  // Android EmailLoginFragment: 형식 invalid면 active 단계 없이 곧장 error.
+  const pwFormatError = password.length > 0 && !pwValid;
+  const pwBorder = pwError || pwFormatError
     ? 'border-borderError'
     : password.length === 0
       ? 'border-borderDefault'
-      : pwValid
-        ? 'border-borderValid'
-        : 'border-borderActive';
+      : 'border-borderValid';
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface">
@@ -86,7 +86,7 @@ export function EmailLoginScreen() {
 
       <div className="flex flex-1 flex-col px-6 pt-6 pb-safe">
         {/* 이메일 아이디 */}
-        <label className="text-label-strong text-textPrimary">이메일 아이디</label>
+        <label className="text-label text-textPrimary">이메일 아이디</label>
         <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', emailBorder)}>
           <input
             type="email"
@@ -110,7 +110,7 @@ export function EmailLoginScreen() {
         <EmailSuggestions email={email} onPick={setEmail} />
 
         {/* 비밀번호 */}
-        <label className="mt-6 text-label-strong text-textPrimary">비밀번호</label>
+        <label className="mt-6 text-label text-textPrimary">비밀번호</label>
         <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', pwBorder)}>
           <input
             type={showPw ? 'text' : 'password'}
@@ -129,8 +129,12 @@ export function EmailLoginScreen() {
             </button>
           )}
           {pwValid && !pwError && <Check size={20} className="text-blue" />}
-          {pwError && <AlertCircle size={20} className="text-error" />}
+          {(pwError || pwFormatError) && <AlertCircle size={20} className="text-error" />}
         </div>
+        {/* 비번 형식 inline 에러 — Android `txtPasswordError` (panel 2 디자인) */}
+        {password.length > 0 && !pwValid && (
+          <p className="mt-1 text-caption text-error">문자, 숫자 포함 8-20자로 입력해주세요.</p>
+        )}
 
         {/* 비밀번호 표시 — 별도 체크박스 (Android XML) */}
         <button
@@ -141,13 +145,13 @@ export function EmailLoginScreen() {
         >
           <span
             className={cn(
-              'flex h-5 w-5 items-center justify-center rounded-sm border-2',
+              'flex h-[14px] w-[14px] items-center justify-center rounded-sm border',
               showPw ? 'border-orange bg-orange text-textWhite' : 'border-neutralLow text-transparent',
             )}
           >
-            <Check size={12} strokeWidth={3} />
+            <Check size={10} strokeWidth={3} />
           </span>
-          <span className={cn('text-label', showPw ? 'text-textPrimary' : 'text-textSecondary')}>
+          <span className={cn('text-caption', showPw ? 'text-textPrimary' : 'text-textSecondary')}>
             비밀번호 표시
           </span>
         </button>
@@ -165,11 +169,11 @@ export function EmailLoginScreen() {
           로그인
         </button>
 
-        {/* 회원가입 링크 — 중앙 정렬, 보조 텍스트 컬러 */}
+        {/* 회원가입 링크 — 중앙 정렬, 보조 텍스트 컬러, 밑줄 (디자인 PNG 기준) */}
         <button
           type="button"
           onClick={() => navigate('/signup/email')}
-          className="mt-6 text-label text-textSecondary"
+          className="mt-6 self-center text-label text-textSecondary underline"
         >
           회원가입
         </button>
