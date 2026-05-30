@@ -56,21 +56,21 @@ export function SignupPasswordScreen() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
+    <div className="flex min-h-dvh flex-col bg-surface px-6 pt-safe pb-safe">
       <SignupToolbar rightLabel="다음" onRightTap={handleNext} rightActive={canProceed} />
 
-      <div className="flex flex-1 flex-col">
-        <h1 className="mt-4 text-display text-textPrimary">사용하실 비밀번호를 입력해주세요</h1>
+      <div className="flex flex-1 flex-col pt-2">
+        <h1 className="text-display text-textPrimary">사용하실 비밀번호를 입력해주세요.</h1>
 
         {/* 비밀번호 */}
-        <label className="mt-8 block text-caption text-textSecondary">비밀번호</label>
-        <div className={cn('mt-1.5 flex h-12 items-center gap-2 rounded-card border px-3', pwBorder)}>
+        <label className="mt-8 block text-label-strong text-textPrimary">비밀번호</label>
+        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', pwBorder)}>
           <input
             type={showPw ? 'text' : 'password'}
             autoComplete="new-password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
-            placeholder="비밀번호를 입력해주세요"
+            placeholder="문자, 숫자 포함 8자 ~20자"
             className="flex-1 bg-transparent text-body text-textPrimary outline-none placeholder:text-textHint"
           />
           {pw.length > 0 && (
@@ -111,8 +111,8 @@ export function SignupPasswordScreen() {
         </button>
 
         {/* 비밀번호 확인 */}
-        <label className="mt-6 block text-caption text-textSecondary">비밀번호 확인</label>
-        <div className={cn('mt-1.5 flex h-12 items-center gap-2 rounded-card border px-3', pw2Border)}>
+        <label className="mt-6 block text-label-strong text-textPrimary">비밀번호 확인</label>
+        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', pw2Border)}>
           <input
             type="password"
             autoComplete="new-password"

@@ -85,7 +85,7 @@ export function SignupPreferenceScreen() {
   if (phase === 'SELECTION') {
     const canProceed = selectedSports.length > 0;
     return (
-      <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
+      <div className="flex min-h-dvh flex-col bg-surface px-6 pt-safe pb-safe">
         <SignupToolbar
           rightLabel="건너뛰기"
           onRightTap={() => finishSignup([], {})}
@@ -153,7 +153,7 @@ export function SignupPreferenceScreen() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface px-5 pt-safe pb-safe">
+    <div className="flex min-h-dvh flex-col bg-surface px-6 pt-safe pb-safe">
       <SignupToolbar
         rightLabel="건너뛰기"
         onRightTap={() => finishSignup([], {})}
