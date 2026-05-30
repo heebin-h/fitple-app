@@ -26,17 +26,19 @@ export function EmailSuggestions({ email, onPick }: Props) {
 
   const candidates = [`${idPart}@naver.com`, `${idPart}@gmail.com`];
 
-  // 디자인 `sign_signup_email_states.png` 기준: 입력 박스(흰색)보다 살짝 진한 회색.
-  // 우리 토큰 `background`(#F2F2F2)가 정확히 그 톤.
+  // 디자인 PNG + Android `layout_input_email.xml` 의 `layoutEmailSuggestions` 그대로:
+  //   - 배경: bg_input_box_default = colorSurface(흰색) + borderDefault 1px stroke + corner_sm(8dp)
+  //   - 행: 48dp 높이, 14dp padding-start, 14sp textPrimary
+  //   - 구분선: 1dp height, colorBackground(#F2F2F2)
   return (
-    <div className="mt-2 overflow-hidden rounded-card border border-borderDefault bg-background">
+    <div className="mt-2 overflow-hidden rounded-lg border border-borderDefault bg-surface">
       {candidates.map((s, i) => (
         <div key={s}>
-          {i > 0 && <div className="h-px bg-borderDefault/60" />}
+          {i > 0 && <div className="h-px bg-background" />}
           <button
             type="button"
             onClick={() => onPick(s)}
-            className="flex h-12 w-full items-center px-3.5 text-left text-label text-textPrimary active:bg-neutralLow/30"
+            className="flex h-12 w-full items-center px-3.5 text-left text-label text-textPrimary active:bg-background"
           >
             {s}
           </button>

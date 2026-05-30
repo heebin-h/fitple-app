@@ -105,10 +105,16 @@ export function LoginScreen() {
           </h1>
 
           <div className="flex w-full flex-col items-center gap-[20px]">
-            {/* 체험권 배지 */}
+            {/* 체험권 배지 — Figma `2479:7527` 기준:
+                Union SVG가 inset[-22.74%_-8.43%_-40.93%_-8.43%]로 컨테이너보다 살짝 확장돼
+                실제 버블이 166×44보다 약간 큼. 텍스트는 ml-[12px] mt-[8px]로 좌측 안쪽 배치. */}
             <div className="relative h-[44px] w-[166px]">
-              <img src={badgeBubble} alt="" className="absolute inset-0 h-full w-full" />
-              <p className="absolute left-1/2 top-[7px] -translate-x-1/2 whitespace-nowrap text-micro text-textPrimary">
+              <img
+                src={badgeBubble}
+                alt=""
+                className="absolute inset-[-22.74%_-8.43%_-40.93%_-8.43%] block max-w-none"
+              />
+              <p className="absolute left-[12px] top-[8px] whitespace-nowrap text-micro text-textPrimary">
                 회원가입하고 <span className="font-bold">1회 체험권</span> 받기!
               </p>
             </div>

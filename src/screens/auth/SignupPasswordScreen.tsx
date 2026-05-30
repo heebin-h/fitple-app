@@ -64,7 +64,7 @@ export function SignupPasswordScreen() {
 
         {/* 비밀번호 */}
         <label className="mt-8 block text-label text-textPrimary">비밀번호</label>
-        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', pwBorder)}>
+        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-lg border px-3.5', pwBorder)}>
           <input
             type={showPw ? 'text' : 'password'}
             autoComplete="new-password"
@@ -112,7 +112,7 @@ export function SignupPasswordScreen() {
 
         {/* 비밀번호 확인 */}
         <label className="mt-6 block text-label text-textPrimary">비밀번호 확인</label>
-        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', pw2Border)}>
+        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-lg border px-3.5', pw2Border)}>
           <input
             type="password"
             autoComplete="new-password"

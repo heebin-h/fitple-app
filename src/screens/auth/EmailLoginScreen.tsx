@@ -87,7 +87,7 @@ export function EmailLoginScreen() {
       <div className="flex flex-1 flex-col px-6 pt-6 pb-safe">
         {/* 이메일 아이디 */}
         <label className="text-label text-textPrimary">이메일 아이디</label>
-        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', emailBorder)}>
+        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-lg border px-3.5', emailBorder)}>
           <input
             type="email"
             inputMode="email"
@@ -111,7 +111,7 @@ export function EmailLoginScreen() {
 
         {/* 비밀번호 */}
         <label className="mt-6 text-label text-textPrimary">비밀번호</label>
-        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-card border px-3.5', pwBorder)}>
+        <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-lg border px-3.5', pwBorder)}>
           <input
             type={showPw ? 'text' : 'password'}
             autoComplete="current-password"
