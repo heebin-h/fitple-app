@@ -87,23 +87,23 @@ export function SignupPasswordScreen() {
             pwError ? 'text-error' : 'text-textHint',
           )}
         >
-          영문, 숫자 조합 8~20자로 입력해주세요
+          문자, 숫자 포함 8-20자로 입력해주세요.
         </p>
 
-        {/* 비밀번호 표시 (별도 체크박스 — Android 디자인) */}
+        {/* 비밀번호 표시 — 별도 체크박스. EmailLogin과 사이즈 통일(14px). */}
         <button
           type="button"
           onClick={() => setShowPw((v) => !v)}
-          className="mt-4 inline-flex items-center gap-2 self-start"
+          className="mt-3 inline-flex items-center gap-2 self-start"
           aria-pressed={showPw}
         >
           <span
             className={cn(
-              'flex h-5 w-5 items-center justify-center rounded-md border-2',
+              'flex h-[14px] w-[14px] items-center justify-center rounded-sm border',
               showPw ? 'border-orange bg-orange text-textWhite' : 'border-neutralLow text-transparent',
             )}
           >
-            <Check size={12} strokeWidth={3} />
+            <Check size={10} strokeWidth={3} />
           </span>
           <span className={cn('text-caption', showPw ? 'text-textPrimary' : 'text-textSecondary')}>
             비밀번호 표시
