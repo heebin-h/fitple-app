@@ -106,17 +106,16 @@ export function LoginScreen() {
 
           <div className="flex w-full flex-col items-center gap-[20px]">
             {/* 체험권 배지 — Figma `2479:7527`:
-                166×44 텍스트 박스를 버블 SVG가 살짝 감싸는 구조. wrapper div 가 음수 inset 으로
-                위치/크기를 잡고 그 안의 img 는 size-full 로 채워 SVG 비율을 그대로 보존.
-                텍스트는 좌측 12px, 위 8px 안쪽으로 배치. */}
+                Union SVG가 native 194×72(viewBox)이고 preserveAspectRatio="none"라 컨테이너에
+                변형되지 않게 명시 픽셀 사이즈로 렌더. 텍스트 박스 166×44 기준으로 좌-14/상-10
+                오프셋하면 버블이 텍스트를 살짝 감싸는 모양 — Figma 원본 그대로.
+                버블 외곽 라인은 SVG 내부 drop-shadow 필터로만 표현(별도 border 없음). */}
             <div className="relative h-[44px] w-[166px]">
-              <div className="absolute inset-[-22.74%_-8.43%_-40.93%_-8.43%]">
-                <img
-                  src={badgeBubble}
-                  alt=""
-                  className="block h-full w-full max-w-none"
-                />
-              </div>
+              <img
+                src={badgeBubble}
+                alt=""
+                className="absolute -left-[14px] -top-[10px] block h-[72px] w-[194px] max-w-none"
+              />
               <p className="absolute left-[12px] top-[8px] whitespace-nowrap text-micro text-textPrimary">
                 회원가입하고 <span className="font-bold">1회 체험권</span> 받기!
               </p>

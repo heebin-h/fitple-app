@@ -26,12 +26,13 @@ export function EmailSuggestions({ email, onPick }: Props) {
 
   const candidates = [`${idPart}@naver.com`, `${idPart}@gmail.com`];
 
-  // 디자인 PNG + Android `layout_input_email.xml` 의 `layoutEmailSuggestions` 그대로:
-  //   - 배경: bg_input_box_default = colorSurface(흰색) + borderDefault 1px stroke + corner_sm(8dp)
+  // 디자인 PNG 기준: 외곽에 라인 보더가 아니라 **드롭 섀도우**만 있는 카드.
+  //   - 배경: 흰색(colorSurface)
+  //   - 외곽: 보더 없음 + shadow-md (Android XML의 stroke 무시 — 디자인 우선)
   //   - 행: 48dp 높이, 14dp padding-start, 14sp textPrimary
   //   - 구분선: 1dp height, colorBackground(#F2F2F2)
   return (
-    <div className="mt-2 overflow-hidden rounded-lg border border-borderDefault bg-surface">
+    <div className="mt-2 overflow-hidden rounded-lg bg-surface shadow-md">
       {candidates.map((s, i) => (
         <div key={s}>
           {i > 0 && <div className="h-px bg-background" />}
