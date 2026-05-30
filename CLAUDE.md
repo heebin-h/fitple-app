@@ -18,6 +18,8 @@
 1. **`SPEC.md`** — 25 sections, ~1,600 lines. Authoritative for screens, flows, data models, colours, typography, build steps. If your change contradicts SPEC.md, update SPEC.md in the same commit.
 2. **`HANDOFF.md`** — what was done last, what's next.
 3. **`BUILD.md`** — every `npx cap …` / Xcode command you'll need.
+4. **`docs/DESIGN_IMPLEMENTATION_GUIDE.md`** ⚠️ **MANDATORY** — Read before implementing/modifying ANY screen from `designs/*.png` or Figma. Contains the pitfalls catalog (19+ items so far) and token mapping. Skipping this guide is the #1 cause of repeated rework cycles.
+5. **`docs/FLOWS.md`** — 3 home-access flows (login/signup/guest) with screen-by-screen mapping.
 
 Reference material outside this repo (read-only):
 

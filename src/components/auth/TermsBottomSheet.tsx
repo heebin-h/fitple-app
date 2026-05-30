@@ -1,16 +1,25 @@
 /**
- * 약관 동의 BottomSheet. SPEC §12.7 / Android `TermsBottomSheetFragment.kt`.
+ * 약관 동의 BottomSheet. SPEC §12.7 / Android `layout_bottom_sheet_terms.xml` +
+ * `TermsBottomSheetFragment.kt` 1:1.
  *
- * Vaul Drawer로 구현 (BottomSheetDialogFragment의 React 대응).
- * 필수 5개 + "모두 동의" 마스터 토글. 라벨 앞에 주황 **필수** 배지.
- * 5개 모두 체크되면 "동의하고 가입하기" 활성화 → onAgree 콜백.
+ * 레이아웃:
+ *   - 핸들바 40×4 borderDefault, mt-3 mb-6
+ *   - 타이틀(18sp bold, 2줄): "회원가입을 위해서는\n아래의 약관동의가 필요해요"
+ *   - "모두 동의합니다." 행 (48dp, 24×24 사각 체크박스, 15sp bold)
+ *   - 1px 구분선(colorBackground)
+ *   - 5개 필수 항목 (48dp): 사각 체크박스 24×24 + "[필수] {label}" + > 화살표 18px gray
+ *   - 취소 / 동의하고 가입하기 두 버튼 (54dp 가로 분할, mt-6 — 바닥에 안 붙음)
  *
- * Android와 동일하게 Figma 시안은 캐시에 없어 SPEC §12.7 + Android XML 기준으로 구성.
+ * 체크박스: Android ic_checkbox_unchecked/checked = **사각 corner_xs(4dp)**.
+ *   - 미체크: 흰색 + 1.5dp gray 보더
+ *   - 체크:   오렌지 solid + 흰 체크 (안)
+ *
+ * "필수" 배지: Android Fragment에서 HTML로 prepend — 주황 굵게 + 공백 2칸 + 항목 텍스트.
  */
 
 import { useMemo, useState } from 'react';
 import { Drawer } from 'vaul';
-import { Check } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 const TERMS: string[] = [
@@ -41,77 +50,117 @@ export function TermsBottomSheet({ open, onOpenChange, onAgree }: Props) {
   const handleAgree = () => {
     if (!allChecked) return;
     onOpenChange(false);
-    // 다음 진입 시 깨끗하게
     setChecked(TERMS.map(() => false));
     onAgree();
   };
 
+  const handleCancel = () => onOpenChange(false);
+
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-w-mobile flex-col rounded-t-sheet bg-surface px-5 pt-3 pb-safe">
-          {/* drag handle */}
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-borderDefault" />
-          <Drawer.Title className="mb-4 text-h2 text-textPrimary">
-            약관에 동의해주세요
+        <Drawer.Overlay className="fixed inset-0 z-[60] bg-black/40" />
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-[70] mx-auto flex max-w-mobile flex-col rounded-t-sheet bg-surface px-6 pb-safe">
+          {/* 핸들바 */}
+          <div className="mx-auto mt-3 mb-6 h-1 w-10 rounded-full bg-borderDefault" />
+
+          {/* 타이틀 */}
+          <Drawer.Title className="mb-6 whitespace-pre-line text-h2 text-textPrimary">
+            {'회원가입을 위해서는\n아래의 약관동의가 필요해요'}
           </Drawer.Title>
 
           {/* 모두 동의 */}
           <button
             type="button"
             onClick={toggleAll}
-            className="flex h-12 items-center gap-3 rounded-card border border-borderDefault px-3"
+            className="flex h-12 items-center gap-2"
           >
-            <CheckCircle checked={allChecked} />
-            <span className="text-body-strong text-textPrimary">모두 동의</span>
+            <SquareCheck checked={allChecked} />
+            <span className="text-body-strong text-textPrimary">모두 동의합니다.</span>
           </button>
 
+          {/* 구분선 */}
+          <div className="my-2 h-px bg-background" />
+
           {/* 5개 필수 항목 */}
-          <ul className="mt-2 flex flex-col">
+          <ul>
             {TERMS.map((label, i) => (
               <li key={label}>
-                <button
-                  type="button"
-                  onClick={() => toggleAt(i)}
-                  className="flex h-12 w-full items-center gap-3 px-1 text-left"
-                >
-                  <CheckCircle checked={checked[i]} />
-                  <span className="text-label text-textPrimary">
+                <div className="flex h-12 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleAt(i)}
+                    aria-label={`${label} 체크`}
+                    className="flex items-center"
+                  >
+                    <SquareCheck checked={checked[i]} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleAt(i)}
+                    className="flex-1 text-left text-label text-textPrimary"
+                  >
                     <span className="font-bold text-orange">필수</span>{'  '}
                     {label}
-                  </span>
-                </button>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // 약관 상세는 v1 데모 범위 외 — 기능은 비어두되 화살표는 표시
+                    }}
+                    aria-label={`${label} 상세 보기`}
+                    className="text-textHint"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
 
-          <button
-            type="button"
-            onClick={handleAgree}
-            disabled={!allChecked}
-            className={cn(
-              'mt-6 h-[52px] w-full rounded-card text-body-strong text-textWhite',
-              allChecked ? 'bg-orange' : 'bg-btnDisabled',
-            )}
-          >
-            동의하고 가입하기
-          </button>
+          {/* 취소 / 동의하고 가입하기 — 가로 분할, mt-6, mb-8 (바닥에 안 붙음) */}
+          <div className="mt-6 mb-8 flex h-[54px] gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex-1 rounded-card border border-borderDefault text-body text-textPrimary"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleAgree}
+              disabled={!allChecked}
+              className={cn(
+                'flex-1 rounded-card text-label text-textWhite',
+                allChecked ? 'bg-orange' : 'bg-btnDisabled',
+              )}
+            >
+              동의하고 가입하기
+            </button>
+          </div>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
   );
 }
 
-function CheckCircle({ checked }: { checked: boolean }) {
+/**
+ * Android `ic_checkbox_*` 1:1.
+ *   - 미체크: 흰색 + 1.5dp gray 보더 + corner_xs(4dp)
+ *   - 체크:   오렌지 solid + 흰 체크 + 같은 모서리
+ */
+function SquareCheck({ checked }: { checked: boolean }) {
   return (
     <span
       className={cn(
-        'flex h-6 w-6 items-center justify-center rounded-full border-2',
-        checked ? 'border-orange bg-orange text-textWhite' : 'border-neutralLow text-transparent',
+        'flex h-6 w-6 items-center justify-center rounded',
+        checked
+          ? 'bg-orange text-textWhite'
+          : 'border-[1.5px] border-textHint bg-surface text-transparent',
       )}
     >
-      <Check size={14} strokeWidth={3} />
+      <Check size={16} strokeWidth={3} />
     </span>
   );
 }

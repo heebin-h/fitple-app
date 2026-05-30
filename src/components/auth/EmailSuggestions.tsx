@@ -26,13 +26,11 @@ export function EmailSuggestions({ email, onPick }: Props) {
 
   const candidates = [`${idPart}@naver.com`, `${idPart}@gmail.com`];
 
-  // 디자인 PNG 기준: 외곽에 라인 보더가 아니라 **드롭 섀도우**만 있는 카드.
+  // 디자인 PNG 기준: 외곽 라인 X, 사방으로 퍼지는 드롭 섀도우 카드.
   //   - 배경: 흰색(colorSurface)
-  //   - 외곽: 보더 없음 + shadow-md (Android XML의 stroke 무시 — 디자인 우선)
-  //   - 행: 48dp 높이, 14dp padding-start, 14sp textPrimary
-  //   - 구분선: 1dp height, colorBackground(#F2F2F2)
+  //   - shadow-md는 위/옆이 거의 안 보임 → y-offset 2 + blur 10 커스텀으로 사방 노출.
   return (
-    <div className="mt-2 overflow-hidden rounded-lg bg-surface shadow-md">
+    <div className="mt-2 overflow-hidden rounded-lg bg-surface shadow-[0_2px_10px_0_rgba(0,0,0,0.10)]">
       {candidates.map((s, i) => (
         <div key={s}>
           {i > 0 && <div className="h-px bg-background" />}

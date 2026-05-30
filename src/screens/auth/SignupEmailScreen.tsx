@@ -15,7 +15,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { userManager } from '../../storage/userManager';
 import { isValidEmailFormat } from '../../utils/validation';
 import { cn } from '../../utils/cn';
@@ -97,12 +97,12 @@ export function SignupEmailScreen() {
           />
           {email.length > 0 && (
             <button type="button" onClick={() => setEmail('')} aria-label="지우기" className="text-textHint">
-              <X size={18} />
+              <XCircle size={18} />
             </button>
           )}
-          {state === 'valid' && <Check size={18} className="text-blue" />}
+          {state === 'valid' && <CheckCircle size={18} className="text-blue" />}
           {(state === 'invalid' || state === 'taken') && (
-            <AlertCircle size={18} className="text-error" />
+            <AlertTriangle size={18} className="text-error" />
           )}
         </div>
 

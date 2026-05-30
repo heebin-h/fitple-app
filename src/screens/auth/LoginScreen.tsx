@@ -116,8 +116,12 @@ export function LoginScreen() {
                 alt=""
                 className="absolute -left-[14px] -top-[10px] block h-[72px] w-[194px] max-w-none"
               />
-              <p className="absolute left-[12px] top-[8px] whitespace-nowrap text-micro text-textPrimary">
-                회원가입하고 <span className="font-bold">1회 체험권</span> 받기!
+              {/* Figma 텍스트 노드: 외곽 p에 leading-[0]으로 line-box 붕괴 + 각 span에
+                  leading-[22px]로 라인 높이 명시. 이게 텍스트의 vertical alignment 정밀 보정. */}
+              <p className="absolute left-[12px] top-[8px] whitespace-nowrap leading-[0] text-micro text-textPrimary">
+                <span className="leading-[22px]">회원가입하고 </span>
+                <span className="font-bold leading-[22px]">1회 체험권</span>
+                <span className="leading-[22px]"> 받기!</span>
               </p>
             </div>
 

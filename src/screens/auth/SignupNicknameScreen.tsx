@@ -13,7 +13,7 @@
 
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Check, X } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { userManager } from '../../storage/userManager';
 import { isValidNickname } from '../../utils/validation';
@@ -85,18 +85,23 @@ export function SignupNicknameScreen() {
           />
           {nickname.length > 0 && (
             <button type="button" onClick={() => setNickname('')} aria-label="지우기" className="text-textHint">
-              <X size={18} />
+              <XCircle size={18} />
             </button>
           )}
-          {valid && <Check size={18} className="text-blue" />}
+          {valid && <CheckCircle size={18} className="text-blue" />}
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-caption">
-          <span className={hasError ? 'text-error' : 'text-textHint'}>
-            {hasError ? '2~10자로 입력해주세요.' : '2~10자, 공백만은 불가'}
-          </span>
-          <span className="text-textHint">{trimmed.length}/{MAX_LEN}</span>
-        </div>
+        {/* 빈 상태에서는 헬퍼 텍스트 숨김. 입력 시작 후에만 카운트(+에러 시 빨강) 노출 */}
+        {nickname.length > 0 && (
+          <div className="mt-2 flex items-center justify-between text-caption">
+            {hasError ? (
+              <span className="text-error">2~10자로 입력해주세요.</span>
+            ) : (
+              <span />
+            )}
+            <span className="text-textHint">{trimmed.length}/{MAX_LEN}</span>
+          </div>
+        )}
       </div>
 
       <div className="pb-4">

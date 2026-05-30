@@ -12,7 +12,7 @@
 
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Check, X, AlertCircle } from 'lucide-react';
+import { Check, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { isValidPassword } from '../../utils/validation';
 import { cn } from '../../utils/cn';
 import { SignupToolbar } from '../../components/auth/SignupToolbar';
@@ -75,20 +75,16 @@ export function SignupPasswordScreen() {
           />
           {pw.length > 0 && (
             <button type="button" onClick={() => setPw('')} aria-label="지우기" className="text-textHint">
-              <X size={18} />
+              <XCircle size={18} />
             </button>
           )}
-          {pwValid && <Check size={18} className="text-blue" />}
-          {pwError && <AlertCircle size={18} className="text-error" />}
+          {pwValid && <CheckCircle size={18} className="text-blue" />}
+          {pwError && <AlertTriangle size={18} className="text-error" />}
         </div>
-        <p
-          className={cn(
-            'mt-2 text-caption',
-            pwError ? 'text-error' : 'text-textHint',
-          )}
-        >
-          문자, 숫자 포함 8-20자로 입력해주세요.
-        </p>
+        {/* 도움말은 빈 상태엔 숨김, 입력 있는데 형식 안 맞을 때만 빨강 노출 */}
+        {pwError && (
+          <p className="mt-2 text-caption text-error">문자, 숫자 포함 8-20자로 입력해주세요.</p>
+        )}
 
         {/* 비밀번호 표시 — 별도 체크박스. EmailLogin과 사이즈 통일(14px). */}
         <button
@@ -123,11 +119,11 @@ export function SignupPasswordScreen() {
           />
           {pw2.length > 0 && (
             <button type="button" onClick={() => setPw2('')} aria-label="지우기" className="text-textHint">
-              <X size={18} />
+              <XCircle size={18} />
             </button>
           )}
-          {pw2Match && <Check size={18} className="text-blue" />}
-          {pw2Error && <AlertCircle size={18} className="text-error" />}
+          {pw2Match && <CheckCircle size={18} className="text-blue" />}
+          {pw2Error && <AlertTriangle size={18} className="text-error" />}
         </div>
         {pw2Error && (
           <p className="mt-2 text-caption text-error">비밀번호가 일치하지 않습니다</p>

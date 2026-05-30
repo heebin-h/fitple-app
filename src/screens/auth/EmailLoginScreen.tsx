@@ -21,7 +21,7 @@
 
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Check, X, AlertCircle } from 'lucide-react';
+import { Check, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { userManager } from '../../storage/userManager';
 import { useAuthStore } from '../../store/authStore';
@@ -101,11 +101,11 @@ export function EmailLoginScreen() {
           />
           {email.length > 0 && (
             <button type="button" onClick={() => setEmail('')} aria-label="지우기" className="text-textHint">
-              <X size={20} />
+              <XCircle size={20} />
             </button>
           )}
-          {emailValid && <Check size={20} className="text-blue" />}
-          {emailHasError && <AlertCircle size={20} className="text-error" />}
+          {emailValid && <CheckCircle size={20} className="text-blue" />}
+          {emailHasError && <AlertTriangle size={20} className="text-error" />}
         </div>
         <EmailSuggestions email={email} onPick={setEmail} />
 
@@ -125,11 +125,11 @@ export function EmailLoginScreen() {
           />
           {password.length > 0 && (
             <button type="button" onClick={() => setPassword('')} aria-label="지우기" className="text-textHint">
-              <X size={20} />
+              <XCircle size={20} />
             </button>
           )}
-          {pwValid && !pwError && <Check size={20} className="text-blue" />}
-          {(pwError || pwFormatError) && <AlertCircle size={20} className="text-error" />}
+          {pwValid && !pwError && <CheckCircle size={20} className="text-blue" />}
+          {(pwError || pwFormatError) && <AlertTriangle size={20} className="text-error" />}
         </div>
         {/* 비번 형식 inline 에러 — Android `txtPasswordError` (panel 2 디자인) */}
         {password.length > 0 && !pwValid && (
