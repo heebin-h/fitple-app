@@ -50,10 +50,14 @@ export function SplashScreen() {
     };
   }, [navigate, setUser]);
 
+  // 스플래시 디자인 (`sign_splash_login_emaillogin.png` panel 1):
+  // 큰 주황 bolt 아이콘 + 그 아래 "Fit Ple" 워드마크 (Pretendard ExtraBold). 화면 중앙.
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-surface">
-      <h1 className="text-display text-orange">FitPle</h1>
-      <Zap size={40} className="mt-3 text-orange" fill="currentColor" />
+      <Zap size={140} className="text-orange" fill="currentColor" strokeWidth={1.5} />
+      <h1 className="mt-3 text-[44px] font-extrabold tracking-tight text-textPrimary">
+        Fit<span className="text-orange">Ple</span>
+      </h1>
     </div>
   );
 }
