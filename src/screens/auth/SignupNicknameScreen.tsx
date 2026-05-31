@@ -70,7 +70,7 @@ export function SignupNicknameScreen() {
       <SignupToolbar />
 
       <div className="flex flex-1 flex-col pt-2">
-        <h1 className="text-display text-textPrimary">사용하실 닉네임을 입력해주세요.</h1>
+        <h1 className="text-[20px] font-bold leading-[1.4] text-textPrimary">사용하실 닉네임을 입력해주세요.</h1>
 
         <label className="mt-8 block text-label text-textPrimary">닉네임</label>
         <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-lg border px-3.5', border)}>

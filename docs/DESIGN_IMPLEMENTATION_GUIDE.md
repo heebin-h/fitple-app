@@ -80,6 +80,12 @@ SVG는 한 번에 깨지면 시간 낭비 크다.
 | 25 | 약관 행에 화살표 누락 | 체크박스 + 라벨만 | 우측 ChevronRight 18px gray (`ic_arrow_right`) 필수 |
 | 26 | 약관 버튼 1개 + 바닥 붙임 | "동의하고 가입하기" 하나만, bottom 0 | **취소 + 동의** 2버튼 가로 분할 + `mt-6 mb-8` (바닥 X) |
 | 27 | SignupComplete 단순화 | 체크+타이틀+버튼만 | "어떤 모임이 있을까?" + **5개 추천 모임 가로 carousel** (그라데이션 카드) 필수 |
+| 28 | 가입 화면 h1 크기 | `text-display`(22px) | Android XML 20sp → **`text-[20px] font-bold`** 또는 새 토큰 |
+| 29 | Terms 모달 타이틀 크기 | `text-h2`(17px) | Android XML 18sp → **`text-[18px] font-bold`** |
+| 30 | 약관 체크박스 — Android XML 사각 | XML 따라서 `rounded` 4dp | **PNG 우선 = 원형** (`rounded-full`) |
+| 31 | SignupComplete 체크 합성 | `bg-orange rounded-full` + `<Check>` | **ic_check_circle 인라인 SVG**(CheckCircleIcon size={96}) 그대로 |
+| 32 | 입력 아이콘 lucide outline | XCircle/CheckCircle/AlertTriangle | **Android ic_* 인라인 SVG** (ClearIcon/CheckCircleIcon/WarningIcon — filled 카브아웃) |
+| 33 | DETAIL 종목 행 상태 — PNG 3상태(current/light/muted) | PNG 따라 light 추가 | **사용자 명시 = 2상태(current/muted)만** — PNG와 다르더라도 사용자 지시 우선 |
 
 ---
 

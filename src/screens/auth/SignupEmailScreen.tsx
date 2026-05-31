@@ -80,7 +80,7 @@ export function SignupEmailScreen() {
       <SignupToolbar />
 
       <div className="flex flex-1 flex-col pt-2">
-        <h1 className="text-display text-textPrimary">사용하실 이메일 주소를 입력해주세요.</h1>
+        <h1 className="text-[20px] font-bold leading-[1.4] text-textPrimary">사용하실 이메일 주소를 입력해주세요.</h1>
 
         <label className="mt-8 block text-label text-textPrimary">이메일 아이디</label>
         <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-lg border px-3.5', borderClass[state])}>
