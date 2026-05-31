@@ -97,12 +97,12 @@ export function SignupEmailScreen() {
           />
           {email.length > 0 && (
             <button type="button" onClick={() => setEmail('')} aria-label="지우기" className="text-textHint">
-              <ClearIcon size={18} />
+              <ClearIcon size={20} />
             </button>
           )}
-          {state === 'valid' && <CheckCircleIcon size={18} className="text-blue" />}
+          {state === 'valid' && <CheckCircleIcon size={20} className="text-blue" />}
           {(state === 'invalid' || state === 'taken') && (
-            <WarningIcon size={18} className="text-error" />
+            <WarningIcon size={20} className="text-error" />
           )}
         </div>
 
