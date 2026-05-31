@@ -12,7 +12,8 @@
 
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Check, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { ClearIcon, CheckCircleIcon, WarningIcon } from '../../components/icons';
 import { isValidPassword } from '../../utils/validation';
 import { cn } from '../../utils/cn';
 import { SignupToolbar } from '../../components/auth/SignupToolbar';
@@ -75,11 +76,11 @@ export function SignupPasswordScreen() {
           />
           {pw.length > 0 && (
             <button type="button" onClick={() => setPw('')} aria-label="지우기" className="text-textHint">
-              <XCircle size={18} />
+              <ClearIcon size={18} />
             </button>
           )}
-          {pwValid && <CheckCircle size={18} className="text-blue" />}
-          {pwError && <AlertTriangle size={18} className="text-error" />}
+          {pwValid && <CheckCircleIcon size={18} className="text-blue" />}
+          {pwError && <WarningIcon size={18} className="text-error" />}
         </div>
         {/* 도움말은 빈 상태엔 숨김, 입력 있는데 형식 안 맞을 때만 빨강 노출 */}
         {pwError && (
@@ -119,11 +120,11 @@ export function SignupPasswordScreen() {
           />
           {pw2.length > 0 && (
             <button type="button" onClick={() => setPw2('')} aria-label="지우기" className="text-textHint">
-              <XCircle size={18} />
+              <ClearIcon size={18} />
             </button>
           )}
-          {pw2Match && <CheckCircle size={18} className="text-blue" />}
-          {pw2Error && <AlertTriangle size={18} className="text-error" />}
+          {pw2Match && <CheckCircleIcon size={18} className="text-blue" />}
+          {pw2Error && <WarningIcon size={18} className="text-error" />}
         </div>
         {pw2Error && (
           <p className="mt-2 text-caption text-error">비밀번호가 일치하지 않습니다</p>

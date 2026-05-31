@@ -19,7 +19,8 @@
 
 import { useMemo, useState } from 'react';
 import { Drawer } from 'vaul';
-import { Check, ChevronRight } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { ChevronRightIcon } from '../icons';
 import { cn } from '../../utils/cn';
 
 const TERMS: string[] = [
@@ -111,7 +112,7 @@ export function TermsBottomSheet({ open, onOpenChange, onAgree }: Props) {
                     aria-label={`${label} 상세 보기`}
                     className="text-textHint"
                   >
-                    <ChevronRight size={18} />
+                    <ChevronRightIcon size={18} />
                   </button>
                 </div>
               </li>
@@ -146,15 +147,16 @@ export function TermsBottomSheet({ open, onOpenChange, onAgree }: Props) {
 }
 
 /**
- * Android `ic_checkbox_*` 1:1.
- *   - 미체크: 흰색 + 1.5dp gray 보더 + corner_xs(4dp)
- *   - 체크:   오렌지 solid + 흰 체크 + 같은 모서리
+ * 약관 체크박스 — 디자인 PNG 기준 **원형**으로 유지 (사용자 지시).
+ * Android XML은 사각이지만 디자인 PNG 우선.
+ *   - 미체크: 흰색 + 1.5px gray 보더 + 원형
+ *   - 체크:   오렌지 solid + 흰 체크 + 원형
  */
 function SquareCheck({ checked }: { checked: boolean }) {
   return (
     <span
       className={cn(
-        'flex h-6 w-6 items-center justify-center rounded',
+        'flex h-6 w-6 items-center justify-center rounded-full',
         checked
           ? 'bg-orange text-textWhite'
           : 'border-[1.5px] border-textHint bg-surface text-transparent',

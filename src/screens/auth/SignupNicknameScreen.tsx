@@ -13,7 +13,7 @@
 
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { ClearIcon, CheckCircleIcon } from '../../components/icons';
 import toast from 'react-hot-toast';
 import { userManager } from '../../storage/userManager';
 import { isValidNickname } from '../../utils/validation';
@@ -85,10 +85,10 @@ export function SignupNicknameScreen() {
           />
           {nickname.length > 0 && (
             <button type="button" onClick={() => setNickname('')} aria-label="지우기" className="text-textHint">
-              <XCircle size={18} />
+              <ClearIcon size={18} />
             </button>
           )}
-          {valid && <CheckCircle size={18} className="text-blue" />}
+          {valid && <CheckCircleIcon size={18} className="text-blue" />}
         </div>
 
         {/* 빈 상태에서는 헬퍼 텍스트 숨김. 입력 시작 후에만 카운트(+에러 시 빨강) 노출 */}
