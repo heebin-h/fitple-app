@@ -18,8 +18,10 @@
 1. **`SPEC.md`** — 25 sections, ~1,600 lines. Authoritative for screens, flows, data models, colours, typography, build steps. If your change contradicts SPEC.md, update SPEC.md in the same commit.
 2. **`HANDOFF.md`** — what was done last, what's next.
 3. **`BUILD.md`** — every `npx cap …` / Xcode command you'll need.
-4. **`docs/DESIGN_IMPLEMENTATION_GUIDE.md`** ⚠️ **MANDATORY** — Read before implementing/modifying ANY screen from `designs/*.png` or Figma. Contains the pitfalls catalog (19+ items so far) and token mapping. Skipping this guide is the #1 cause of repeated rework cycles.
-5. **`docs/FLOWS.md`** — 3 home-access flows (login/signup/guest) with screen-by-screen mapping.
+4. **`docs/SOURCE_INVENTORY.md`** 🚨 **MANDATORY FIRST** — Exhaustive checklist of EVERY Android Kotlin/XML/drawable + designs/PNG. Before any audit or screen work, the Phase's checkbox must ALL be ✅. Otherwise sub-files get missed → repeated rework. Never start without going through this inventory.
+5. **`docs/DESIGN_IMPLEMENTATION_GUIDE.md`** ⚠️ **MANDATORY** — Read after the inventory. Contains the pitfalls catalog (33+ items) + token mapping + shadow patterns. Skipping this guide is the #1 cause of repeated rework cycles.
+6. **`docs/IMPLEMENTATION_AUDIT.md`** — Latest Android↔React deep audit findings (C1~C3 / H1~H3 / M1~M3 / L1~L2 by priority).
+7. **`docs/FLOWS.md`** — 3 home-access flows (login/signup/guest) with screen-by-screen mapping.
 
 Reference material outside this repo (read-only):
 
