@@ -15,7 +15,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { CheckCircleIcon } from '../../components/icons';
+import { Check } from 'lucide-react';
 
 import imgRunning from '../../assets/images/meetings/running_beach.png';
 import imgFutsal from '../../assets/images/meetings/futsal_field1.png';
@@ -42,9 +42,13 @@ export function SignupCompleteScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface pt-safe pb-safe">
-      {/* ① 상단 — 화면 상반부에 중앙 정렬: 체크 96px + 타이틀 24sp bold */}
+      {/* ① 상단 — 화면 상반부에 중앙 정렬.
+          체크 아이콘: 96dp 오렌지 원 + 흰 체크 (Android ic_check_circle 시각 매칭 —
+          inline SVG의 evenodd 카브아웃보다 합성 방식이 디자인 PNG의 Material 스타일에 더 가까움). */}
       <div className="flex flex-1 flex-col items-center justify-center px-5">
-        <CheckCircleIcon size={96} className="text-orange" />
+        <span className="flex h-24 w-24 items-center justify-center rounded-full bg-orange text-textWhite">
+          <Check size={56} strokeWidth={3} />
+        </span>
         <h1 className="mt-5 text-[24px] font-bold leading-tight text-textPrimary">
           가입이 완료 되었어요!
         </h1>

@@ -51,10 +51,11 @@ export function SplashScreen() {
   }, [navigate, setUser]);
 
   // 스플래시 디자인 (`sign_splash_login_emaillogin.png` panel 1):
-  // 큰 주황 bolt 아이콘 + 그 아래 "Fit Ple" 워드마크 (Pretendard ExtraBold). 화면 중앙.
+  // 큰 통주황 bolt 아이콘(테두리 X, 묵직한 fill) + 그 아래 "Fit Ple" 워드마크.
+  // lucide Zap은 기본 stroke 스타일이라 strokeWidth=0 + fill=currentColor 로 통주황 실루엣.
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-surface">
-      <Zap size={140} className="text-orange" fill="currentColor" strokeWidth={1.5} />
+      <Zap size={160} className="text-orange" fill="currentColor" strokeWidth={0} />
       <h1 className="mt-3 text-[44px] font-extrabold tracking-tight text-textPrimary">
         Fit<span className="text-orange">Ple</span>
       </h1>
