@@ -15,10 +15,12 @@
  * 색/타이포/간격은 모두 토큰 사용(룰 #1·#2). 에셋은 Figma 내보내기(assets/images/login/).
  */
 
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
+import { userManager } from '../../storage/userManager';
 import { cn } from '../../utils/cn';
 
 import logoFitple from '../../assets/images/login/logo_fitple.png';
@@ -82,6 +84,15 @@ function SocialButton({
 export function LoginScreen() {
   const navigate = useNavigate();
   const enterGuest = useAuthStore((s) => s.enterGuest);
+
+  // SPEC §11.4 / Android `LoginFragment.kt:91-111` — 미완성 회원가입 감지 시 재개 다이얼로그.
+  // pending_signup 키가 남아있다는 건 약관 동의(Step 4)까지 완료된 사용자가 선호운동(Step 5)
+  // 직전에 중단했다는 뜻 → /signup/preference 로 이어서 진행할 수 있게 안내.
+  const [resumeEmail, setResumeEmail] = useState<string | null>(null);
+  useEffect(() => {
+    const pending = userManager.getPendingSignupEmail();
+    if (pending) setResumeEmail(pending);
+  }, []);
 
   const handleGuest = () => {
     enterGuest();
@@ -177,6 +188,38 @@ export function LoginScreen() {
           회원가입 없이 둘러보기
         </button>
       </div>
+
+      {/* 가입 중단 재개 다이얼로그 — Android `LoginFragment.kt:91-111` */}
+      {resumeEmail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+          <div className="w-full max-w-[340px] rounded-card bg-surface p-6">
+            <h2 className="text-h2 text-textPrimary">회원가입을 이어서 하시겠습니까?</h2>
+            <p className="mt-3 whitespace-pre-line text-label text-textSecondary">
+              {'이전에 시작한 회원가입이 있어요.\n선호 운동 설정만 하면 완료돼요!'}
+            </p>
+            <div className="mt-6 flex h-[48px] gap-2">
+              <button
+                type="button"
+                onClick={() => setResumeEmail(null)}
+                className="flex-1 rounded-card border border-borderDefault text-body text-textPrimary"
+              >
+                나중에
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const e = resumeEmail;
+                  setResumeEmail(null);
+                  navigate('/signup/preference', { state: { email: e } });
+                }}
+                className="flex-1 rounded-card bg-orange text-body text-textWhite"
+              >
+                이어서 하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

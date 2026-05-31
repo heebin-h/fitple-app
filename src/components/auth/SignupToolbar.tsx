@@ -21,6 +21,8 @@ interface Props {
   rightLabel?: string;
   onRightTap?: () => void;
   rightActive?: boolean;
+  /** 뒤로 버튼 커스텀 핸들러. 미지정 시 navigate(-1). DETAIL phase에서 store back() 호출 등에 사용. */
+  onBack?: () => void;
 }
 
 export function SignupToolbar({
@@ -28,13 +30,14 @@ export function SignupToolbar({
   rightLabel,
   onRightTap,
   rightActive = true,
+  onBack,
 }: Props) {
   const navigate = useNavigate();
   return (
     <header className="relative flex h-14 items-center">
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={onBack ?? (() => navigate(-1))}
         aria-label="뒤로"
         className="-ml-2 p-2 text-textPrimary"
       >

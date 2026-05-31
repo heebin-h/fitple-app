@@ -57,6 +57,8 @@ export function SignupPreferenceScreen() {
   const beginDetail = usePreferenceStore((s) => s.beginDetail);
   const setAnswer = usePreferenceStore((s) => s.setAnswer);
   const next = usePreferenceStore((s) => s.next);
+  const back = usePreferenceStore((s) => s.back);
+  const jumpToSport = usePreferenceStore((s) => s.jumpToSport);
   const reset = usePreferenceStore((s) => s.reset);
 
   // 직접 진입 방어
@@ -152,11 +154,17 @@ export function SignupPreferenceScreen() {
     }
   };
 
+  // DETAIL 뒤로 버튼: step>0 → 이전 step / step==0 → SELECTION 단계 복귀 (Android `LoginFragment.kt:129-141`)
+  const handleDetailBack = () => {
+    back();
+  };
+
   return (
     <div className="flex min-h-dvh flex-col bg-surface px-6 pt-safe pb-safe">
       <SignupToolbar
         rightLabel="건너뛰기"
         onRightTap={() => finishSignup([], {})}
+        onBack={handleDetailBack}
       />
 
       <div className="flex flex-1 flex-col overflow-y-auto">
@@ -166,22 +174,23 @@ export function SignupPreferenceScreen() {
           모임을 추천해 드려요
         </p>
 
-        {/* 5종목 가로 행 — 3상태:
-            current(현재 종목 = 진한 오렌지) / light(선택했지만 현재 아님 = 연한 오렌지) / muted(미선택 = 회색).
-            SPORTS 카탈로그 순서로 고정 표시 (사용자 선택 순서 무관). */}
+        {/* 5종목 가로 행 — 3상태 + 선택된 비-current 클릭 시 그 종목으로 점프
+            (Android SignupPreferenceFragment.kt:148-174). */}
         <div className="mt-6 flex gap-2">
           {SPORTS.map((sport) => {
             const isCurrent = sport.name === currentSport;
             const isSelected = selectedSports.includes(sport.name);
             const tileState = isCurrent ? 'current' : isSelected ? 'light' : 'muted';
+            // 선택했지만 현재 아닌 종목만 클릭 가능 (현재 종목·미선택 종목은 무시)
+            const canJump = isSelected && !isCurrent;
             return (
               <SportTile
                 key={sport.name}
                 name={sport.name}
                 icon={ICONS[sport.name]}
                 state={tileState}
-                onTap={() => undefined}
-                disabled
+                onTap={canJump ? () => jumpToSport(sport.name) : () => undefined}
+                disabled={!canJump}
               />
             );
           })}

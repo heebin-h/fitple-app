@@ -28,6 +28,7 @@ interface PreferenceState {
   setAnswer: (sport: string, question: string, optionIdx: number) => void;
   next: () => 'continue' | 'done';                                // done = 마지막 종목 직후
   back: () => 'continue' | 'toSelection';                         // toSelection = step 0에서 뒤로
+  jumpToSport: (sport: string) => void;                           // DETAIL: 상단 종목 행 클릭 → 그 종목으로 점프
   reset: () => void;
 }
 
@@ -83,6 +84,12 @@ export const usePreferenceStore = create<PreferenceState>((set, get) => ({
     }
     set({ detailStep: detailStep - 1 });
     return 'continue';
+  },
+
+  jumpToSport: (sport) => {
+    const { detailQueue } = get();
+    const idx = detailQueue.indexOf(sport);
+    if (idx >= 0) set({ detailStep: idx });
   },
 
   reset: () => set({ ...initial }),
