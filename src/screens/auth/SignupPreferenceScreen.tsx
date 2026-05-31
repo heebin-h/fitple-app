@@ -166,17 +166,20 @@ export function SignupPreferenceScreen() {
           모임을 추천해 드려요
         </p>
 
-        {/* 5종목 가로 행 — 현재 종목만 하이라이트, 나머지(선택했든 안했든) 전부 회색.
+        {/* 5종목 가로 행 — 3상태:
+            current(현재 종목 = 진한 오렌지) / light(선택했지만 현재 아님 = 연한 오렌지) / muted(미선택 = 회색).
             SPORTS 카탈로그 순서로 고정 표시 (사용자 선택 순서 무관). */}
         <div className="mt-6 flex gap-2">
           {SPORTS.map((sport) => {
             const isCurrent = sport.name === currentSport;
+            const isSelected = selectedSports.includes(sport.name);
+            const tileState = isCurrent ? 'current' : isSelected ? 'light' : 'muted';
             return (
               <SportTile
                 key={sport.name}
                 name={sport.name}
                 icon={ICONS[sport.name]}
-                state={isCurrent ? 'current' : 'muted'}
+                state={tileState}
                 onTap={() => undefined}
                 disabled
               />
@@ -191,7 +194,9 @@ export function SignupPreferenceScreen() {
             return (
               <div key={q.question}>
                 <p className="text-label-strong text-textPrimary">{q.question}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
+                {/* 옵션 칩 — Android `HorizontalScrollView` 매칭: 줄바꿈 X, 가로 스크롤 O.
+                    각 칩 `flex-shrink-0` 으로 폭 유지, 컨테이너 `overflow-x-auto` 로 스크롤. */}
+                <div className="mt-3 flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden">
                   {q.options.map((opt, idx) => {
                     const sel = answeredIdx === idx;
                     return (
@@ -200,7 +205,7 @@ export function SignupPreferenceScreen() {
                         type="button"
                         onClick={() => setAnswer(currentSport, q.question, idx)}
                         className={cn(
-                          'inline-flex h-9 items-center rounded-full border px-3 text-caption',
+                          'inline-flex h-9 flex-shrink-0 items-center rounded-full border px-3 text-caption',
                           sel
                             ? 'border-orange bg-orangeTint text-orange'
                             : 'border-borderDefault bg-surface text-textSecondary',

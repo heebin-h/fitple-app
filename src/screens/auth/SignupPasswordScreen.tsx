@@ -58,7 +58,7 @@ export function SignupPasswordScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface px-6 pt-safe pb-safe">
-      <SignupToolbar rightLabel="다음" onRightTap={handleNext} rightActive={canProceed} />
+      <SignupToolbar />
 
       <div className="flex flex-1 flex-col pt-2">
         <h1 className="text-[20px] font-bold leading-[1.4] text-textPrimary">사용하실 비밀번호를 입력해주세요.</h1>

@@ -66,9 +66,13 @@ export function SignupCompleteScreen() {
               />
               {/* 하단 검정 그라데이션 (bg_review_gradient) */}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/85" />
-              <div className="absolute inset-x-3 bottom-3 flex flex-col gap-0.5">
-                <p className="text-mini-strong leading-tight text-textWhite">{card.title}</p>
-                <p className="text-[10px] leading-[1.3] text-textWhite/70">{card.meta}</p>
+              {/* 카드 텍스트 — Android dimens.xml 정확 매칭:
+                  - title: text_sm(12sp) + bold
+                  - meta:  text_tiny(10sp), 색 colorWhite60(#99FFFFFF)
+                  - title-meta gap: spacing_xs(4dp) */}
+              <div className="absolute inset-x-3 bottom-3 flex flex-col gap-1">
+                <p className="text-[12px] font-bold leading-tight text-textWhite">{card.title}</p>
+                <p className="text-[10px] leading-[1.3] text-textWhite/60">{card.meta}</p>
               </div>
             </div>
           ))}
