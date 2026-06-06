@@ -214,10 +214,11 @@ export function SignupPreferenceScreen() {
                         type="button"
                         onClick={() => setAnswer(currentSport, q.question, idx)}
                         className={cn(
-                          'inline-flex h-9 flex-shrink-0 items-center rounded-full border px-3 text-caption',
+                          // Android `bg_chip_*`: selected stroke 1.5dp / unselected 1dp
+                          'inline-flex h-9 flex-shrink-0 items-center rounded-full px-3 text-caption',
                           sel
-                            ? 'border-orange bg-orangeTint text-orange'
-                            : 'border-borderDefault bg-surface text-textSecondary',
+                            ? 'border-[1.5px] border-orange bg-orangeTint text-orange'
+                            : 'border border-borderDefault bg-surface text-textSecondary',
                         )}
                       >
                         {opt}
@@ -263,18 +264,18 @@ function SportTile({
   onTap: () => void;
   disabled?: boolean;
 }) {
-  // 상태별 룩 — 명확한 시각 계층:
-  //   idle    : SELECTION 미선택 (탭 가능, 회색)
-  //   selected: SELECTION 선택됨 (오렌지 강조)
-  //   current : DETAIL의 현재 종목 (가장 강조)
-  //   light   : DETAIL에서 선택된 종목이지만 현재 아님 (라이트 오렌지)
-  //   muted   : DETAIL에서 SELECTION 단계에 선택되지 않은 종목 (강한 회색 — 비활성)
-  const styles: Record<TileState, { box: string; label: string; iconClass: string }> = {
-    idle:     { box: 'border-borderDefault bg-background',           label: 'text-textSecondary', iconClass: 'opacity-70 grayscale' },
-    selected: { box: 'border-orange bg-orangeTint',                  label: 'text-orange font-bold', iconClass: '' },
-    current:  { box: 'border-orange bg-orangeTint',                  label: 'text-orange font-bold', iconClass: '' },
-    light:    { box: 'border-sportLightAccent bg-sportLightTint',    label: 'text-sportLightAccent', iconClass: 'opacity-90' },
-    muted:    { box: 'border-borderDefault bg-background',           label: 'text-textHint',         iconClass: 'opacity-50 grayscale' },
+  // 상태별 룩 — Android `bg_sport_*`: selected/current/light = stroke_md(2dp), unselected/idle/muted = stroke_thin(1dp)
+  //   idle    : SELECTION 미선택 (탭 가능, 회색) — 1px border
+  //   selected: SELECTION 선택됨 (오렌지 강조) — 2px border
+  //   current : DETAIL의 현재 종목 (가장 강조) — 2px border
+  //   light   : DETAIL에서 선택된 종목이지만 현재 아님 (라이트 오렌지) — 2px border
+  //   muted   : DETAIL에서 미선택 (강한 회색 — 비활성) — 1px border
+  const styles: Record<TileState, { box: string; border: string; label: string; iconClass: string }> = {
+    idle:     { box: 'border-borderDefault bg-background',           border: 'border',   label: 'text-textSecondary',     iconClass: 'opacity-70 grayscale' },
+    selected: { box: 'border-orange bg-orangeTint',                  border: 'border-2', label: 'text-orange font-bold',  iconClass: '' },
+    current:  { box: 'border-orange bg-orangeTint',                  border: 'border-2', label: 'text-orange font-bold',  iconClass: '' },
+    light:    { box: 'border-sportLightAccent bg-sportLightTint',    border: 'border-2', label: 'text-sportLightAccent',  iconClass: 'opacity-90' },
+    muted:    { box: 'border-borderDefault bg-background',           border: 'border',   label: 'text-textHint',          iconClass: 'opacity-50 grayscale' },
   };
   const s = styles[state];
   return (
@@ -287,7 +288,8 @@ function SportTile({
     >
       <span
         className={cn(
-          'flex aspect-square w-full items-center justify-center rounded-card border-2',
+          'flex aspect-square w-full items-center justify-center rounded-card',
+          s.border,
           s.box,
         )}
       >

@@ -47,7 +47,8 @@ export function SignupCompleteScreen() {
           inline SVG의 evenodd 카브아웃보다 합성 방식이 디자인 PNG의 Material 스타일에 더 가까움). */}
       <div className="flex flex-1 flex-col items-center justify-center px-5">
         <span className="flex h-24 w-24 items-center justify-center rounded-full bg-orange text-textWhite">
-          <Check size={56} strokeWidth={3} />
+          {/* strokeWidth 2.5 — Android `ic_check_white.xml` 정확 매칭 */}
+          <Check size={56} strokeWidth={2.5} />
         </span>
         <h1 className="mt-5 text-[24px] font-bold leading-tight text-textPrimary">
           가입이 완료 되었어요!

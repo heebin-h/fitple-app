@@ -114,7 +114,7 @@ export default {
 
       borderRadius: {
         card: '12px',
-        sheet: '20px',
+        sheet: '24px',  // Android dimens.xml `corner_xl = 24dp`
       },
 
       // Animation tokens — slide transitions from SPEC §6.5.
