@@ -84,13 +84,20 @@ export function SignupPreferenceScreen() {
   // ─────────────────────────────────────────────────────────
   // SELECTION
   // ─────────────────────────────────────────────────────────
+  // 건너뛰기: 현재까지 선택한 종목 + 답변(있다면) 보존해 저장 (Android `navigateToComplete()` 동작).
+  // 선택 0개면 빈 페이로드. SELECTION 단계에서 답변은 없지만 selectedSports 는 보존.
+  const handleSkip = () => {
+    const { sports, details } = buildSavePayload({ selectedSports, detailSelections });
+    void finishSignup(sports, details);
+  };
+
   if (phase === 'SELECTION') {
     const canProceed = selectedSports.length > 0;
     return (
       <div className="flex min-h-dvh flex-col bg-surface px-6 pt-safe pb-safe">
         <SignupToolbar
           rightLabel="건너뛰기"
-          onRightTap={() => finishSignup([], {})}
+          onRightTap={handleSkip}
         />
 
         <div className="flex flex-1 flex-col">
@@ -163,7 +170,7 @@ export function SignupPreferenceScreen() {
     <div className="flex min-h-dvh flex-col bg-surface px-6 pt-safe pb-safe">
       <SignupToolbar
         rightLabel="건너뛰기"
-        onRightTap={() => finishSignup([], {})}
+        onRightTap={handleSkip}
         onBack={handleDetailBack}
       />
 

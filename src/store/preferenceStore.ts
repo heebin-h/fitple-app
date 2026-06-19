@@ -44,11 +44,18 @@ export const usePreferenceStore = create<PreferenceState>((set, get) => ({
   ...initial,
 
   selectSport: (sport) =>
-    set((s) => ({
-      selectedSports: s.selectedSports.includes(sport)
-        ? s.selectedSports.filter((x) => x !== sport)
-        : [...s.selectedSports, sport],
-    })),
+    set((s) => {
+      const isRemoving = s.selectedSports.includes(sport);
+      if (isRemoving) {
+        // 미선택 전환 시 그 종목의 답변도 같이 제거 — 재선택 시 zombie 답변 방지
+        const { [sport]: _removed, ...rest } = s.detailSelections;
+        return {
+          selectedSports: s.selectedSports.filter((x) => x !== sport),
+          detailSelections: rest,
+        };
+      }
+      return { selectedSports: [...s.selectedSports, sport] };
+    }),
 
   beginDetail: () => {
     const { selectedSports } = get();
