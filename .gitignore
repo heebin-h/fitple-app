@@ -40,3 +40,6 @@ Thumbs.db
 
 # Misc
 *.tsbuildinfo
+
+# oh-my-claudecode runtime state
+.omc/
