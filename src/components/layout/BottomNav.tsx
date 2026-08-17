@@ -1,20 +1,17 @@
 /**
  * 하단 5탭 내비게이션. SPEC §10.1 / §11.5.
  *
- *   홈(/home) · 운동(/exercise) · 탐색(/explore) — 실제 라우트
- *   채팅 · MY — Phase 1에선 라우트 미구현 → Toast 안내
+ *   홈(/home) · 운동(/exercise) · 탐색(/explore) · MY(/my) — 실제 라우트
+ *   채팅 — Phase 5에서 toast 유지
  *
- * 게스트 세션에서는 채팅/MY가 "로그인이 필요한 기능이에요"를 띄운다(§11.5).
- * 회원 세션에서는 "준비 중이에요"(Phase 1 placeholder).
- *
- * MobileFrame 내부 `relative` 컨테이너 기준 `absolute` 하단 고정.
- * 노치 단말 대응으로 `pb-safe`(env(safe-area-inset-bottom)) 적용.
+ * 게스트는 MY 탭에서 "로그인이 필요해요" 토스트 (§11.5).
  */
 
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, Dumbbell, Compass, MessageCircle, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../../utils/cn';
+import { useAuthStore } from '../../store/authStore';
 
 const ITEM = 'flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5';
 
@@ -23,6 +20,18 @@ function tabClass({ isActive }: { isActive: boolean }) {
 }
 
 export function BottomNav() {
+  const navigate  = useNavigate();
+  const isGuest   = useAuthStore((s) => s.isGuest);
+  const currentUser = useAuthStore((s) => s.currentUser);
+
+  function handleMy() {
+    if (isGuest || !currentUser) {
+      toast('로그인이 필요해요');
+    } else {
+      navigate('/my');
+    }
+  }
+
   return (
     <nav className="absolute inset-x-0 bottom-0 z-20 flex h-14 items-stretch border-t border-borderDefault bg-surface pb-safe">
       <NavLink to="/home" className={tabClass}>
@@ -37,7 +46,6 @@ export function BottomNav() {
         <Compass size={22} />
         <span className="text-mini">탐색</span>
       </NavLink>
-      {/* 채팅 / MY — Android `FitpleMainActivity.kt:147-153` Toast 정확 문구 (게스트 분기 없음) */}
       <button
         type="button"
         onClick={() => toast('채팅 기능을 준비 중이에요')}
@@ -48,7 +56,7 @@ export function BottomNav() {
       </button>
       <button
         type="button"
-        onClick={() => toast('마이페이지 기능을 준비 중이에요')}
+        onClick={handleMy}
         className={cn(ITEM, 'text-textHint')}
       >
         <User size={22} />
