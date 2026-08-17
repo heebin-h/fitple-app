@@ -191,8 +191,8 @@ export function HomeScreen() {
         ))}
       </div>
 
-      {/* ── 활동 중인 모임 ─────────────────────────────────── */}
-      <div className="mt-5 px-5">
+      {/* ── 활동 중인 모임 — 게스트 제외 (SPEC §12.11) ────── */}
+      {!isGuest && <div className="mt-5 px-5">
         <div className="flex items-center justify-between">
           <h2 className="text-h3 text-textPrimary">활동 중인 모임</h2>
           <button type="button" onClick={() => navigate('/exercise')}
@@ -225,7 +225,7 @@ export function HomeScreen() {
             ))
           )}
         </div>
-      </div>
+      </div>}
 
       {/* ── 체험 가능 모임 ─────────────────────────────────── */}
       <div className="mt-6">

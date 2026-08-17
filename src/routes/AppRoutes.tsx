@@ -1,8 +1,8 @@
 /**
  * 라우트 테이블. SPEC §10.1.
  *
- * ① MainLayout 그룹 (BottomNav 있음): /home · /exercise · /explore · /my
- * ② 인증 전용 그룹 (BottomNav 없음): /meeting/:id · /upcoming
+ * ① MainLayout 그룹 (BottomNav 있음): /home · /exercise · /explore · /upcoming · /my
+ * ② 인증 전용 그룹 (BottomNav 없음): /meeting/:id · /meeting/:id/chat
  * ③ 비인증 공개: / · /login · /email-login · /signup/*
  */
 
@@ -22,6 +22,7 @@ import { HomeScreen }             from '../screens/main/HomeScreen';
 import { ExerciseScreen }         from '../screens/main/ExerciseScreen';
 import { RecommendedGroupScreen } from '../screens/main/RecommendedGroupScreen';
 import { PostDetailScreen }       from '../screens/main/PostDetailScreen';
+import { PostChatScreen }         from '../screens/main/PostChatScreen';
 import { UpcomingMeetingScreen }  from '../screens/main/UpcomingMeetingScreen';
 import { MyScreen }               from '../screens/main/MyScreen';
 
@@ -40,19 +41,20 @@ export function AppRoutes() {
           <Route path="/signup/preference" element={<SignupPreferenceScreen />} />
           <Route path="/signup/complete"   element={<SignupCompleteScreen />} />
 
-          {/* ① 탭 화면 (BottomNav 있음) */}
+          {/* ① 탭 화면 (BottomNav 있음) — SPEC §10.1 */}
           <Route element={<RequireAuth><MainLayout /></RequireAuth>}>
-            <Route path="/home"             element={<HomeScreen />} />
-            <Route path="/exercise"         element={<ExerciseScreen />} />
-            <Route path="/explore"          element={<RecommendedGroupScreen />} />
-            <Route path="/explore/:sport"   element={<RecommendedGroupScreen />} />
-            <Route path="/my"               element={<MyScreen />} />
+            <Route path="/home"           element={<HomeScreen />} />
+            <Route path="/exercise"       element={<ExerciseScreen />} />
+            <Route path="/explore"        element={<RecommendedGroupScreen />} />
+            <Route path="/explore/:sport" element={<RecommendedGroupScreen />} />
+            <Route path="/upcoming"       element={<UpcomingMeetingScreen />} />
+            <Route path="/my"             element={<MyScreen />} />
           </Route>
 
-          {/* ② 인증 전용, BottomNav 없음 */}
+          {/* ② 인증 전용, BottomNav 없음 — SPEC §12.15/16 */}
           <Route element={<RequireAuth><Outlet /></RequireAuth>}>
-            <Route path="/meeting/:id" element={<PostDetailScreen />} />
-            <Route path="/upcoming"    element={<UpcomingMeetingScreen />} />
+            <Route path="/meeting/:id"      element={<PostDetailScreen />} />
+            <Route path="/meeting/:id/chat" element={<PostChatScreen />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
