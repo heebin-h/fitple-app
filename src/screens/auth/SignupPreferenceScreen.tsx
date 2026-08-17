@@ -75,8 +75,8 @@ export function SignupPreferenceScreen() {
   ) => {
     if (!email) return;
     await userManager.savePreferences(email, sports, details);
+    userManager.clearPendingSignup(); // setLoggedIn 전에 제거해야 재개 다이얼로그 미표시
     userManager.setLoggedIn(email);
-    userManager.clearPendingSignup();
     setUser(await userManager.getCurrentUser());
     navigate('/signup/complete', { replace: true });
   };

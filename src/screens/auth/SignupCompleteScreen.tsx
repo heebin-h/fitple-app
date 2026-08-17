@@ -4,7 +4,7 @@
  *
  * Android dimens 매핑:
  *   icon_complete       = 96dp → h-24 w-24 (CheckCircleIcon 96)
- *   text_heading        = 24sp → text-[24px] font-bold
+ *   text_heading        = 24sp → text-title
  *   page_margin         = 20dp → px-5
  *   spacing_xl          = 24dp (서브타이틀 margin-bottom)
  *   card_preview_width  = 140dp → w-[140px]
@@ -50,7 +50,7 @@ export function SignupCompleteScreen() {
           {/* strokeWidth 2.5 — Android `ic_check_white.xml` 정확 매칭 */}
           <Check size={56} strokeWidth={2.5} />
         </span>
-        <h1 className="mt-5 text-[24px] font-bold leading-tight text-textPrimary">
+        <h1 className="mt-5 text-title text-textPrimary">
           가입이 완료 되었어요!
         </h1>
       </div>

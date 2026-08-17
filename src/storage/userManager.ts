@@ -59,7 +59,10 @@ export const userManager = {
     details: Record<string, Record<string, string>>,
   ): Promise<void> {
     const user = await this.getUserByEmail(email);
-    if (!user) return;
+    if (!user) {
+      console.error('[userManager] savePreferences: user not found —', email);
+      return;
+    }
     user.selectedSports = sports;
     user.sportDetails = details;
     const key = await userKey(email);

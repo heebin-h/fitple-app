@@ -88,6 +88,9 @@ export default {
       fontSize: {
         hero:            ['26px', { lineHeight: '1.40', fontWeight: '600' }],
         'label-semibold':['14px', { lineHeight: '1.40', fontWeight: '600' }],
+        title:           ['24px', { lineHeight: '1.30', fontWeight: '700' }], // 24sp 전용 (SignupComplete)
+        heading:         ['20px', { lineHeight: '1.40', fontWeight: '700' }], // 20sp 전용 (Signup 화면 제목)
+        section:         ['18px', { lineHeight: '1.40', fontWeight: '700' }], // 18sp 전용 (TermsBottomSheet)
         display:         ['22px', { lineHeight: '1.35', fontWeight: '700' }],
         h1:              ['19px', { lineHeight: '1.30', fontWeight: '700' }],
         h2:              ['17px', { lineHeight: '1.40', fontWeight: '700' }],

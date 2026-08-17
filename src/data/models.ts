@@ -50,7 +50,7 @@ export interface ScheduleItem {
   id: string;
   title: string;
   date: string;             // YYYY-MM-DD
-  time: string;             // HH:mm
+  time: string;             // 한국어 표기, e.g. '오전 8:00' / '오후 8:30'
   sport: string;
   image: string;
   day: string;              // 월/화/수…

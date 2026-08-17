@@ -267,18 +267,21 @@ export function PostDetailScreen() {
               <div ref={chatEndRef} />
             </div>
             {/* 입력 바 */}
-            <div className="fixed inset-x-0 bottom-0 flex items-center gap-2 border-t border-borderDefault bg-surface px-4 py-3">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="메시지를 입력해주세요"
-                className="flex-1 rounded-[8px] bg-background px-3 py-2 text-caption text-textPrimary outline-none placeholder:text-textHint"
-              />
-              <button type="button" onClick={handleSend}
-                className={cn('p-2', input.trim() ? 'text-orange' : 'text-textHint')}>
-                <Send size={20} />
-              </button>
+            <div className="fixed bottom-0 left-1/2 w-full max-w-mobile -translate-x-1/2 flex flex-col border-t border-borderDefault bg-surface">
+              <div className="flex items-center gap-2 px-4 py-3">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="메시지를 입력해주세요"
+                  className="flex-1 rounded-[8px] bg-background px-3 py-2 text-caption text-textPrimary outline-none placeholder:text-textHint"
+                />
+                <button type="button" onClick={handleSend}
+                  className={cn('p-2', input.trim() ? 'text-orange' : 'text-textHint')}>
+                  <Send size={20} />
+                </button>
+              </div>
+              <div className="pb-safe" />
             </div>
           </div>
         )}
@@ -293,14 +296,17 @@ export function PostDetailScreen() {
 
       {/* ── 하단 고정 버튼 (홈탭에서만) ─────────────────── */}
       {activeTab === '홈' && (
-        <div className="fixed inset-x-0 bottom-0 border-t border-borderDefault bg-surface px-5 py-3">
-          <button type="button" onClick={handleJoin} disabled={joined}
-            className={cn(
-              'h-[52px] w-full rounded-card text-h3 text-textWhite',
-              joined ? 'bg-btnDisabled' : 'bg-orange',
-            )}>
-            {joined ? '참가 완료' : '1회 참가하기'}
-          </button>
+        <div className="fixed bottom-0 left-1/2 w-full max-w-mobile -translate-x-1/2 flex flex-col border-t border-borderDefault bg-surface">
+          <div className="px-5 py-3">
+            <button type="button" onClick={handleJoin} disabled={joined}
+              className={cn(
+                'h-[52px] w-full rounded-card text-h3 text-textWhite',
+                joined ? 'bg-btnDisabled' : 'bg-orange',
+              )}>
+              {joined ? '참가 완료' : '1회 참가하기'}
+            </button>
+          </div>
+          <div className="pb-safe" />
         </div>
       )}
     </div>

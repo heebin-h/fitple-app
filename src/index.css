@@ -9,6 +9,10 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  /* BottomNav(3.5rem) + iOS 홈 인디케이터 safe area */
+  .pb-nav-safe {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 html,

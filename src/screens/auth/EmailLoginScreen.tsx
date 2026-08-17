@@ -58,7 +58,7 @@ export function EmailLoginScreen() {
       const ok = await userManager.loginUser(normalized, password);
       if (!ok) {
         setPwError(true);
-        toast('이메일 또는 비밀번호가 맞지 않아요');
+        toast('이메일 또는 비밀번호가 올바르지 않아요.');
         return;
       }
       userManager.setLoggedIn(normalized);

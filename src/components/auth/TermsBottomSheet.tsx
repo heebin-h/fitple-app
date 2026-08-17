@@ -66,7 +66,7 @@ export function TermsBottomSheet({ open, onOpenChange, onAgree }: Props) {
           <div className="mx-auto mt-3 mb-6 h-1 w-10 rounded-full bg-borderDefault" />
 
           {/* 타이틀 */}
-          <Drawer.Title className="mb-6 whitespace-pre-line text-[18px] font-bold leading-[1.4] text-textPrimary">
+          <Drawer.Title className="mb-6 whitespace-pre-line text-section text-textPrimary">
             {'회원가입을 위해서는\n아래의 약관동의가 필요해요'}
           </Drawer.Title>
 

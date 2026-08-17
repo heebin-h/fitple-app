@@ -54,7 +54,7 @@ function DateStrip({
 }: { schedules: ScheduleItem[]; selected: string; onSelect: (d: string) => void }) {
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() + i);
+    d.setDate(d.getDate() + (i - 3)); // 오늘 중앙: -3, -2, -1, 0, +1, +2, +3
     const date = d.toISOString().slice(0, 10);
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     return { date, label: dayNames[d.getDay()], num: d.getDate() };
@@ -115,7 +115,7 @@ export function HomeScreen() {
 
   function heroContent() {
     if (isGuest || !currentUser) {
-      return { title: '모임을 둘러보는 중이에요!', sub: '로그인하고 더 많은 기능을 사용해보세요', cta: '로그인하기 →', ctaFn: () => navigate('/login') };
+      return { title: '모임을 둘러보는 중이에요!', sub: '로그인하고 더 많은 기능을 사용해보세요', cta: '로그인하고 참여하기 →', ctaFn: () => navigate('/login') };
     }
     const nick = currentUser.nickname;
     if (heroInfo?.type === 'today') {
@@ -304,11 +304,13 @@ export function HomeScreen() {
           className="mt-3 text-label-semibold text-orange">모임 만들기 →</button>
       </div>
 
-      {/* ── FAB ────────────────────────────────────────────── */}
-      <button type="button" onClick={() => toast('모임 만들기 기능 준비 중이에요')}
-        className="fixed bottom-20 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-orange shadow-lg">
-        <Plus size={24} className="text-textWhite" />
-      </button>
+      {/* ── FAB — MobileFrame 내 우하단 고정 ──────────────── */}
+      <div className="pointer-events-none fixed bottom-20 left-1/2 z-10 h-14 w-full max-w-mobile -translate-x-1/2">
+        <button type="button" onClick={() => toast('모임 만들기 기능 준비 중이에요')}
+          className="pointer-events-auto absolute right-4 top-0 flex h-14 w-14 items-center justify-center rounded-full bg-orange shadow-lg">
+          <Plus size={24} className="text-textWhite" />
+        </button>
+      </div>
     </div>
   );
 }
