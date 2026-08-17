@@ -22,28 +22,36 @@ const KEY_SEEDED = 'seeded';
 export async function seedIfFirstRun(): Promise<void> {
   if (localStorage.getItem(KEY_SEEDED) === 'true') return;
 
-  // 데모 계정 등록 (saveUser가 비밀번호 SHA-256 처리)
-  for (const acc of SEED_DEMO_ACCOUNTS) {
-    const created = await userManager.saveUser(acc.email, acc.password, acc.nickname);
-    if (created) {
-      // 기본 선호운동 (재개 다이얼로그 안 뜨게 — 데모용 완성 프로필)
-      await userManager.savePreferences(
-        acc.email,
-        ['러닝'],
-        { 러닝: { '평균 페이스를 알려주세요 (1km 기준)': '5:00~5:59' } },
-      );
+  try {
+    // 데모 계정 등록 (saveUser가 비밀번호 SHA-256 처리)
+    for (const acc of SEED_DEMO_ACCOUNTS) {
+      const created = await userManager.saveUser(acc.email, acc.password, acc.nickname);
+      if (created) {
+        // 기본 선호운동 (재개 다이얼로그 안 뜨게 — 데모용 완성 프로필)
+        await userManager.savePreferences(
+          acc.email,
+          ['러닝'],
+          { 러닝: { '평균 페이스를 알려주세요 (1km 기준)': '5:00~5:59' } },
+        );
+      }
+    }
+
+    // 컬렉션 시드
+    localStorage.setItem('meetings',  JSON.stringify(SEED_MEETINGS));
+    localStorage.setItem('reviews',   JSON.stringify(SEED_REVIEWS));
+    localStorage.setItem('schedules', JSON.stringify(SEED_SCHEDULES));
+    for (const [meetingId, msgs] of Object.entries(SEED_CHATS)) {
+      localStorage.setItem(`chats:${meetingId}`, JSON.stringify(msgs));
+    }
+
+    localStorage.setItem(KEY_SEEDED, 'true');
+  } catch (e) {
+    console.error('[seedRunner] seed failed:', e);
+    // QuotaExceededError 포함 — 스토리지 부족 시에도 무한 재시도 방지
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      try { localStorage.setItem(KEY_SEEDED, 'true'); } catch { /* ignore */ }
     }
   }
-
-  // 컬렉션 시드
-  localStorage.setItem('meetings',  JSON.stringify(SEED_MEETINGS));
-  localStorage.setItem('reviews',   JSON.stringify(SEED_REVIEWS));
-  localStorage.setItem('schedules', JSON.stringify(SEED_SCHEDULES));
-  for (const [meetingId, msgs] of Object.entries(SEED_CHATS)) {
-    localStorage.setItem(`chats:${meetingId}`, JSON.stringify(msgs));
-  }
-
-  localStorage.setItem(KEY_SEEDED, 'true');
 }
 
 /**

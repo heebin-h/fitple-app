@@ -11,7 +11,7 @@
  *     이미 가입된 이메일이면 (정상 흐름에서 발생 X) Toast.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ClearIcon, CheckCircleIcon } from '../../components/icons';
 import toast from 'react-hot-toast';
@@ -26,8 +26,14 @@ const MAX_LEN = 10;
 export function SignupNicknameScreen() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { email, password } =
-    (location.state as { email?: string; password?: string } | null) ?? {};
+  const { email } = (location.state as { email?: string } | null) ?? {};
+  // SignupPasswordScreen이 sessionStorage에 임시 저장한 값 — 사용 즉시 소거
+  const password = sessionStorage.getItem('_sp') ?? '';
+
+  // URL 직접 진입 방어
+  useEffect(() => {
+    if (!email || !password) navigate('/signup/email', { replace: true });
+  }, [email, password, navigate]);
 
   const [nickname, setNickname] = useState('');
   const [showTerms, setShowTerms] = useState(false);
@@ -55,6 +61,7 @@ export function SignupNicknameScreen() {
 
   const handleAgree = async () => {
     if (!email || !password) return;
+    sessionStorage.removeItem('_sp'); // 사용 즉시 소거
     const ok = await userManager.saveUser(email, password, trimmed);
     if (!ok) {
       toast.error('이미 가입된 이메일이에요');

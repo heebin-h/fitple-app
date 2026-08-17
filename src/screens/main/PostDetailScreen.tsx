@@ -57,6 +57,7 @@ export function PostDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const currentUser = useAuthStore((s) => s.currentUser);
+  const isGuest     = useAuthStore((s) => s.isGuest);
 
   const meeting = useMemo(() => readMeetings().find((m) => m.id === id) ?? null, [id]);
   const [activeTab, setActiveTab] = useState<Tab>('홈');
@@ -97,6 +98,7 @@ export function PostDetailScreen() {
 
   function handleSend() {
     if (!input.trim() || !id) return;
+    if (isGuest || !currentUser) { toast('로그인이 필요해요'); return; }
     const msg: ChatMessage = {
       id: `my-${Date.now()}`,
       senderName: currentUser?.nickname ?? '나',

@@ -191,9 +191,19 @@ export function LoginScreen() {
 
       {/* 가입 중단 재개 다이얼로그 — Android `LoginFragment.kt:91-111` */}
       {resumeEmail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
-          <div className="w-full max-w-[340px] rounded-card bg-surface p-6">
-            <h2 className="text-h2 text-textPrimary">회원가입을 이어서 하시겠습니까?</h2>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+          aria-hidden="false"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resume-dialog-title"
+            className="w-full max-w-[340px] rounded-card bg-surface p-6"
+          >
+            <h2 id="resume-dialog-title" className="text-h2 text-textPrimary">
+              회원가입을 이어서 하시겠습니까?
+            </h2>
             <p className="mt-3 whitespace-pre-line text-label text-textSecondary">
               {'이전에 시작한 회원가입이 있어요.\n선호 운동 설정만 하면 완료돼요!'}
             </p>
@@ -207,6 +217,8 @@ export function LoginScreen() {
               </button>
               <button
                 type="button"
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
                 onClick={() => {
                   const e = resumeEmail;
                   setResumeEmail(null);

@@ -19,6 +19,8 @@ import type { Meeting, Review, ScheduleItem, ChatMessage } from './models';
 // Demo accounts
 // ────────────────────────────────────────────────────────────────────────
 
+// 비밀번호는 seedRunner.ts의 userManager.saveUser()에서 SHA-256 해싱됨.
+// 이 파일의 평문 값은 데모 전용 — 실제 사용자 자격증명이 아님.
 export const SEED_DEMO_ACCOUNTS = [
   { email: 'demo@fitple.app',  password: 'demo1234', nickname: '데모유저' },
   { email: 'alice@fitple.app', password: 'alice123', nickname: '앨리스'   },

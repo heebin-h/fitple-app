@@ -41,6 +41,7 @@ export function EmailLoginScreen() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [pwError, setPwError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const emailValid = isValidEmailFormat(email);
   const pwValid = isValidPassword(password);
@@ -50,18 +51,25 @@ export function EmailLoginScreen() {
   const emailHasError = email.length > 0 && email.includes('@') && !emailValid;
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
-    const normalized = email.trim().toLowerCase();
-    const ok = await userManager.loginUser(normalized, password);
-    if (!ok) {
-      setPwError(true);
-      toast('이메일 또는 비밀번호가 맞지 않아요');
-      return;
+    if (!canSubmit || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const normalized = email.trim().toLowerCase();
+      const ok = await userManager.loginUser(normalized, password);
+      if (!ok) {
+        setPwError(true);
+        toast('이메일 또는 비밀번호가 맞지 않아요');
+        return;
+      }
+      userManager.setLoggedIn(normalized);
+      userManager.clearPendingSignup();
+      setUser(await userManager.getCurrentUser());
+      navigate('/home', { replace: true });
+    } catch {
+      toast('로그인 중 오류가 발생했어요. 다시 시도해 주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
-    userManager.setLoggedIn(normalized);
-    userManager.clearPendingSignup();
-    setUser(await userManager.getCurrentUser());
-    navigate('/home', { replace: true });
   };
 
   const emailBorder = useMemo(() => {
@@ -161,10 +169,10 @@ export function EmailLoginScreen() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!canSubmit}
+          disabled={!canSubmit || isSubmitting}
           className={cn(
             'mt-8 h-[54px] w-full rounded-card text-h3 text-textWhite',
-            canSubmit ? 'bg-orange' : 'bg-btnDisabled',
+            canSubmit && !isSubmitting ? 'bg-orange' : 'bg-btnDisabled',
           )}
         >
           로그인

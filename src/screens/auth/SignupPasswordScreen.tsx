@@ -10,7 +10,7 @@
  *   - 하단 풀와이드 "다음" 버튼 (활성/비활성)
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { ClearIcon, CheckCircleIcon, WarningIcon } from '../../components/icons';
@@ -22,6 +22,11 @@ export function SignupPasswordScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = (location.state as { email?: string } | null)?.email ?? '';
+
+  // URL 직접 진입 방어 — email 없으면 Step 1으로
+  useEffect(() => {
+    if (!email) navigate('/signup/email', { replace: true });
+  }, [email, navigate]);
 
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -48,12 +53,10 @@ export function SignupPasswordScreen() {
   }, [pw2, pw2Error, pw2Match]);
 
   const handleNext = () => {
-    if (!canProceed) return;
-    if (!email) {
-      navigate('/signup/email', { replace: true });
-      return;
-    }
-    navigate('/signup/nickname', { state: { email, password: pw } });
+    if (!canProceed || !email) return;
+    // password는 navigate state(브라우저 history)가 아닌 sessionStorage로 전달
+    sessionStorage.setItem('_sp', pw);
+    navigate('/signup/nickname', { state: { email } });
   };
 
   return (
