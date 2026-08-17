@@ -33,7 +33,7 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="absolute inset-x-0 bottom-0 z-20 flex h-14 items-stretch border-t border-borderDefault bg-surface pb-safe">
+    <nav className="fixed bottom-0 left-1/2 z-20 flex h-14 w-full max-w-mobile -translate-x-1/2 items-stretch border-t border-borderDefault bg-surface pb-safe">
       <NavLink to="/home" className={tabClass}>
         <Home size={22} />
         <span className="text-mini">홈</span>
