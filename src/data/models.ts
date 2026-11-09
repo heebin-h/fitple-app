@@ -8,6 +8,8 @@ export interface UserProfile {
   passwordHash: string;
   selectedSports: string[];
   sportDetails: Record<string, Record<string, string>>;
+  /** 찜한 모임 id — Android optJSONArray 호환처럼 필드 도입 전 유저는 undefined */
+  favoriteMeetingIds?: string[];
 }
 
 export interface Meeting {

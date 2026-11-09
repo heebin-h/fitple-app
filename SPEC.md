@@ -419,6 +419,7 @@ export interface UserProfile {
   passwordHash: string;                                 // SHA-256 hex
   selectedSports: string[];                             // e.g. ['러닝', '골프']
   sportDetails: Record<string, Record<string, string>>; // sport → question → answer
+  favoriteMeetingIds?: string[];                        // 찜한 모임 id (Android favoriteMeetingIds). 필드 도입 전 유저는 undefined
 }
 
 export interface Meeting {
@@ -492,7 +493,7 @@ A meeting maps roughly 1:1 to a "post" in the Android sense (`PostDetailFragment
 | `seeded`                         | `'true'`        | Set by `seedRunner` after a successful first-run injection.            |
 | `current_user`                   | `string`        | Normalised email of the currently logged-in user. Absent = signed-out. |
 | `pending_signup`                 | `string`        | Email of a user that finished nickname/terms but not preferences.      |
-| `user:{sha256(email)}`           | JSON string     | Serialised `UserProfile`.                                              |
+| `user:{sha256(email)}`           | JSON string     | Serialised `UserProfile` (incl. `favoriteMeetingIds` — 찜, `userManager.isFavorite / toggleFavorite`). |
 | `meetings`                       | JSON array      | Seeded meeting catalogue (Home + Exercise + RecommendedGroup pull from this). |
 | `reviews`                        | JSON array      | Review carousel.                                                       |
 | `schedules`                      | JSON array      | Upcoming meeting items.                                                |
@@ -592,6 +593,7 @@ Local component state remains the default. Only promote to Zustand when:
 /trials                         TrialListScreen        (홈 "체험 가능 모임" 더보기 — Android TrialListFragment)
 /reviews                        ReviewListScreen       (홈 "후기" 더보기 — Android ReviewListFragment)
 /notifications                  NotificationScreen     (bell — Android NotificationFragment)
+/search                         SearchScreen           (홈 검색창 · Upcoming 검색 아이콘 — Android SearchFragment)
 /chat                           ChatListScreen         (BottomNav 채팅 탭 — Android ChatListFragment, 회원 전용)
 ```
 
@@ -599,7 +601,7 @@ Local component state remains the default. Only promote to Zustand when:
 * `RequireAuth` wraps any route that demands a real account (chat send, meeting create, MY tab). On rejection it pushes to `/login` and surfaces a `react-hot-toast` notification.
 * Header/tab visibility:
   * `BottomNav` is rendered by `HomeScreen`, `ExerciseScreen`, `RecommendedGroupScreen` (top-level "Explore"), `UpcomingMeetingScreen` (when accessed from a tab), `ChatListScreen`, `MyScreen`.
-  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, `ReviewListScreen`, and `NotificationScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
+  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, `ReviewListScreen`, `NotificationScreen`, and `SearchScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
 
 ### 10.2 Slide transitions
 
@@ -799,7 +801,7 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
   | Schedule found for tomorrow                   | `안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃`     | `일정 바로가기 →`     |
   | Schedule found for today                      | `안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요`        | `일정 바로가기 →`     |
 * **Data:** `meetingsRepo.getActive(currentUser)`, `meetingsRepo.getTrials()`, `reviewsRepo.list()`, `schedulesRepo.next7()`.
-* **Interactions:** Search input is read-only in v1 (toast). Bell → `/notifications` (guest: see §11.5). Location chip shows toast.
+* **Interactions:** Search bar → `/search` (member + guest). Bell → `/notifications` (guest: see §11.5). Location chip shows toast.
 
 ### 12.11 HomeScreen (guest branch)
 * Same skeleton minus the Active Meetings section, with the fixed hero text, and with login prompts replacing several actions (see §11.5).
@@ -887,6 +889,20 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Data:** `ACTIVE_MEETING_IDS` (seed, = Android `SampleData.activeMeetings`). Preview "운영진이 공지를 등록했어요" and time "오후 3:40" are Android constants. Empty state "가입한 모임이 없어요.\n모임에 가입하면 채팅방이 생겨요!" `14 pt / textHint`, `120 pt` from top.
 * **Interactions:** Row → `/meeting/{id}` with router state `{ initialTab: '채팅' }` (Android `initialTab = 2`). `PostDetailScreen` honours `location.state.initialTab`.
 * **Access:** member only — guest is blocked at the tab (toast) and a direct `/chat` visit redirects to `/login`.
+
+### 12.22 SearchScreen
+* **Source:** Android `SearchFragment.kt` + `fragment_search.xml`; result rows `item_group_list.xml` + `designs/home_recommended_group_list.png` (PNG wins on conflict).
+* **Entry:** Home search bar (member + guest — Android GuestHome also opens it), Upcoming search icon. (Android PostDetail toolbar also has one — not in the React header.)
+* **Layout:** Toolbar `56 pt`, `px-3`: back + search field (`44 pt`, radius `12 pt`, `1 pt` orange border, `px-3.5`, trailing search icon, hint "찾고싶은 모임이 있나요?"). Field auto-focuses on entry.
+* **Behaviour:** Filters live on every change. Query is trimmed; empty → no rows and no empty message. Match = `title` contains query, case-insensitive. Pool = all `meetings`. No match → "검색 결과가 없어요" `14 pt / textHint`, `80 pt` from top.
+* **Row (`GroupListItem`):** `px-5 py-3.5`, thumbnail `72 × 72` radius `8`, title `15 / 700`, description `13 / textPrimary` 1 line, meta "{location} | 멤버 {n}명" `12 / textHint` (separator in borderDefault), `FavoriteHeart` top-right. Row tap → `/meeting/{id}`.
+* **Access:** member + guest, no BottomNav.
+
+### 12.23 Favorites (찜)
+* **Source:** Android `HomeSectionBinders.bindFavoriteHeart` + `UserManager.isFavorite / toggleFavorite`.
+* **Where:** `FavoriteHeart` on every `MeetingCard` (Home active list, Exercise, RecommendedGroup) and `GroupListItem` (Search). Android has no heart on PostDetail; the React PostDetail heart remains a toast (pre-existing, not Android).
+* **Look:** `24 pt`. Not favourited → outline, textSecondary (design PNG). Favourited → filled, orange (Android `ic_heart` tint).
+* **Behaviour:** Toggle persists to `UserProfile.favoriteMeetingIds`. Tap does not trigger the card's navigation. Guest → no-op (Android registers no listener without a user).
 
 ## 13. Component Inventory
 
@@ -1274,7 +1290,7 @@ Pulled verbatim from `app/src/main/res/values/strings.xml` and the Fragment sour
 재개 다이얼로그   회원가입을 이어서 하시겠습니까?  /  이전에 시작한 회원가입이 있어요.\n선호 운동 설정만 하면 완료돼요!  /  이어서 하기  /  나중에
 로그인 실패        이메일 또는 비밀번호가 올바르지 않아요.
 이메일 중복        이미 가입된 이메일이에요.  로그인하기
-미구현 토스트     준비 중인 기능이에요  /  검색 기능 준비 중이에요  /  위치 변경 기능 준비 중이에요  /  모임 만들기 기능 준비 중이에요  /  맞춤 모임 추천 기능 준비 중이에요
+미구현 토스트     준비 중인 기능이에요  /  위치 변경 기능 준비 중이에요  /  모임 만들기 기능 준비 중이에요  /  맞춤 모임 추천 기능 준비 중이에요
 종료 안내         뒤로 버튼을 한번 더 누르면 종료됩니다   (Android only — drop on iOS)
 ```
 

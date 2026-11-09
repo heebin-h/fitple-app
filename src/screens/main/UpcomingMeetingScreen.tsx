@@ -75,7 +75,7 @@ export function UpcomingMeetingScreen() {
           <ArrowLeft size={22} className="text-textPrimary" />
         </button>
         <span className="flex-1 text-center text-h3 text-textPrimary">다가오는 정기모임</span>
-        <button type="button" onClick={() => toast('검색 기능을 준비 중이에요')} className="p-1">
+        <button type="button" onClick={() => navigate('/search')} className="p-1">
           <Search size={20} className="text-textPrimary" />
         </button>
         <button type="button" onClick={() => navigate('/notifications')} className="p-1">

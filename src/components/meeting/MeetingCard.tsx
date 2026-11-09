@@ -1,10 +1,14 @@
 /**
  * 모임 목록 카드. HomeScreen·ExerciseScreen·RecommendedGroupScreen 공용.
- * SPEC §13 MeetingCard / Android `item_exercise_group.xml` 참조.
+ * SPEC §13 MeetingCard / Android `item_meeting_card.xml` 참조.
+ *
+ * 우측 찜 하트(FavoriteHeart) — Android item_meeting_card btnHeart + bindFavoriteHeart.
+ * 하트가 내부 버튼이므로 루트는 <button> 대신 role="button" div (button 중첩 금지).
  */
 
 import type { Meeting } from '../../data/models';
 import { meetingImg } from '../../utils/meetingImage';
+import { FavoriteHeart } from './FavoriteHeart';
 
 interface Props {
   meeting: Meeting;
@@ -13,10 +17,12 @@ interface Props {
 
 export function MeetingCard({ meeting: m, onClick }: Props) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-card border border-borderDefault bg-surface p-3 text-left"
+      onKeyDown={(e) => { if (e.key === 'Enter') onClick(); }}
+      className="flex w-full cursor-pointer items-start gap-3 rounded-card border border-borderDefault bg-surface p-3 text-left"
     >
       {/* 커버 이미지 */}
       <img
@@ -59,6 +65,8 @@ export function MeetingCard({ meeting: m, onClick }: Props) {
           멤버 {m.memberCount}/{m.maxMembers}명
         </p>
       </div>
-    </button>
+
+      <FavoriteHeart meetingId={m.id} />
+    </div>
   );
 }

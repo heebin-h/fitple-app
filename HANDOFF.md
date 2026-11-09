@@ -100,12 +100,13 @@ git log --oneline -5
 | `/reviews` | ReviewListScreen | ✗ |
 | `/notifications` | NotificationScreen | ✗ |
 | `/chat` | ChatListScreen | ✅ |
+| `/search` | SearchScreen | ✗ |
 
 ## 5. 의도된 "준비 중" 항목 (v1 데모 범위 외)
 
 아래 기능은 SPEC에서 데모 범위 외로 명시 → toast 처리, 미구현이 정상:
 - 카카오/Apple/Google 소셜 로그인
-- 위치 변경, 검색
+- 위치 변경
 - 모임 만들기 FAB
 - 이용약관/개인정보처리방침 (MyScreen)
 - 찜하기, 공유 (PostDetailScreen)

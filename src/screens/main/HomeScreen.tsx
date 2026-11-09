@@ -165,7 +165,7 @@ export function HomeScreen() {
           <MapPin size={14} className="text-orange" />
           미사 1동 ▾
         </button>
-        <button type="button" onClick={() => toast('검색 기능을 준비 중이에요')}
+        <button type="button" onClick={() => navigate('/search')}
           className="flex flex-1 items-center gap-2 rounded-[8px] bg-background px-3 py-2">
           <Search size={14} className="text-textHint" />
           <span className="text-caption text-textHint">찾고싶은 모임이 있나요?</span>
