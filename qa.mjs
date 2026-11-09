@@ -158,7 +158,7 @@ const guestActive = await page.getByText('활동 중인 모임').isVisible().cat
 !guestActive
   ? ok('게스트: "활동 중인 모임" 숨김')
   : flag('게스트: "활동 중인 모임" 표시됨 (버그)');
-await page.getByText('모임을 둘러보는 중이에요').isVisible().catch(() => false)
+await page.getByText('로그인하고 다양한 모임에 참여해요!').isVisible().catch(() => false)
   ? ok('게스트 Hero 텍스트') : flag('게스트 Hero 없음');
 
 // 게스트 MY → 리다이렉트

@@ -17,9 +17,11 @@ import { cn } from '../../utils/cn';
 
 interface Props {
   meetingId: string;
+  /** 비로그인 탭 처리. 미지정 = 무반응(bindFavoriteHeart). 게스트 홈 추천 카드는 로그인 안내(showLoginRequired("찜하기")). */
+  onGuestTap?: () => void;
 }
 
-export function FavoriteHeart({ meetingId }: Props) {
+export function FavoriteHeart({ meetingId, onGuestTap }: Props) {
   const email = useAuthStore((s) => s.currentUser?.email ?? null);
   const [liked, setLiked] = useState(false);
 
@@ -34,7 +36,7 @@ export function FavoriteHeart({ meetingId }: Props) {
 
   const onTap = async (e: MouseEvent) => {
     e.stopPropagation();
-    if (!email) return;
+    if (!email) { onGuestTap?.(); return; }
     try {
       setLiked(await userManager.toggleFavorite(email, meetingId));
     } catch (err) {

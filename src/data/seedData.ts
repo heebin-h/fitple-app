@@ -28,7 +28,7 @@ export const SEED_DEMO_ACCOUNTS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────
-// Meetings — 17 entries (3 per sport × 5 sports + 체험 2)
+// Meetings — 21 entries (3 per sport × 5 sports + 체험 2 + 게스트 추천 4)
 // ────────────────────────────────────────────────────────────────────────
 
 export const SEED_MEETINGS: Meeting[] = [
@@ -60,7 +60,19 @@ export const SEED_MEETINGS: Meeting[] = [
   // ── 체험 — Android SampleData.trialMeetings t2/t3 (t1 = m-cyc-3)
   { id: 'm-trial-hik-1', title: '싱글벙글 등산 크루 체험', groupName: '싱글벙글등산', sport: '등산', image: 'img_trial_hiking_group1', location: '여의도구', memberCount: 14, maxMembers: 30, lastActiveMinutes: 3, description: '함께 산을 오르면 더 즐거워요!', meetingTime: '매주 일 오전 8:00' },
   { id: 'm-trial-hik-2', title: '북한산 초보 등산 체험',   groupName: '초보등산클럽', sport: '등산', image: 'img_trial_hiking_group2', location: '도봉구',   memberCount:  8, maxMembers: 20, lastActiveMinutes: 5, description: '처음 산행이라도 걱정 없어요!',  meetingTime: '매주 토 오전 9:00' },
+
+  // ── 게스트 추천 — Android SampleData.guestRecommended g1~g4
+  { id: 'm-guest-1', title: '싱글벙글 러닝 크루 모집',   groupName: '싱글벙글러닝', sport: '러닝', image: 'img_meeting_running_group1', location: '동작구', memberCount: 40, maxMembers: 50, lastActiveMinutes:  3, description: '초보자들도 환영합니다~',                   meetingTime: '매주 토 오전 8:00' },
+  { id: 'm-guest-2', title: '동작구 러닝 모임',          groupName: '동작러닝',     sport: '러닝', image: 'img_meeting_running_track',  location: '동작구', memberCount: 23, maxMembers: 30, lastActiveMinutes:  8, description: '누구나 편하게 참여하세요! 너무 재미있어요', meetingTime: '매주 수 오후 7:00' },
+  { id: 'm-guest-3', title: '한시간 달리는 러닝 크루',   groupName: '한시간러닝',   sport: '러닝', image: 'img_meeting_running_night',  location: '동작구', memberCount: 10, maxMembers: 20, lastActiveMinutes: 15, description: '초보자들도 환영합니다~',                   meetingTime: '매주 토 오전 7:00' },
+  { id: 'm-guest-4', title: '같이 달리자! 동작구 모집!', groupName: '동작크루',     sport: '러닝', image: 'img_meeting_running_beach',  location: '동작구', memberCount: 20, maxMembers: 30, lastActiveMinutes: 30, description: 'since 25.02.20 러닝 모임입니다',           meetingTime: '매주 일 오전 9:00' },
 ];
+
+/** 회원 홈 "추천 모임" — Android `SampleData.homeRecommended` id 1/2/3 대응. */
+export const HOME_RECOMMENDED_IDS = ['m-run-2', 'm-fut-1', 'm-hik-1'] as const;
+
+/** 게스트 홈 "추천 모임" — Android `SampleData.guestRecommended` g1~g4 (seed 하단 '게스트 추천' 블록). */
+export const GUEST_RECOMMENDED_IDS = ['m-guest-1', 'm-guest-2', 'm-guest-3', 'm-guest-4'] as const;
 
 /** 가입(활동 중)한 모임 — Android `SampleData.activeMeetings` id 4/5/6 대응. 채팅방 목록(/chat) 풀. */
 export const ACTIVE_MEETING_IDS = ['m-run-1', 'm-glf-1', 'm-cyc-1'] as const;

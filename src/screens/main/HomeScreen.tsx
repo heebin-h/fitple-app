@@ -1,334 +1,200 @@
 /**
- * 홈 화면 — P4 풀 구현. SPEC §12.10 / §12.11.
+ * 홈 — `/home`. 회원이면 MemberHome(Android HomeFragment), 게스트면 GuestHome(Android GuestHomeFragment).
+ * 레이아웃: fragment_home.xml · fragment_guest_home.xml + designs/home_main_postdetail_share_chat.png("홈 -가입 x"),
+ *           home_bottom_banner_schedule.png. 공용 섹션은 components/home/HomeSections.tsx.
  *
- * 섹션 순서:
- *   Top bar → Hero → SportRow → 활동중인 모임 → 체험 가능 모임 → 후기 → 다가오는 정기모임 → CTA 배너 → FAB
+ * 섹션 순서 (XML 그대로):
+ *   회원  : 상단바 → 검색 → Hero → 종목 → 추천 모임 → 활동 중인 모임 → 체험 → CTA 배너 → 후기 → 정기모임 → FAB
+ *   게스트: 상단바 → 검색 → Hero → 종목 → 추천 모임 →                  체험 → CTA 배너 → 후기 → 정기모임 → FAB
+ * 상단(상단바~Hero)은 PNG처럼 옅은 회색 배경, 종목 행부터 위쪽 모서리가 둥근 흰 패널.
  */
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Search, MapPin, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
 import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import { MeetingCard } from '../../components/meeting/MeetingCard';
 import { TrialCard } from '../../components/meeting/TrialCard';
 import { ReviewCard } from '../../components/meeting/ReviewCard';
-import { TRIAL_MEETING_IDS } from '../../data/seedData';
-import { meetingImg } from '../../utils/meetingImage';
-import { cn } from '../../utils/cn';
+import {
+  HomeTopBar, HomeHero, SportIconRow, SectionDivider, SectionHeader,
+  RecommendedFilterRow, HScroll, CtaBanner, UpcomingSection,
+} from '../../components/home/HomeSections';
+import {
+  TRIAL_MEETING_IDS, HOME_RECOMMENDED_IDS, GUEST_RECOMMENDED_IDS, ACTIVE_MEETING_IDS,
+} from '../../data/seedData';
 import type { Meeting, Review, ScheduleItem } from '../../data/models';
-
-import iconRunning  from '../../assets/images/sports/sport_running.png';
-import iconFutsal   from '../../assets/images/sports/sport_futsal.png';
-import iconHiking   from '../../assets/images/sports/sport_hiking.png';
-import iconCycling  from '../../assets/images/sports/sport_cycling.png';
-import iconGolf     from '../../assets/images/sports/sport_golf.png';
-
-const SPORT_ICONS: Record<string, string> = {
-  러닝: iconRunning, 풋살: iconFutsal, 등산: iconHiking, 사이클: iconCycling, 골프: iconGolf,
-};
-const SPORT_NAMES = ['러닝', '풋살', '등산', '사이클', '골프'];
 
 // ── localStorage helpers ────────────────────────────────────────────────────
 function readLS<T>(key: string): T[] {
   try { return JSON.parse(localStorage.getItem(key) ?? '[]') as T[]; }
-  catch { return []; }
+  catch (e) { console.error(`[HomeScreen] ${key} parse failed:`, e); return []; }
 }
 
-function todayStr()    { return new Date().toISOString().slice(0, 10); }
-function tomorrowStr() { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); }
-
-// ── 필터 칩 ────────────────────────────────────────────────────────────────
-const CHIPS = ['가까운순', '편하게', '평일오후', '주말'] as const;
-type Chip = typeof CHIPS[number];
-
-function applyChips(meetings: Meeting[], active: Set<Chip>): Meeting[] {
-  return meetings.filter((m) => {
-    if (active.has('편하게')  && m.level !== '보통') return false;
-    if (active.has('평일오후') && m.meetingTime && !/[월화수목금]/.test(m.meetingTime)) return false;
-    if (active.has('주말')    && m.meetingTime && !/[토일]|주말/.test(m.meetingTime)) return false;
-    return true;
-  });
+function pick(all: Meeting[], ids: readonly string[]): Meeting[] {
+  return ids.map((id) => all.find((m) => m.id === id)).filter((m): m is Meeting => m !== undefined);
 }
 
-// ── DateStrip 로컬 컴포넌트 ─────────────────────────────────────────────────
-function DateStrip({
-  schedules, selected, onSelect,
-}: { schedules: ScheduleItem[]; selected: string; onSelect: (d: string) => void }) {
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + (i - 3)); // 오늘 중앙: -3, -2, -1, 0, +1, +2, +3
-    const date = d.toISOString().slice(0, 10);
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-    return { date, label: dayNames[d.getDay()], num: d.getDate() };
-  });
-  const hasSched = (date: string) => schedules.some((s) => s.date === date);
-
-  return (
-    <div className="flex gap-1 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
-      {days.map(({ date, label, num }) => {
-        const isToday  = date === todayStr();
-        const isSel    = date === selected;
-        return (
-          <button
-            key={date}
-            type="button"
-            onClick={() => onSelect(date)}
-            className={cn(
-              'flex flex-shrink-0 flex-col items-center gap-0.5 rounded-[8px] px-3 py-2',
-              isSel ? 'bg-orange text-textWhite' : 'bg-transparent text-textPrimary',
-            )}
-          >
-            <span className={cn('text-micro', isSel ? 'text-textWhite' : isToday ? 'text-orange' : 'text-textHint')}>
-              {isToday ? '오늘' : label}
-            </span>
-            <span className="text-body-strong">{num}</span>
-            {hasSched(date) && (
-              <span className={cn('h-1 w-1 rounded-full', isSel ? 'bg-textWhite' : 'bg-orange')} />
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
+function todayMD(offset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
 }
 
-// ── 메인 컴포넌트 ───────────────────────────────────────────────────────────
-export function HomeScreen() {
-  const navigate  = useNavigate();
-  const currentUser = useAuthStore((s) => s.currentUser);
-  const isGuest   = useAuthStore((s) => s.isGuest);
-
+function useHomeData() {
   const meetings  = useMemo(() => readLS<Meeting>('meetings'), []);
   const reviews   = useMemo(() => readLS<Review>('reviews'), []);
   const schedules = useMemo(() => readLS<ScheduleItem>('schedules'), []);
+  const trials    = useMemo(() => pick(meetings, TRIAL_MEETING_IDS), [meetings]);
+  return { meetings, reviews, schedules, trials };
+}
 
-  const [activeChips, setActiveChips] = useState<Set<Chip>>(new Set());
-  const [selDate, setSelDate]         = useState(todayStr());
-
-  // ── Hero 로직 (SPEC §12.10) ───────────────────────────────────────────
-  const heroInfo = useMemo(() => {
-    if (isGuest || !currentUser) return null;
-    const todaySched    = schedules.find((s) => s.date === todayStr());
-    const tomorrowSched = schedules.find((s) => s.date === tomorrowStr());
-    if (todaySched)    return { type: 'today'    as const, sched: todaySched    };
-    if (tomorrowSched) return { type: 'tomorrow' as const, sched: tomorrowSched };
-    return { type: 'none' as const, sched: null };
-  }, [schedules, isGuest, currentUser]);
-
-  function heroContent() {
-    if (isGuest || !currentUser) {
-      return { title: '모임을 둘러보는 중이에요!', sub: '로그인하고 더 많은 기능을 사용해보세요', cta: '로그인하고 참여하기 →', ctaFn: () => navigate('/login') };
-    }
-    const nick = currentUser.nickname;
-    if (heroInfo?.type === 'today') {
-      const s = heroInfo.sched!;
-      return { title: `안녕하세요 ${nick}님!`, sub: `오늘 ${s.time} · ${s.title}이 있어요`, cta: '일정 바로가기 →', ctaFn: () => navigate('/upcoming') };
-    }
-    if (heroInfo?.type === 'tomorrow') {
-      const s = heroInfo.sched!;
-      return { title: `안녕하세요 ${nick}님!`, sub: `다음 ${s.sport}은 내일 ${s.time}이에요 🏃`, cta: '일정 바로가기 →', ctaFn: () => navigate('/upcoming') };
-    }
-    return { title: `안녕하세요 ${nick}님!`, sub: '아직 가입한 모임이 없어요', cta: '가입하러 가기 →', ctaFn: () => navigate('/exercise') };
-  }
-
-  const hero = heroContent();
-
-  // Android GuestHomeFragment.showLoginRequired(featureName) — 게스트는 토스트 + 로그인 화면, 회원은 이동
-  function memberOnly(featureName: string, to: string) {
-    if (isGuest || !currentUser) {
-      toast(`로그인 후 ${featureName} 기능을 사용할 수 있어요`);
-      navigate('/login');
-      return;
-    }
-    navigate(to);
-  }
-
-  // ── 활동 중인 모임 필터 ───────────────────────────────────────────────
-  const toggleChip = (chip: Chip) => {
-    if (chip === '가까운순') return; // 정렬만, 필터 없음
-    setActiveChips((prev) => {
-      const next = new Set(prev);
-      next.has(chip) ? next.delete(chip) : next.add(chip);
-      return next;
-    });
-  };
-  // Android setupActiveMeetings: UserCreatedMeetings + activeMeetings — 만든 모임이 맨 앞
-  const created = useCreatedMeetingsStore((s) => s.meetings);
-  const filteredMeetings = useMemo(
-    () => applyChips([...created, ...meetings], activeChips).slice(0, 5),
-    [created, meetings, activeChips],
-  );
-
-  // ── 날짜별 일정 ───────────────────────────────────────────────────────
-  const daySchedules = useMemo(() => schedules.filter((s) => s.date === selDate), [schedules, selDate]);
-
-  // ── 체험 가능 모임 — Android SampleData.trialMeetings 순서 ───────────
-  const trialMeetings = useMemo(
-    () => TRIAL_MEETING_IDS
-      .map((id) => meetings.find((m) => m.id === id))
-      .filter((m): m is Meeting => m !== undefined),
-    [meetings],
-  );
-
+function Fab({ onClick }: { onClick: () => void }) {
   return (
-    <div className="relative flex flex-col overflow-y-auto pb-4 pt-safe">
-      {/* ── 상단 바 ────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-5 py-3">
-        <button type="button" onClick={() => toast('위치 변경 기능을 준비 중이에요')}
-          className="flex items-center gap-1 text-caption font-medium text-textPrimary">
-          <MapPin size={14} className="text-orange" />
-          미사 1동 ▾
-        </button>
-        <button type="button" onClick={() => navigate('/search')}
-          className="flex flex-1 items-center gap-2 rounded-[8px] bg-background px-3 py-2">
-          <Search size={14} className="text-textHint" />
-          <span className="text-caption text-textHint">찾고싶은 모임이 있나요?</span>
-        </button>
-        <button type="button" onClick={() => memberOnly('알림', '/notifications')}>
-          <Bell size={22} className="text-textPrimary" />
-        </button>
-      </div>
-
-      {/* ── Hero 카드 ──────────────────────────────────────── */}
-      <div className="mx-5 rounded-card bg-orangeTint px-4 py-4">
-        <p className="text-h2 text-textPrimary">{hero.title}</p>
-        <p className="mt-1 text-caption text-textSecondary">{hero.sub}</p>
-        <button type="button" onClick={hero.ctaFn}
-          className="mt-3 text-label-semibold text-orange">
-          {hero.cta}
-        </button>
-      </div>
-
-      {/* ── 종목 아이콘 행 ─────────────────────────────────── */}
-      <div className="mt-4 flex justify-around px-5">
-        {SPORT_NAMES.map((name) => (
-          <button key={name} type="button"
-            onClick={() => navigate(`/explore/${encodeURIComponent(name)}`)}
-            className="flex flex-col items-center gap-1">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orangeTint">
-              <img src={SPORT_ICONS[name]} alt={name} className="h-7 w-7 object-contain" />
-            </div>
-            <span className="text-mini text-textSecondary">{name}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ── 활동 중인 모임 — 게스트 제외 (SPEC §12.11) ────── */}
-      {!isGuest && <div className="mt-5 px-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-h3 text-textPrimary">활동 중인 모임</h2>
-          <button type="button" onClick={() => navigate('/exercise')}
-            className="text-caption text-orange">더보기 ›</button>
-        </div>
-
-        {/* 필터 칩 */}
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
-          {CHIPS.map((chip) => {
-            const isActive = chip === '가까운순' ? true : activeChips.has(chip);
-            return (
-              <button key={chip} type="button" onClick={() => toggleChip(chip)}
-                className={cn(
-                  'flex-shrink-0 rounded-full border px-3 py-1 text-micro',
-                  isActive ? 'border-orange bg-orange text-textWhite' : 'border-borderDefault text-textSecondary',
-                )}>
-                {chip}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 모임 카드 */}
-        <div className="mt-2 flex flex-col gap-2">
-          {filteredMeetings.length === 0 ? (
-            <p className="py-4 text-center text-caption text-textHint">조건에 맞는 모임이 없어요</p>
-          ) : (
-            filteredMeetings.map((m) => (
-              <MeetingCard key={m.id} meeting={m} onClick={() => navigate(`/meeting/${m.id}`)} />
-            ))
-          )}
-        </div>
-      </div>}
-
-      {/* ── 체험 가능 모임 ─────────────────────────────────── */}
-      <div className="mt-6">
-        <div className="flex items-center justify-between px-5">
-          <h2 className="text-h3 text-textPrimary">체험 가능 모임</h2>
-          <button type="button" onClick={() => navigate('/trials')}
-            className="text-caption text-textHint">더보기 ›</button>
-        </div>
-        <div className="mt-2 flex gap-3 overflow-x-auto px-5 pb-2 [&::-webkit-scrollbar]:hidden">
-          {trialMeetings.map((m) => (
-            <TrialCard key={m.id} meeting={m}
-              onApply={() => navigate(`/meeting/${m.id}`)}
-              onClick={() => navigate(`/meeting/${m.id}`)} />
-          ))}
-        </div>
-      </div>
-
-      {/* ── 후기 ───────────────────────────────────────────── */}
-      <div className="mt-6">
-        <div className="flex items-center justify-between px-5">
-          <h2 className="text-h3 text-textPrimary">후기</h2>
-          <button type="button" onClick={() => navigate('/reviews')}
-            className="text-caption text-textHint">더보기 ›</button>
-        </div>
-        <div className="mt-2 flex gap-3 overflow-x-auto px-5 pb-2 [&::-webkit-scrollbar]:hidden">
-          {reviews.map((r) => (
-            <ReviewCard key={r.id} review={r} />
-          ))}
-        </div>
-      </div>
-
-      {/* ── 다가오는 정기모임 ──────────────────────────────── */}
-      <div className="mt-6 px-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-h3 text-textPrimary">다가오는 정기모임</h2>
-          <button type="button" onClick={() => navigate('/upcoming')}
-            className="text-caption text-orange">더보기 ›</button>
-        </div>
-        <div className="mt-2">
-          <DateStrip schedules={schedules} selected={selDate} onSelect={setSelDate} />
-        </div>
-        <div className="mt-3 flex flex-col gap-2">
-          {daySchedules.length === 0 ? (
-            <p className="py-3 text-center text-caption text-textHint">이 날은 일정이 없어요</p>
-          ) : (
-            daySchedules.map((s) => (
-              <button key={s.id} type="button"
-                onClick={() => navigate('/upcoming')}
-                className="flex items-center gap-3 rounded-card border border-borderDefault p-3">
-                <img src={meetingImg(s.image)} alt="" className="h-12 w-12 flex-shrink-0 rounded-[8px] object-cover" />
-                <div className="flex-1 text-left">
-                  <p className="text-body-strong text-textPrimary">{s.title}</p>
-                  <p className="mt-0.5 text-caption text-textSecondary">{s.time} · {s.location}</p>
-                  <p className="mt-0.5 text-micro text-textHint">{s.sport} · {s.level} · 멤버 {s.memberCount}명</p>
-                </div>
-                {s.isUrgent && (
-                  <span className="rounded-[4px] bg-error px-1.5 py-0.5 text-[10px] text-textWhite">마감임박</span>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* ── CTA 배너 ───────────────────────────────────────── */}
-      <div className="mx-5 mt-6 rounded-card bg-background px-4 py-4">
-        <p className="text-caption text-textSecondary">나에게 딱맞는 모임이 없어 아쉬우신가요?</p>
-        <p className="mt-0.5 text-body-strong text-textPrimary">직접 모임장이 되어 모임을 운영해보세요!</p>
-        <button type="button" onClick={() => memberOnly('맞춤 모임 추천', '/create-meeting')}
-          className="mt-3 text-label-semibold text-orange">모임 만들기 →</button>
-      </div>
-
-      {/* ── FAB — MobileFrame 내 우하단 고정 ──────────────── */}
-      <div className="pointer-events-none fixed bottom-20 left-1/2 z-10 h-14 w-full max-w-mobile -translate-x-1/2">
-        <button type="button" onClick={() => memberOnly('모임 만들기', '/create-meeting')}
-          className="pointer-events-auto absolute right-4 top-0 flex h-14 w-14 items-center justify-center rounded-full bg-orange shadow-lg">
-          <Plus size={24} className="text-textWhite" />
-        </button>
-      </div>
+    <div className="pointer-events-none fixed bottom-20 left-1/2 z-10 h-14 w-full max-w-mobile -translate-x-1/2">
+      <button type="button" onClick={onClick} aria-label="모임 만들기"
+        className="pointer-events-auto absolute right-4 top-0 flex h-14 w-14 items-center justify-center rounded-full bg-orange shadow-lg">
+        <Plus size={24} className="text-textWhite" />
+      </button>
     </div>
   );
+}
+
+const locationToast = () => toast('위치 변경 기능을 준비 중이에요');
+
+// ── 회원 홈 — Android HomeFragment ──────────────────────────────────────────
+function MemberHome() {
+  const navigate = useNavigate();
+  const nickname = useAuthStore((s) => s.currentUser?.nickname ?? '');
+  const created = useCreatedMeetingsStore((s) => s.meetings);
+  const { meetings, reviews, schedules, trials } = useHomeData();
+
+  const recommended = useMemo(() => pick(meetings, HOME_RECOMMENDED_IDS), [meetings]);
+  // setupActiveMeetings: UserCreatedMeetings + activeMeetings (필터 없음)
+  const active = useMemo(() => [...created, ...pick(meetings, ACTIVE_MEETING_IDS)], [created, meetings]);
+
+  // setupHero: 오늘 일정 → 내일 일정 → 없음
+  const greeting = nickname.trim() ? `안녕하세요 ${nickname}님!` : '안녕하세요!';
+  const todayItem    = schedules.find((s) => s.date === todayMD(0));
+  const tomorrowItem = schedules.find((s) => s.date === todayMD(1));
+  const hero = todayItem
+    ? { title: `${greeting}\n오늘 ${todayItem.time} · ${todayItem.title}이 있어요`, cta: '일정 바로가기 →', to: '/upcoming' }
+    : tomorrowItem
+      ? { title: `${greeting}\n다음 ${tomorrowItem.sport}은 내일 ${tomorrowItem.time}이에요 🏃`, cta: '일정 바로가기 →', to: '/upcoming' }
+      : { title: `${greeting}\n아직 가입한 모임이 없어요`, cta: '가입하러 가기 →', to: '/explore' };
+
+  const toDetail = (m: Meeting) => navigate(`/meeting/${m.id}`);
+
+  return (
+    <div className="relative flex flex-col bg-background/50 pt-safe">
+      <HomeTopBar onLocation={locationToast} onBell={() => navigate('/notifications')} onSearch={() => navigate('/search')} />
+      <HomeHero title={hero.title} cta={hero.cta} onCta={() => navigate(hero.to)} />
+
+      <div className="rounded-t-[16px] bg-surface">
+        <SportIconRow onSport={(s) => navigate(`/explore/${encodeURIComponent(s)}`)} />
+
+        <div className="px-5 pt-3">
+          <SectionHeader title="추천 모임" onMore={() => navigate('/explore')} />
+          <RecommendedFilterRow />
+          {recommended.map((m) => (
+            <MeetingCard key={m.id} meeting={m} variant="recommended" onClick={() => toDetail(m)} />
+          ))}
+        </div>
+        <SectionDivider />
+
+        <div className="px-5 pt-5">
+          <SectionHeader title="활동 중인 모임" onMore={() => navigate('/exercise')} />
+          {active.map((m) => <MeetingCard key={m.id} meeting={m} onClick={() => toDetail(m)} />)}
+        </div>
+        <SectionDivider />
+
+        <div className="pt-5">
+          <SectionHeader title="체험 가능 모임" onMore={() => navigate('/trials')} className="px-5" />
+          <HScroll>
+            {trials.map((m) => <TrialCard key={m.id} meeting={m} onApply={() => toDetail(m)} onClick={() => toDetail(m)} />)}
+          </HScroll>
+        </div>
+        <SectionDivider />
+
+        <CtaBanner title="나에게 딱맞는 모임이 없어 아쉬우신가요?" sub="직접 모임장이 되어 모임을 운영해보세요!"
+          button="모임 만들기 →" onClick={() => navigate('/create-meeting')} />
+        <SectionDivider />
+
+        <div className="pt-5">
+          <SectionHeader title="후기" onMore={() => navigate('/reviews')} className="px-5" />
+          <HScroll>{reviews.map((r) => <ReviewCard key={r.id} review={r} />)}</HScroll>
+        </div>
+        <SectionDivider />
+
+        <UpcomingSection schedules={schedules} onMore={() => navigate('/upcoming')} showMonth />
+      </div>
+
+      <Fab onClick={() => navigate('/create-meeting')} />
+    </div>
+  );
+}
+
+// ── 게스트 홈 — Android GuestHomeFragment ───────────────────────────────────
+function GuestHome() {
+  const navigate = useNavigate();
+  const { meetings, reviews, schedules, trials } = useHomeData();
+  const recommended = useMemo(() => pick(meetings, GUEST_RECOMMENDED_IDS), [meetings]);
+
+  // showLoginRequired(featureName): 토스트 + 로그인 화면 push (뒤로 = 게스트 홈 복귀)
+  const loginRequired = (feature: string) => () => {
+    toast(`로그인 후 ${feature} 기능을 사용할 수 있어요`);
+    navigate('/login');
+  };
+
+  return (
+    <div className="relative flex flex-col bg-background/50 pt-safe">
+      <HomeTopBar onLocation={locationToast} onBell={loginRequired('알림')} onSearch={() => navigate('/search')} />
+      <HomeHero title="로그인하고 다양한 모임에 참여해요!" cta="로그인하기 →" onCta={() => navigate('/login')} />
+
+      <div className="rounded-t-[16px] bg-surface">
+        <SportIconRow onSport={(s) => navigate(`/explore/${encodeURIComponent(s)}`)} />
+
+        <div className="px-5 pt-3">
+          <SectionHeader title="추천 모임" onMore={() => navigate('/explore')} />
+          <RecommendedFilterRow />
+          {recommended.map((m) => (
+            <MeetingCard key={m.id} meeting={m} variant="recommended"
+              onClick={loginRequired('모임 상세 보기')} onGuestHeart={loginRequired('찜하기')} />
+          ))}
+        </div>
+        <SectionDivider />
+
+        <div className="pt-5">
+          <SectionHeader title="체험 가능 모임" onMore={() => navigate('/trials')} className="px-5" />
+          <HScroll>
+            {trials.map((m) => (
+              <TrialCard key={m.id} meeting={m} onApply={loginRequired('체험 신청')} onClick={loginRequired('모임 상세 보기')} />
+            ))}
+          </HScroll>
+        </div>
+        <SectionDivider />
+
+        <CtaBanner title={'나에게 맞는 모임을\n찾아드릴까요?'} button="모임 찾아주기 →" onClick={loginRequired('맞춤 모임 추천')} />
+        <SectionDivider />
+
+        <div className="pt-5">
+          <SectionHeader title="후기" onMore={() => navigate('/reviews')} className="px-5" />
+          <HScroll>{reviews.map((r) => <ReviewCard key={r.id} review={r} />)}</HScroll>
+        </div>
+        <SectionDivider />
+
+        <UpcomingSection schedules={schedules} onMore={() => navigate('/upcoming')} showMonth={false} />
+      </div>
+
+      <Fab onClick={loginRequired('모임 만들기')} />
+    </div>
+  );
+}
+
+export function HomeScreen() {
+  const isGuest = useAuthStore((s) => s.isGuest);
+  const currentUser = useAuthStore((s) => s.currentUser);
+  return isGuest || !currentUser ? <GuestHome /> : <MemberHome />;
 }

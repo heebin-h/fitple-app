@@ -257,7 +257,7 @@ src/
 │   │   └── SignupCompleteScreen.tsx
 │   └── main/
 │       ├── HomeScreen.tsx
-│       ├── GuestHomeBranch.tsx    # Used inside HomeScreen when isGuest
+│       ├── (GuestHome / MemberHome live inside HomeScreen.tsx; shared sections in components/home/HomeSections.tsx)
 │       ├── ExerciseScreen.tsx
 │       ├── PostDetailScreen.tsx
 │       ├── PostChatScreen.tsx
@@ -672,7 +672,7 @@ The flag is also cleared if the user logs in successfully on the same device.
 
 ### 11.5 Guest mode
 
-`LoginScreen` → "회원가입 없이 둘러보기" → `authStore.enterGuest()` → `navigate('/home')`. The home screen reads `isGuest` from the store and renders the guest branch (`GuestHomeBranch.tsx`):
+`LoginScreen` → "회원가입 없이 둘러보기" → `authStore.enterGuest()` → `navigate('/home')`. The home screen reads `isGuest` from the store and renders `GuestHome` (inside `HomeScreen.tsx`, §12.11):
 
 * Hero copy is fixed: "모임을 둘러보는 중이에요!" with CTA "로그인하고 참여하기 →".
 * "Active Meetings" section is omitted.
@@ -785,29 +785,32 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Edge cases:** Pressing back is intercepted — both back and the X icon in the toolbar should also `/home` because the account is already active.
 
 ### 12.10 HomeScreen (member)
-* **Purpose:** Authenticated landing.
-* **Layout (top-to-bottom):**
-  1. Top bar: location chip ("미사 1동 ▾"), search bar ("찾고싶은 모임이 있나요?"), bell icon.
-  2. Hero card: greeting "안녕하세요 {nickname}님!", contextual subtitle + CTA — see three states below.
-  3. Sport icon row (5 sports). Tap routes to `/explore/{sport}`.
-  4. Section "활동 중인 모임" with filter chips (`가까운순`, `편하게`, `평일오후`, `주말`) and 3+ `MeetingCard` rows. "더보기 ›" routes to `/exercise`.
-  5. Section "체험 가능 모임" — horizontal carousel of `TrialCard` (Android `SampleData.trialMeetings` 3건 = seed `TRIAL_MEETING_IDS`). Card tap and "신청하기" both route to `/meeting/{id}`. "더보기 ›" routes to `/trials`.
-  6. Section "후기" — horizontal carousel of `ReviewCard` (image + gradient overlay + quote). "더보기 ›" routes to `/reviews`.
-  7. Section "다가오는 정기모임" — `DateStrip` (7 days, today centred) + vertical list of `ScheduleCard`. "더보기 ›" routes to `/upcoming`.
-  8. CTA banner: "나에게 딱맞는 모임이 없어 아쉬우신가요? / 직접 모임장이 되어 모임을 운영해보세요!" with "모임 만들기 →" → `/create-meeting` (Android `btnFindMeeting`).
-  9. Floating `+` FAB bottom-right (above bottom nav) → `/create-meeting`.
-  * "활동 중인 모임" list = session-created meetings (newest first) + seed meetings, then chip filter, first 5.
-* **Hero card states** (logic identical to Android `HomeFragment.setupHero`):
+* **Source:** Android `HomeFragment.kt` + `fragment_home.xml`; visuals from `designs/home_main_postdetail_share_chat.png` ("홈 -가입 x") and `home_bottom_banner_schedule.png` (PNG wins over XML). Shared sections live in `components/home/HomeSections.tsx`. `HomeScreen` renders `MemberHome` for a logged-in user and `GuestHome` (§12.11) otherwise.
+* **Layout (top-to-bottom, XML order):**
+  1. Top bar: location "미사 1동 ▾" (Android `LocationState.current` default; tap → toast "위치 변경 기능을 준비 중이에요"), bell → `/notifications`.
+  2. Search field (full width, orange outline) → `/search`.
+  3. Hero: date "M월 D일(요일)", title (states below), orange CTA, illustration right (`ic_banner_schedule_illust`). Top area (1–3) sits on a faint grey background; from the sport row down a white panel with rounded top corners.
+  4. Sport icon row (5) → `/explore/{sport}`.
+  5. "추천 모임" + 더보기 → `/explore`. Static filter row ("필터" + 가까운 순 · 편하게 · 평일 오후 · 주말 · 초보 환영 — display only, Android binds no listener). List = `HOME_RECOMMENDED_IDS` (= Android `homeRecommended`), `MeetingCard variant="recommended"` (no badges, meta "{location} | 멤버 {n}명").
+  6. "활동 중인 모임" + 더보기 → `/exercise`. List = session-created meetings + `ACTIVE_MEETING_IDS` (= `UserCreatedMeetings + activeMeetings`), no filter, `MeetingCard` (badges + meta "{location} | {meetingTime} | 멤버 n/max").
+  7. "체험 가능 모임" + 더보기 → `/trials`; `TrialCard` carousel, tap / 신청하기 → `/meeting/{id}`.
+  8. CTA banner "나에게 딱맞는 모임이 없어 아쉬우신가요?" / "직접 모임장이 되어 모임을 운영해보세요!" / "모임 만들기 →" → `/create-meeting`.
+  9. "후기" + 더보기 → `/reviews`; `ReviewCard` carousel.
+  10. "다가오는 정기모임" + 더보기 → `/upcoming`; month label "YYYY년 M월", static date strip (today ±3, today highlighted, not tappable), **all** schedules as `ScheduleCard` (no date filter — Android `populateSchedule`).
+  11. FAB → `/create-meeting`.
+  * Sections are separated by a `12 pt` background band.
+* **Hero card states** (Android `HomeFragment.setupHero`; greeting falls back to "안녕하세요!" without a nickname):
   | State                                         | Title                                                      | CTA                  |
   |-----------------------------------------------|------------------------------------------------------------|----------------------|
-  | No upcoming schedule today or tomorrow        | `안녕하세요 {nickname}님!\n아직 가입한 모임이 없어요`              | `가입하러 가기 →`     |
-  | Schedule found for tomorrow                   | `안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃`     | `일정 바로가기 →`     |
-  | Schedule found for today                      | `안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요`        | `일정 바로가기 →`     |
-* **Data:** `meetingsRepo.getActive(currentUser)`, `meetingsRepo.getTrials()`, `reviewsRepo.list()`, `schedulesRepo.next7()`.
-* **Interactions:** Search bar → `/search` (member + guest). Bell → `/notifications` (guest: see §11.5). Location chip shows toast.
+  | No schedule today or tomorrow                 | `안녕하세요 {nickname}님!\n아직 가입한 모임이 없어요`              | `가입하러 가기 →` → `/explore` |
+  | Schedule found for tomorrow                   | `안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃`     | `일정 바로가기 →` → `/upcoming` |
+  | Schedule found for today                      | `안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요`        | `일정 바로가기 →` → `/upcoming` |
 
-### 12.11 HomeScreen (guest branch)
-* Same skeleton minus the Active Meetings section, with the fixed hero text, and with login prompts replacing several actions (see §11.5).
+### 12.11 HomeScreen (guest)
+* **Source:** Android `GuestHomeFragment.kt` + `fragment_guest_home.xml` (no dedicated PNG — same visual system as §12.10).
+* **Layout:** same as §12.10 minus "활동 중인 모임" and minus the month label. Hero title "로그인하고 다양한 모임에 참여해요!", CTA "로그인하기 →" → `/login` (no toast). Recommended list = `GUEST_RECOMMENDED_IDS` (= Android `guestRecommended` g1–g4). CTA banner "나에게 맞는 모임을\n찾아드릴까요?" / "모임 찾아주기 →".
+* **Allowed:** search, sport icons, all 더보기 links, review carousel.
+* **Login prompts** (toast "로그인 후 {기능} 기능을 사용할 수 있어요" + push `/login`): bell (알림), recommended card (모임 상세 보기), recommended heart (찜하기), trial card (모임 상세 보기), trial 신청하기 (체험 신청), CTA banner (맞춤 모임 추천), FAB (모임 만들기).
 
 ### 12.12 ExerciseScreen
 * **Purpose:** Vertical list of every meeting (Android `ExerciseFragment`).
@@ -1478,34 +1481,29 @@ Password screen also includes "비밀번호 표시" row identical to EmailLogin 
 
 ### 25.11 HomeScreen (member, full layout)
 
-Order top→bottom on the same single scrollable surface.
+Order top→bottom on one scroll surface. Sizes are the implemented values (design PNG measured at ~1:1; XML where no PNG). Behaviour and copy: §12.10.
 
-| #  | Region                                       | Spec |
-|----|----------------------------------------------|------|
-| 1  | **Header row** (sticky)                      | Height `52 pt`. Left: location chip "미사 1동 ▾" `13 pt / 600 / textPrimary` with chevron-down `12 × 12`. Center: search bar fills remaining width, height `36 pt`, radius `999`, background `surface`, `1 pt borderDefault`, leading magnifier icon `16 × 16`, placeholder "찾고싶은 모임이 있나요?" `13 pt / 400 / textHint`. Right: bell icon `24 × 24`. |
-| 2  | **Hero card**                                | Margin `12 pt` top, `20 pt` horizontal. Card height `108 pt`, radius `14 pt`, background gradient from `#FFE2D7` (top-left) to `#FFD0C0` (bottom-right). Inside: date `12 pt / 500 / textSecondary` top-left, then bold 2-line title `15 pt / 700 / textPrimary` line-height `1.4`. Right side: schedule mascot illustration `90 × 90 pt`. CTA text "가입하러 가기 →" `13 pt / 700 / orange` aligned bottom-left. |
-| 3  | **Sport row**                                | Margin-top `20 pt`. Row of 5 tiles same as preference SELECTION sizing (`60 × 78`). Spacing `12 pt`. Horizontal padding `20 pt`. Hits route to `/explore/{sport}`. |
-| 4  | **추천 모임 section**                         | Header (see §25.1). Margin-top `28 pt`. |
-| 4a | Filter chips                                 | Horizontal scroll, `8 pt` gap. Chip height `32 pt`, radius `999`, padding `0 14 pt`. Unselected: border `borderDefault`, label `13 pt / 500 / textSecondary`. Selected: solid `orangeTint`, `1 pt orange`, label `13 pt / 600 / orange`. First chip "가까운 순 ▾" adds chevron. |
-| 4b | Recommended cards (list)                     | 4 visible. Card `100% × 84 pt`, radius `12 pt`, white background. Left: image `64 × 64`, radius `10 pt`, `16 pt` from card-left. Right: title `15 pt / 700 / textPrimary` (single line, ellipsis), desc `13 pt / 400 / textSecondary` (single line), meta row `12 pt / 400 / textHint` "멤버 {n}명 · {n}분전 활동". Top-right: heart icon `20 × 20`, `textHint` outline. Sport badge pill bottom-right of image area: height `20 pt`, radius `999`, padding `0 8 pt`, label `11 pt / 600`, color scheme matches the sport (default `orangeTint` + `orange` text). |
-| 5  | **활동 중인 모임 section**                    | Same card pattern as 4b. Header "활동 중인 모임" + 더보기. |
-| 6  | **체험 가능 모임 section**                    | Header + "더보기 ›" (`13 pt / textHint`) → `/trials`. Horizontal carousel of `TrialCard` (`components/meeting/TrialCard.tsx`, source `item_trial_card.xml` + `designs/home_trial_card_detail_apply.png`, PNG wins on conflict). Card `162 pt` wide, no border. Image square, radius `12 pt` all corners. Badges top-left: "{n}분전 활동" pill (blueTint bg / blue text) + sport pill (orangeTint / orange), `11 pt`. "한자리 남았어요!!" bottom-left when remaining seats ≤ 2. Title `15 pt / 500`, description `13 pt`, pin + location `12 pt / textSecondary`, avatar stack (4 grey `22 pt` circles + dark "+{memberCount−5}" circle) + "멤버 {n}/{max}" `13 pt / textHint`. CTA "신청하기" full card width, `52 pt` tall, radius `8 pt`, `14 pt / 700`. |
-| 7  | **CTA banner**                                | Card `100% × 96 pt`, radius `14 pt`, background `#FFF0ED`. Title `14 pt / 700`, subtitle `13 pt / 500 / textSecondary` underneath. Right side: orange outline button "모임 만들기 →" `36 pt` tall, padding `0 14 pt`, radius `999`, label `13 pt / 700 / orange`. |
-| 8  | **후기 section**                              | Header + "더보기 ›" (`13 pt / textHint`) → `/reviews`. Carousel of `ReviewCard` (`components/meeting/ReviewCard.tsx`, source `item_review_card.xml` + `designs/home_review_billboard_cards.png`). Card `180 × 240 pt`, radius `12 pt`, image fills card with gradient `gradientStart → gradientEnd`. Text stack bottom, `12 pt` padding: nickname `11 pt / white80`, activity `11 pt / white60` (1 line), quote `12 pt / 700 / white` wrapped in `"…"`, max 3 lines. |
-| 9  | **다가오는 정기모임 section**                 | Header "다가오는 정기모임" + 더보기. Below header: "{YYYY}년 {M}월" `13 pt / 500 / textSecondary`. |
-| 9a | Date strip                                   | 7 day cells centered on today. Each cell `40 × 56 pt`. Number `15 pt / 600 / textPrimary` on white circle `32 × 32` (no fill when not today). Today: circle solid `orange`, number white, day-of-week label `12 pt / 700 / orange` below. Other days: dow `12 pt / 500 / textHint`. Horizontal scroll if more than 7 visible. |
-| 9b | Schedule cards                               | List, gap `10 pt`. Card `100% × 100 pt`, radius `12 pt`, white background. Left text column padding `14 pt`. Top: small badge row "Level·{보통/중급/상급}" `11 pt / 700 / orange` on `orangeTint` pill + sport badge "{러닝/…}" same style. Title `15 pt / 700`, single-line. "한자리 남았어요!!" red bold below title when `isUrgent`. Info row: `{location} · 매주({day}) {time} · {n}명 참석중` `12 pt / 500 / textSecondary`. Right: thumbnail `80 × 80 pt`, radius `10 pt`. |
-| 10 | **Bottom-nav** (fixed)                       | Height `56 pt + safe-area-inset-bottom`. White background, top `1 pt` divider in `borderDefault`. 5 equal-width slots. Icon `24 × 24` + label `11 pt / 500`. Selected: icon + label both `orange`; unselected: `textHint`. The active tab indicator is colour-only (no underline). |
-| 11 | **FAB**                                      | `56 × 56` round, orange, white `+ ` glyph, `bottom: 76 pt + safe-area`, `right: 20 pt`. Shadow `0 4pt 12pt rgba(255,87,34,0.30)`. |
+| #  | Region | Spec |
+|----|--------|------|
+| 1  | **Top bar** | `48 pt`, `px-5`. "미사 1동" `13 pt / 700` + chevron-down `14`. Bell outline `24` right. |
+| 2  | **Search** | `44 pt`, radius `8`, `1 pt` orange border, `px-3.5`, hint `14 pt / textHint`, search icon `20` right. `pb 12`. |
+| 3  | **Hero** | `px-5 pt-3 pb-5`. Date `13 pt / textPrimary`; title `15 pt / 700`, keep-all wrapping; CTA `36 pt`, radius `6`, `px-3`, `13 pt / 700` white on orange; illustration `80 pt` tall, right, bottom-aligned. Rows 1–3 on `background/50`. |
+| 4  | **Sport row** | White panel starts here (top radius `16`). 5 equal columns: box `52 × 52`, radius `14`, `background`; icon `30`; label `11 pt / textSecondary`, `5 pt` gap. |
+| 5  | **Section header** (all sections) | Title `17 pt / 700`; "더보기" `13 pt / textHint` + chevron-right `16`. `12 pt` below. |
+| 6  | **추천 모임** | Filter row: "필터" pill (`28 pt`, borderDefault, sliders icon `12`, `12 pt / textSecondary`) + chips (`28 pt`, radius full, orange border + orange `13 pt` text, white). `MeetingCard` rows. |
+| 7  | **MeetingCard** | Row `py-3`, no border/divider. Thumb `92 × 92`, radius `6`. Badges (active only): "{n}분전 활동" blueTint/blue, sport orangeTint/orange bold, radius `4`, `11 pt`. Title `15 pt / 500`, description `13 pt / textSecondary` 1 line, meta `11 pt / textHint` with borderDefault "\|" separators, optional `#tags` line. Heart `24` top-right (§12.23). |
+| 8  | **Section band** | `12 pt`, `background`. |
+| 9  | **체험 가능 모임** | `TrialCard` carousel (§25 row "체험 가능 모임" above / `TrialCard.tsx`). |
+| 10 | **CTA banner** | `mx-5 my-4`, radius `14`, `background`, `p-4`. Title `16 pt / 700`, sub `14 pt`. Button bottom-right: `40 pt`, radius `10`, orangeTint, orange `14 pt / 700`. No illustration (PNG). |
+| 11 | **후기** | `ReviewCard` carousel. |
+| 12 | **다가오는 정기모임** | `px-5 pt-5 pb-6`. Month `13 pt / 700` centred. Date strip: 7 cells `44 pt` wide, number `16 pt / 600`, weekday `12 pt / textSecondary`; today = textPrimary rounded rect (radius `8`) with white text; bottom `1 pt` borderDefault line. |
+| 12a| **ScheduleCard** | `py-3`. Badges "Level·{level}" blueTint/blue and sport orangeTint/orange, radius full, `11 pt`. Title `16 pt / 600`. "한자리 남았어요!!" `14 pt` (isUrgent). Info `11 pt`: "{location} · 매주({day}) {time}" blue + " · {n}명 참석중" textHint. Thumb `96 × 96`, radius `8`, right. Not tappable. |
+| 13 | **Bottom-nav** (fixed) | Height `56 pt + safe-area-inset-bottom`. |
+| 14 | **FAB** | `56 × 56` round, orange, white `+`, above the bottom nav. |
 
-#### Hero state copy (textually identical to §12.10):
-* No upcoming → "안녕하세요 {nickname}님!\n아직 가입한 모임이 없어요" / CTA "가입하러 가기 →".
-* Tomorrow → "안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃" / CTA "일정 바로가기 →".
-* Today → "안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요" / CTA "일정 바로가기 →".
+### 25.12 HomeScreen — guest
 
-### 25.12 HomeScreen — guest branch
-
-Identical scaffold minus the "활동 중인 모임" section (#5). Hero copy is fixed "모임을 둘러보는 중이에요!" / CTA "로그인하고 참여하기 →", and the hero background uses a slightly cooler tint (`#E7F0FF` → `#D3E1FF`) per the design exports.
+Same visual spec as §25.11 without row "활동 중인 모임" and without the month label (§12.11).
 
 ### 25.13 ExerciseScreen
 

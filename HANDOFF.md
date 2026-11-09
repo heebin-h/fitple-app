@@ -56,11 +56,11 @@ git log --oneline -5
 - `SignupEmailScreen` → `SignupPasswordScreen` → `SignupNicknameScreen` → `SignupPreferenceScreen` → `SignupCompleteScreen`
 - `SplashScreen` 디자인 PNG 완전 재구현
 
-### Phase 4 — HomeScreen 풀 구현 ✅
-- `meetingImage.ts`: 시드 img_* 키 → 실제 에셋 매핑
-- `MeetingCard` 컴포넌트 (Home/Exercise/Recommended 공용)
-- `HomeScreen`: top bar, hero 3-state (오늘/내일/없음), 종목 아이콘 행, 활동중인모임+칩필터, 체험가능모임 carousel, 후기 carousel, DateStrip+ScheduleCard, CTA 배너, FAB
-- 게스트 분기: "활동 중인 모임" 섹션 숨김 (SPEC §12.11)
+### Phase 4 — HomeScreen 풀 구현 ✅ (2026-11-10 디자인·XML 기준 재구성)
+- `HomeScreen` = `MemberHome`(HomeFragment) / `GuestHome`(GuestHomeFragment) 분기, 공용 섹션 `components/home/HomeSections.tsx`
+- 순서: 상단바 → 검색 → Hero(날짜·일러스트) → 종목 → 추천 모임(필터 칩 표시 전용) → 활동 중인 모임(회원) → 체험 → CTA 배너 → 후기 → 정기모임
+- `MeetingCard` = item_meeting_card (active / recommended variant), 게스트 로그인 유도 7종 (SPEC §12.11)
+- 시드: `HOME_RECOMMENDED_IDS` · `GUEST_RECOMMENDED_IDS`(게스트 추천 4건 추가) · `ACTIVE_MEETING_IDS`
 
 ### Phase 5 — 모임/일정/마이 화면 ✅
 - `chatStore.ts` (Zustand, meetingId 키)
