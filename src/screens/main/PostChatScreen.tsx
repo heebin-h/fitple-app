@@ -10,6 +10,7 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
+import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import type { Meeting, ChatMessage } from '../../data/models';
 
 function readMeetings(): Meeting[] {
@@ -36,7 +37,11 @@ export function PostChatScreen() {
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const meeting = useMemo(() => readMeetings().find((m) => m.id === id) ?? null, [id]);
+  const created = useCreatedMeetingsStore((s) => s.meetings);
+  const meeting = useMemo(
+    () => [...created, ...readMeetings()].find((m) => m.id === id) ?? null,
+    [created, id],
+  );
 
   useEffect(() => {
     if (id) initMessages(id, readChats(id));

@@ -298,7 +298,8 @@ src/
 ├── store/
 │   ├── authStore.ts               # currentUser, isGuest
 │   ├── preferenceStore.ts         # SELECTION → DETAIL state machine
-│   └── chatStore.ts               # Active meetingId → messages
+│   ├── chatStore.ts               # Active meetingId → messages
+│   └── createdMeetingsStore.ts    # 사용자가 만든 모임 (세션 메모리 전용 — Android UserCreatedMeetings)
 ├── storage/
 │   ├── userManager.ts
 │   ├── seedRunner.ts
@@ -594,6 +595,7 @@ Local component state remains the default. Only promote to Zustand when:
 /reviews                        ReviewListScreen       (홈 "후기" 더보기 — Android ReviewListFragment)
 /notifications                  NotificationScreen     (bell — Android NotificationFragment)
 /search                         SearchScreen           (홈 검색창 · Upcoming 검색 아이콘 — Android SearchFragment)
+/create-meeting                 CreateMeetingScreen    (홈 FAB · "모임 만들기 →" — Android CreateMeetingFragment, 회원 전용)
 /chat                           ChatListScreen         (BottomNav 채팅 탭 — Android ChatListFragment, 회원 전용)
 ```
 
@@ -601,7 +603,7 @@ Local component state remains the default. Only promote to Zustand when:
 * `RequireAuth` wraps any route that demands a real account (chat send, meeting create, MY tab). On rejection it pushes to `/login` and surfaces a `react-hot-toast` notification.
 * Header/tab visibility:
   * `BottomNav` is rendered by `HomeScreen`, `ExerciseScreen`, `RecommendedGroupScreen` (top-level "Explore"), `UpcomingMeetingScreen` (when accessed from a tab), `ChatListScreen`, `MyScreen`.
-  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, `ReviewListScreen`, `NotificationScreen`, and `SearchScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
+  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, `ReviewListScreen`, `NotificationScreen`, `SearchScreen`, and `CreateMeetingScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
 
 ### 10.2 Slide transitions
 
@@ -676,7 +678,7 @@ The flag is also cleared if the user logs in successfully on the same device.
 * "Active Meetings" section is omitted.
 * Notification bell → toast "로그인 후 알림 기능을 사용할 수 있어요" + `/login` (Android `GuestHomeFragment.showLoginRequired("알림")`).
 * BottomNav 채팅 탭 → toast "로그인 후 이용할 수 있어요", tab not selected (Android `FitpleMainActivity` nav_chat).
-* FAB, "맞춤 모임 찾기" show "로그인이 필요한 기능이에요" via `react-hot-toast`.
+* FAB → toast "로그인 후 모임 만들기 기능을 사용할 수 있어요" + `/login`; CTA "모임 만들기 →" → "로그인 후 맞춤 모임 추천 기능을 사용할 수 있어요" + `/login` (Android `showLoginRequired`).
 * Tabs **MY** and **Chat** are disabled; tapping them shows the same toast.
 
 ### 11.6 Logout
@@ -792,8 +794,9 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
   5. Section "체험 가능 모임" — horizontal carousel of `TrialCard` (Android `SampleData.trialMeetings` 3건 = seed `TRIAL_MEETING_IDS`). Card tap and "신청하기" both route to `/meeting/{id}`. "더보기 ›" routes to `/trials`.
   6. Section "후기" — horizontal carousel of `ReviewCard` (image + gradient overlay + quote). "더보기 ›" routes to `/reviews`.
   7. Section "다가오는 정기모임" — `DateStrip` (7 days, today centred) + vertical list of `ScheduleCard`. "더보기 ›" routes to `/upcoming`.
-  8. CTA banner: "나에게 딱맞는 모임이 없어 아쉬우신가요? / 직접 모임장이 되어 모임을 운영해보세요!" with "모임 만들기 →".
-  9. Floating `+` FAB bottom-right (above bottom nav) → toast "모임 만들기 기능 준비 중이에요".
+  8. CTA banner: "나에게 딱맞는 모임이 없어 아쉬우신가요? / 직접 모임장이 되어 모임을 운영해보세요!" with "모임 만들기 →" → `/create-meeting` (Android `btnFindMeeting`).
+  9. Floating `+` FAB bottom-right (above bottom nav) → `/create-meeting`.
+  * "활동 중인 모임" list = session-created meetings (newest first) + seed meetings, then chip filter, first 5.
 * **Hero card states** (logic identical to Android `HomeFragment.setupHero`):
   | State                                         | Title                                                      | CTA                  |
   |-----------------------------------------------|------------------------------------------------------------|----------------------|
@@ -886,7 +889,7 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 ### 12.21 ChatListScreen
 * **Source:** Android `ChatListFragment.kt` + `fragment_chat_list.xml` + `item_chat_room.xml` (no design PNG).
 * **Layout:** Tab root (BottomNav visible, chat tab active). Toolbar `56 pt`, `px-5`, left-aligned "채팅" `text-heading` (20/700), no back button. Rows `px-5 py-3.5`: thumbnail `56 × 56`, radius `6 pt` + groupName `15 pt / 700` + preview `13 pt / textSecondary` (1 line each) + time `11 pt / textHint` right.
-* **Data:** `ACTIVE_MEETING_IDS` (seed, = Android `SampleData.activeMeetings`). Preview "운영진이 공지를 등록했어요" and time "오후 3:40" are Android constants. Empty state "가입한 모임이 없어요.\n모임에 가입하면 채팅방이 생겨요!" `14 pt / textHint`, `120 pt` from top.
+* **Data:** session-created meetings (newest first) + `ACTIVE_MEETING_IDS` (seed, = Android `UserCreatedMeetings + SampleData.activeMeetings`). Preview "운영진이 공지를 등록했어요" and time "오후 3:40" are Android constants. Empty state "가입한 모임이 없어요.\n모임에 가입하면 채팅방이 생겨요!" `14 pt / textHint`, `120 pt` from top.
 * **Interactions:** Row → `/meeting/{id}` with router state `{ initialTab: '채팅' }` (Android `initialTab = 2`). `PostDetailScreen` honours `location.state.initialTab`.
 * **Access:** member only — guest is blocked at the tab (toast) and a direct `/chat` visit redirects to `/login`.
 
@@ -894,7 +897,7 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Source:** Android `SearchFragment.kt` + `fragment_search.xml`; result rows `item_group_list.xml` + `designs/home_recommended_group_list.png` (PNG wins on conflict).
 * **Entry:** Home search bar (member + guest — Android GuestHome also opens it), Upcoming search icon. (Android PostDetail toolbar also has one — not in the React header.)
 * **Layout:** Toolbar `56 pt`, `px-3`: back + search field (`44 pt`, radius `12 pt`, `1 pt` orange border, `px-3.5`, trailing search icon, hint "찾고싶은 모임이 있나요?"). Field auto-focuses on entry.
-* **Behaviour:** Filters live on every change. Query is trimmed; empty → no rows and no empty message. Match = `title` contains query, case-insensitive. Pool = all `meetings`. No match → "검색 결과가 없어요" `14 pt / textHint`, `80 pt` from top.
+* **Behaviour:** Filters live on every change. Query is trimmed; empty → no rows and no empty message. Match = `title` contains query, case-insensitive. Pool = session-created meetings + all seed `meetings`. No match → "검색 결과가 없어요" `14 pt / textHint`, `80 pt` from top.
 * **Row (`GroupListItem`):** `px-5 py-3.5`, thumbnail `72 × 72` radius `8`, title `15 / 700`, description `13 / textPrimary` 1 line, meta "{location} | 멤버 {n}명" `12 / textHint` (separator in borderDefault), `FavoriteHeart` top-right. Row tap → `/meeting/{id}`.
 * **Access:** member + guest, no BottomNav.
 
@@ -903,6 +906,16 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Where:** `FavoriteHeart` on every `MeetingCard` (Home active list, Exercise, RecommendedGroup) and `GroupListItem` (Search). Android has no heart on PostDetail; the React PostDetail heart remains a toast (pre-existing, not Android).
 * **Look:** `24 pt`. Not favourited → outline, textSecondary (design PNG). Favourited → filled, orange (Android `ic_heart` tint).
 * **Behaviour:** Toggle persists to `UserProfile.favoriteMeetingIds`. Tap does not trigger the card's navigation. Guest → no-op (Android registers no listener without a user).
+
+### 12.24 CreateMeetingScreen
+* **Source:** Android `CreateMeetingFragment.kt` + `fragment_create_meeting.xml` + `UserCreatedMeetings.kt` (no design PNG).
+* **Layout:** Toolbar `56 pt` (back + centred "모임 만들기"). Body `px-5 pt-4 pb-6`. Labels `13 / 700`: 모임 이름 · 종목 · 위치 · 일정 · 정원 · 소개 (`20 pt` apart). Inputs `44 pt`, radius `12`, `1 pt` orange border, `px-3.5`, `14 pt`; 소개 is a `96 pt` textarea. Hints: "예) 미사강변 주말 러닝 크루" / "예) 미사역" / "예) 매주 토 오전 8:00" / "예) 20" / "어떤 모임인지 소개해주세요". Sport chips (5, catalog order) `13 pt`, pill — selected orangeTint + `1.5 pt` orange border + orange text, unselected surface + borderDefault + textSecondary. Submit "모임 만들기" `54 pt`, radius `12`, `16 / 700`, `28 pt` top margin.
+* **Validation (in order):** trimmed title empty → toast "모임 이름을 입력해주세요"; no sport → "종목을 선택해주세요".
+* **Defaults:** location "위치 미정", schedule "일정 미정", capacity = integer parse (Kotlin `toIntOrNull`) else `20`, description "함께할 멤버를 기다려요!".
+* **Created meeting:** `id = created_{epoch ms}`, `groupName = title`, `memberCount 1`, `lastActiveMinutes 0`, image = sport's representative image (러닝 running_group1 · 풋살 futsal_field1 · 등산 hiking_group1 · 사이클 cycling_group1 · 골프 golf_field1).
+* **On submit:** toast "모임이 만들어졌어요!" → push `/meeting/{id}` (back returns to the form, Android `pushWithSlide`).
+* **Persistence:** `createdMeetingsStore` (Zustand), **session memory only** — not written to localStorage, gone after reload (Android parity). Prepended to Home active list, Exercise list, ChatList, Search pool; resolved by `PostDetailScreen` / `PostChatScreen`.
+* **Access:** member only; guest is stopped at the entry points and a direct visit redirects to `/login`.
 
 ## 13. Component Inventory
 
@@ -1290,7 +1303,7 @@ Pulled verbatim from `app/src/main/res/values/strings.xml` and the Fragment sour
 재개 다이얼로그   회원가입을 이어서 하시겠습니까?  /  이전에 시작한 회원가입이 있어요.\n선호 운동 설정만 하면 완료돼요!  /  이어서 하기  /  나중에
 로그인 실패        이메일 또는 비밀번호가 올바르지 않아요.
 이메일 중복        이미 가입된 이메일이에요.  로그인하기
-미구현 토스트     준비 중인 기능이에요  /  위치 변경 기능 준비 중이에요  /  모임 만들기 기능 준비 중이에요  /  맞춤 모임 추천 기능 준비 중이에요
+미구현 토스트     준비 중인 기능이에요  /  위치 변경 기능 준비 중이에요
 종료 안내         뒤로 버튼을 한번 더 누르면 종료됩니다   (Android only — drop on iOS)
 ```
 

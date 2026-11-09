@@ -11,6 +11,7 @@ import { cn } from '../../utils/cn';
 import { meetingImg } from '../../utils/meetingImage';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
+import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import type { Meeting, ChatMessage } from '../../data/models';
 
 // ── localStorage helpers ────────────────────────────────────────────────────
@@ -59,7 +60,11 @@ export function PostDetailScreen() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const isGuest     = useAuthStore((s) => s.isGuest);
 
-  const meeting = useMemo(() => readMeetings().find((m) => m.id === id) ?? null, [id]);
+  const created = useCreatedMeetingsStore((s) => s.meetings);
+  const meeting = useMemo(
+    () => [...created, ...readMeetings()].find((m) => m.id === id) ?? null,
+    [created, id],
+  );
   // Android PostDetailFragment.newInstance(meeting, initialTab) — ChatList는 '채팅' 탭으로 진입
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<Tab>(() => {

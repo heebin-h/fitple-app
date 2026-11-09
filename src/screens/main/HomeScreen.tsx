@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, Search, MapPin, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
+import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import { MeetingCard } from '../../components/meeting/MeetingCard';
 import { TrialCard } from '../../components/meeting/TrialCard';
 import { ReviewCard } from '../../components/meeting/ReviewCard';
@@ -134,6 +135,16 @@ export function HomeScreen() {
 
   const hero = heroContent();
 
+  // Android GuestHomeFragment.showLoginRequired(featureName) — 게스트는 토스트 + 로그인 화면, 회원은 이동
+  function memberOnly(featureName: string, to: string) {
+    if (isGuest || !currentUser) {
+      toast(`로그인 후 ${featureName} 기능을 사용할 수 있어요`);
+      navigate('/login');
+      return;
+    }
+    navigate(to);
+  }
+
   // ── 활동 중인 모임 필터 ───────────────────────────────────────────────
   const toggleChip = (chip: Chip) => {
     if (chip === '가까운순') return; // 정렬만, 필터 없음
@@ -143,7 +154,12 @@ export function HomeScreen() {
       return next;
     });
   };
-  const filteredMeetings = useMemo(() => applyChips(meetings, activeChips).slice(0, 5), [meetings, activeChips]);
+  // Android setupActiveMeetings: UserCreatedMeetings + activeMeetings — 만든 모임이 맨 앞
+  const created = useCreatedMeetingsStore((s) => s.meetings);
+  const filteredMeetings = useMemo(
+    () => applyChips([...created, ...meetings], activeChips).slice(0, 5),
+    [created, meetings, activeChips],
+  );
 
   // ── 날짜별 일정 ───────────────────────────────────────────────────────
   const daySchedules = useMemo(() => schedules.filter((s) => s.date === selDate), [schedules, selDate]);
@@ -170,15 +186,7 @@ export function HomeScreen() {
           <Search size={14} className="text-textHint" />
           <span className="text-caption text-textHint">찾고싶은 모임이 있나요?</span>
         </button>
-        <button type="button" onClick={() => {
-          // Android GuestHomeFragment.showLoginRequired("알림") — 토스트 + 로그인 화면
-          if (isGuest || !currentUser) {
-            toast('로그인 후 알림 기능을 사용할 수 있어요');
-            navigate('/login');
-            return;
-          }
-          navigate('/notifications');
-        }}>
+        <button type="button" onClick={() => memberOnly('알림', '/notifications')}>
           <Bell size={22} className="text-textPrimary" />
         </button>
       </div>
@@ -310,13 +318,13 @@ export function HomeScreen() {
       <div className="mx-5 mt-6 rounded-card bg-background px-4 py-4">
         <p className="text-caption text-textSecondary">나에게 딱맞는 모임이 없어 아쉬우신가요?</p>
         <p className="mt-0.5 text-body-strong text-textPrimary">직접 모임장이 되어 모임을 운영해보세요!</p>
-        <button type="button" onClick={() => toast('모임 만들기 기능 준비 중이에요')}
+        <button type="button" onClick={() => memberOnly('맞춤 모임 추천', '/create-meeting')}
           className="mt-3 text-label-semibold text-orange">모임 만들기 →</button>
       </div>
 
       {/* ── FAB — MobileFrame 내 우하단 고정 ──────────────── */}
       <div className="pointer-events-none fixed bottom-20 left-1/2 z-10 h-14 w-full max-w-mobile -translate-x-1/2">
-        <button type="button" onClick={() => toast('모임 만들기 기능 준비 중이에요')}
+        <button type="button" onClick={() => memberOnly('모임 만들기', '/create-meeting')}
           className="pointer-events-auto absolute right-4 top-0 flex h-14 w-14 items-center justify-center rounded-full bg-orange shadow-lg">
           <Plus size={24} className="text-textWhite" />
         </button>

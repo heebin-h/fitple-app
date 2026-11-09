@@ -8,6 +8,7 @@ import { ArrowLeft, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MeetingCard } from '../../components/meeting/MeetingCard';
 import type { Meeting } from '../../data/models';
+import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 
 function readMeetings(): Meeting[] {
   try { return JSON.parse(localStorage.getItem('meetings') ?? '[]') as Meeting[]; }
@@ -16,7 +17,10 @@ function readMeetings(): Meeting[] {
 
 export function ExerciseScreen() {
   const navigate = useNavigate();
-  const meetings = useMemo(readMeetings, []);
+  // Android setupMeetingList: UserCreatedMeetings + exerciseMeetings — 만든 모임이 맨 앞
+  const created = useCreatedMeetingsStore((s) => s.meetings);
+  const seeded = useMemo(readMeetings, []);
+  const meetings = useMemo(() => [...created, ...seeded], [created, seeded]);
 
   return (
     <div className="flex flex-col pt-safe">

@@ -6,7 +6,7 @@
  *     paddingHorizontal 14, 우측 ic_search, hint "찾고싶은 모임이 있나요?")
  *   - 진입 시 입력창 자동 포커스 (Android requestFocus + showSoftInput)
  *   - 입력 변경마다 즉시 필터: trim 후 빈 문자열이면 결과·빈 문구 모두 숨김
- *   - 검색 풀: Android `UserCreatedMeetings + SampleData.allMeetings` → localStorage `meetings` 전체
+ *   - 검색 풀: Android `UserCreatedMeetings + SampleData.allMeetings` → createdMeetingsStore + localStorage `meetings`
  *   - 매칭: title.contains(query, ignoreCase = true)
  *   - 결과 없음: "검색 결과가 없어요" 14sp textHint, marginTop 80
  *   - 결과 행: GroupListItem(item_group_list) → 탭 시 모임 상세
@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import { GroupListItem } from '../../components/meeting/GroupListItem';
 import type { Meeting } from '../../data/models';
+import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 
 function readMeetings(): Meeting[] {
   try {
@@ -29,7 +30,9 @@ function readMeetings(): Meeting[] {
 
 export function SearchScreen() {
   const navigate = useNavigate();
-  const pool = useMemo(readMeetings, []);
+  const created = useCreatedMeetingsStore((s) => s.meetings);
+  const seeded = useMemo(readMeetings, []);
+  const pool = useMemo(() => [...created, ...seeded], [created, seeded]);
   const [raw, setRaw] = useState('');
 
   const query = raw.trim().toLowerCase();

@@ -6,7 +6,7 @@
  *   - 행: paddingHorizontal 20 / vertical 14, 썸네일 56dp radius 6dp(bg_img_rounded) +
  *         모임명(groupName) 15sp bold 1줄 / 미리보기 13sp textSecondary 1줄 + 우측 시간 11sp textHint
  *   - 미리보기·시간: Android 상수 고정("운영진이 공지를 등록했어요" / "오후 3:40")
- *   - 방 목록: Android `UserCreatedMeetings + SampleData.activeMeetings` → 모임 만들기 미구현이라 ACTIVE_MEETING_IDS만
+ *   - 방 목록: Android `UserCreatedMeetings + SampleData.activeMeetings` → createdMeetingsStore + ACTIVE_MEETING_IDS
  *   - 탭 → 모임 상세 '채팅' 탭 (Android initialTab = 2)
  *   - 게스트: Android는 탭 자체를 막음(BottomNav) → 직접 URL 진입도 /login으로 돌려보냄
  */
@@ -14,6 +14,7 @@
 import { useMemo } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import { ACTIVE_MEETING_IDS } from '../../data/seedData';
 import { meetingImg } from '../../utils/meetingImage';
 import type { Meeting } from '../../data/models';
@@ -36,7 +37,9 @@ function readRooms(): Meeting[] {
 export function ChatListScreen() {
   const navigate = useNavigate();
   const currentUser = useAuthStore((s) => s.currentUser);
-  const rooms = useMemo(readRooms, []);
+  const created = useCreatedMeetingsStore((s) => s.meetings);
+  const seeded = useMemo(readRooms, []);
+  const rooms = useMemo(() => [...created, ...seeded], [created, seeded]);
 
   if (!currentUser) return <Navigate to="/login" replace />;
 
