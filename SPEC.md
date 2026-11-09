@@ -591,13 +591,15 @@ Local component state remains the default. Only promote to Zustand when:
 /meeting/:meetingId/chat        PostChatScreen         (standalone chat, used by floating "Chat" entry points)
 /trials                         TrialListScreen        (홈 "체험 가능 모임" 더보기 — Android TrialListFragment)
 /reviews                        ReviewListScreen       (홈 "후기" 더보기 — Android ReviewListFragment)
+/notifications                  NotificationScreen     (bell — Android NotificationFragment)
+/chat                           ChatListScreen         (BottomNav 채팅 탭 — Android ChatListFragment, 회원 전용)
 ```
 
 * React Router v6 + `BrowserRouter`. Inside the Capacitor WKWebView this still works because Capacitor serves `index.html` from the bundle and the SPA handles every path client-side.
 * `RequireAuth` wraps any route that demands a real account (chat send, meeting create, MY tab). On rejection it pushes to `/login` and surfaces a `react-hot-toast` notification.
 * Header/tab visibility:
-  * `BottomNav` is rendered by `HomeScreen`, `ExerciseScreen`, `RecommendedGroupScreen` (top-level "Explore"), `UpcomingMeetingScreen` (when accessed from a tab).
-  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, and `ReviewListScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
+  * `BottomNav` is rendered by `HomeScreen`, `ExerciseScreen`, `RecommendedGroupScreen` (top-level "Explore"), `UpcomingMeetingScreen` (when accessed from a tab), `ChatListScreen`, `MyScreen`.
+  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, `ReviewListScreen`, and `NotificationScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
 
 ### 10.2 Slide transitions
 
@@ -670,7 +672,9 @@ The flag is also cleared if the user logs in successfully on the same device.
 
 * Hero copy is fixed: "모임을 둘러보는 중이에요!" with CTA "로그인하고 참여하기 →".
 * "Active Meetings" section is omitted.
-* Notification bell, FAB, "맞춤 모임 찾기" all show "로그인이 필요한 기능이에요" via `react-hot-toast`.
+* Notification bell → toast "로그인 후 알림 기능을 사용할 수 있어요" + `/login` (Android `GuestHomeFragment.showLoginRequired("알림")`).
+* BottomNav 채팅 탭 → toast "로그인 후 이용할 수 있어요", tab not selected (Android `FitpleMainActivity` nav_chat).
+* FAB, "맞춤 모임 찾기" show "로그인이 필요한 기능이에요" via `react-hot-toast`.
 * Tabs **MY** and **Chat** are disabled; tapping them shows the same toast.
 
 ### 11.6 Logout
@@ -795,7 +799,7 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
   | Schedule found for tomorrow                   | `안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃`     | `일정 바로가기 →`     |
   | Schedule found for today                      | `안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요`        | `일정 바로가기 →`     |
 * **Data:** `meetingsRepo.getActive(currentUser)`, `meetingsRepo.getTrials()`, `reviewsRepo.list()`, `schedulesRepo.next7()`.
-* **Interactions:** Search input is read-only in v1 (toast). Bell shows toast. Location chip shows toast.
+* **Interactions:** Search input is read-only in v1 (toast). Bell → `/notifications` (guest: see §11.5). Location chip shows toast.
 
 ### 12.11 HomeScreen (guest branch)
 * Same skeleton minus the Active Meetings section, with the fixed hero text, and with login prompts replacing several actions (see §11.5).
@@ -869,6 +873,20 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Layout:** Toolbar identical to §12.18 with title "이용 후기". `ReviewCard` (180 × 240 pt) stacked vertically with `12 pt` gap.
 * **Data:** `reviews` collection. Cards are not tappable (Android parity).
 * **Access:** member + guest, no BottomNav.
+
+### 12.20 NotificationScreen
+* **Source:** Android `NotificationFragment.kt` + `fragment_notification.xml` + `item_notification.xml` (no design PNG).
+* **Entry:** bell on Home (member), Exercise, Upcoming. (Android also has bells on RecommendedGroup / PostDetail toolbars — not present in the React headers yet.)
+* **Layout:** Toolbar `56 pt` (back + centred "알림" `text-h2`). Rows `px-5 py-3.5`: `40 pt` orangeTint circle with filled bell (orange) + text `14 pt / textPrimary` + time `11 pt / textHint` (`4 pt` below).
+* **Data:** 5 static items hard-coded in the screen, copied verbatim from the Android fragment. Rows are not tappable.
+* **Access:** member + guest via route guard (guest home bell redirects to login before reaching it), no BottomNav.
+
+### 12.21 ChatListScreen
+* **Source:** Android `ChatListFragment.kt` + `fragment_chat_list.xml` + `item_chat_room.xml` (no design PNG).
+* **Layout:** Tab root (BottomNav visible, chat tab active). Toolbar `56 pt`, `px-5`, left-aligned "채팅" `text-heading` (20/700), no back button. Rows `px-5 py-3.5`: thumbnail `56 × 56`, radius `6 pt` + groupName `15 pt / 700` + preview `13 pt / textSecondary` (1 line each) + time `11 pt / textHint` right.
+* **Data:** `ACTIVE_MEETING_IDS` (seed, = Android `SampleData.activeMeetings`). Preview "운영진이 공지를 등록했어요" and time "오후 3:40" are Android constants. Empty state "가입한 모임이 없어요.\n모임에 가입하면 채팅방이 생겨요!" `14 pt / textHint`, `120 pt` from top.
+* **Interactions:** Row → `/meeting/{id}` with router state `{ initialTab: '채팅' }` (Android `initialTab = 2`). `PostDetailScreen` honours `location.state.initialTab`.
+* **Access:** member only — guest is blocked at the tab (toast) and a direct `/chat` visit redirects to `/login`.
 
 ## 13. Component Inventory
 
@@ -1256,7 +1274,7 @@ Pulled verbatim from `app/src/main/res/values/strings.xml` and the Fragment sour
 재개 다이얼로그   회원가입을 이어서 하시겠습니까?  /  이전에 시작한 회원가입이 있어요.\n선호 운동 설정만 하면 완료돼요!  /  이어서 하기  /  나중에
 로그인 실패        이메일 또는 비밀번호가 올바르지 않아요.
 이메일 중복        이미 가입된 이메일이에요.  로그인하기
-미구현 토스트     준비 중인 기능이에요  /  검색 기능 준비 중이에요  /  알림 기능 준비 중이에요  /  위치 변경 기능 준비 중이에요  /  모임 만들기 기능 준비 중이에요  /  맞춤 모임 추천 기능 준비 중이에요
+미구현 토스트     준비 중인 기능이에요  /  검색 기능 준비 중이에요  /  위치 변경 기능 준비 중이에요  /  모임 만들기 기능 준비 중이에요  /  맞춤 모임 추천 기능 준비 중이에요
 종료 안내         뒤로 버튼을 한번 더 누르면 종료됩니다   (Android only — drop on iOS)
 ```
 

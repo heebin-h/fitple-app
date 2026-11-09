@@ -62,6 +62,9 @@ export const SEED_MEETINGS: Meeting[] = [
   { id: 'm-trial-hik-2', title: '북한산 초보 등산 체험',   groupName: '초보등산클럽', sport: '등산', image: 'img_trial_hiking_group2', location: '도봉구',   memberCount:  8, maxMembers: 20, lastActiveMinutes: 5, description: '처음 산행이라도 걱정 없어요!',  meetingTime: '매주 토 오전 9:00' },
 ];
 
+/** 가입(활동 중)한 모임 — Android `SampleData.activeMeetings` id 4/5/6 대응. 채팅방 목록(/chat) 풀. */
+export const ACTIVE_MEETING_IDS = ['m-run-1', 'm-glf-1', 'm-cyc-1'] as const;
+
 /** 체험 가능 모임 — Android `SampleData.trialMeetings` 순서 그대로 (홈 섹션 + /trials 공용). */
 export const TRIAL_MEETING_IDS = ['m-cyc-3', 'm-trial-hik-1', 'm-trial-hik-2'] as const;
 

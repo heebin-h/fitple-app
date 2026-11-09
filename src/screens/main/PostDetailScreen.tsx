@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Heart, Share2, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../../utils/cn';
@@ -60,7 +60,12 @@ export function PostDetailScreen() {
   const isGuest     = useAuthStore((s) => s.isGuest);
 
   const meeting = useMemo(() => readMeetings().find((m) => m.id === id) ?? null, [id]);
-  const [activeTab, setActiveTab] = useState<Tab>('홈');
+  // Android PostDetailFragment.newInstance(meeting, initialTab) — ChatList는 '채팅' 탭으로 진입
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const t = (location.state as { initialTab?: string } | null)?.initialTab;
+    return (TABS as readonly string[]).includes(t ?? '') ? (t as Tab) : '홈';
+  });
   const [joined, setJoinedState] = useState(() =>
     currentUser ? isJoined(currentUser.email, id ?? '') : false,
   );

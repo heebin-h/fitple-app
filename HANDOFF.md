@@ -74,7 +74,7 @@ git log --oneline -5
 ### Phase 6 — 소셜 Toast / BottomNav ✅
 - 소셜 로그인 버튼 (카카오/Apple/Google) → `toast('준비 중인 기능이에요')`
 - BottomNav MY 탭 → `/my` 네비게이션 (게스트면 로그인 토스트)
-- BottomNav 채팅 탭 → `toast('채팅 기능을 준비 중이에요')`
+- BottomNav 채팅 탭 → `/chat` (ChatListScreen, 게스트는 "로그인 후 이용할 수 있어요" 토스트)
 
 ## 4. 현재 라우트 테이블 (완전)
 
@@ -98,14 +98,15 @@ git log --oneline -5
 | `/meeting/:id/chat` | PostChatScreen | ✗ |
 | `/trials` | TrialListScreen | ✗ |
 | `/reviews` | ReviewListScreen | ✗ |
+| `/notifications` | NotificationScreen | ✗ |
+| `/chat` | ChatListScreen | ✅ |
 
 ## 5. 의도된 "준비 중" 항목 (v1 데모 범위 외)
 
 아래 기능은 SPEC에서 데모 범위 외로 명시 → toast 처리, 미구현이 정상:
 - 카카오/Apple/Google 소셜 로그인
-- 위치 변경, 검색, 알림
+- 위치 변경, 검색
 - 모임 만들기 FAB
-- 채팅 탭 (BottomNav)
 - 이용약관/개인정보처리방침 (MyScreen)
 - 찜하기, 공유 (PostDetailScreen)
 - 게시판 탭 상세, 사진첩/멤버 탭

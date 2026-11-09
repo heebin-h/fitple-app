@@ -78,7 +78,7 @@ export function UpcomingMeetingScreen() {
         <button type="button" onClick={() => toast('검색 기능을 준비 중이에요')} className="p-1">
           <Search size={20} className="text-textPrimary" />
         </button>
-        <button type="button" onClick={() => toast('알림 기능을 준비 중이에요')} className="p-1">
+        <button type="button" onClick={() => navigate('/notifications')} className="p-1">
           <Bell size={20} className="text-textPrimary" />
         </button>
       </div>

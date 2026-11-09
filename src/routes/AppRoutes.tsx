@@ -1,8 +1,8 @@
 /**
  * 라우트 테이블. SPEC §10.1.
  *
- * ① MainLayout 그룹 (BottomNav 있음): /home · /exercise · /explore · /upcoming · /my
- * ② 인증 전용 그룹 (BottomNav 없음): /meeting/:id · /meeting/:id/chat · /trials · /reviews
+ * ① MainLayout 그룹 (BottomNav 있음): /home · /exercise · /explore · /upcoming · /my · /chat
+ * ② 인증 전용 그룹 (BottomNav 없음): /meeting/:id · /meeting/:id/chat · /trials · /reviews · /notifications
  * ③ 비인증 공개: / · /login · /email-login · /signup/*
  */
 
@@ -27,6 +27,8 @@ import { UpcomingMeetingScreen }  from '../screens/main/UpcomingMeetingScreen';
 import { MyScreen }               from '../screens/main/MyScreen';
 import { TrialListScreen }        from '../screens/main/TrialListScreen';
 import { ReviewListScreen }       from '../screens/main/ReviewListScreen';
+import { NotificationScreen }     from '../screens/main/NotificationScreen';
+import { ChatListScreen }         from '../screens/main/ChatListScreen';
 
 export function AppRoutes() {
   return (
@@ -51,6 +53,7 @@ export function AppRoutes() {
             <Route path="/explore/:sport" element={<RecommendedGroupScreen />} />
             <Route path="/upcoming"       element={<UpcomingMeetingScreen />} />
             <Route path="/my"             element={<MyScreen />} />
+            <Route path="/chat"           element={<ChatListScreen />} />
           </Route>
 
           {/* ② 인증 전용, BottomNav 없음 — SPEC §12.15/16 */}
@@ -59,6 +62,7 @@ export function AppRoutes() {
             <Route path="/meeting/:id/chat" element={<PostChatScreen />} />
             <Route path="/trials"           element={<TrialListScreen />} />
             <Route path="/reviews"          element={<ReviewListScreen />} />
+            <Route path="/notifications"    element={<NotificationScreen />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

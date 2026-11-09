@@ -26,7 +26,7 @@ export function ExerciseScreen() {
           <ArrowLeft size={22} className="text-textPrimary" />
         </button>
         <span className="flex-1 text-center text-h3 text-textPrimary">운동</span>
-        <button type="button" onClick={() => toast('알림 기능을 준비 중이에요')} className="p-1">
+        <button type="button" onClick={() => navigate('/notifications')} className="p-1">
           <Bell size={22} className="text-textPrimary" />
         </button>
       </div>

@@ -1,8 +1,8 @@
 /**
  * 하단 5탭 내비게이션. SPEC §10.1 / §11.5.
  *
- *   홈(/home) · 운동(/exercise) · 탐색(/explore) · MY(/my) — 실제 라우트
- *   채팅 — Phase 5에서 toast 유지
+ *   홈(/home) · 운동(/exercise) · 탐색(/explore) · 채팅(/chat) · MY(/my) — 실제 라우트
+ *   채팅 — 게스트는 Android 문구 "로그인 후 이용할 수 있어요" 토스트
  *
  * 게스트는 MY 탭에서 "로그인이 필요해요" 토스트 (§11.5).
  */
@@ -47,14 +47,22 @@ export function BottomNav() {
           <Compass size={22} />
           <span className="text-mini">탐색</span>
         </NavLink>
-        <button
-          type="button"
-          onClick={() => toast('채팅 기능을 준비 중이에요')}
-          className={cn(ITEM, 'text-textHint')}
-        >
-          <MessageCircle size={22} />
-          <span className="text-mini">채팅</span>
-        </button>
+        {isGuest || !currentUser ? (
+          // Android FitpleMainActivity nav_chat — 비로그인 시 토스트 + 탭 선택 거부
+          <button
+            type="button"
+            onClick={() => toast('로그인 후 이용할 수 있어요')}
+            className={cn(ITEM, 'text-textHint')}
+          >
+            <MessageCircle size={22} />
+            <span className="text-mini">채팅</span>
+          </button>
+        ) : (
+          <NavLink to="/chat" className={tabClass}>
+            <MessageCircle size={22} />
+            <span className="text-mini">채팅</span>
+          </NavLink>
+        )}
         <button
           type="button"
           onClick={handleMy}

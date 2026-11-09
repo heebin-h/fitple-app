@@ -170,7 +170,15 @@ export function HomeScreen() {
           <Search size={14} className="text-textHint" />
           <span className="text-caption text-textHint">찾고싶은 모임이 있나요?</span>
         </button>
-        <button type="button" onClick={() => toast('알림 기능을 준비 중이에요')}>
+        <button type="button" onClick={() => {
+          // Android GuestHomeFragment.showLoginRequired("알림") — 토스트 + 로그인 화면
+          if (isGuest || !currentUser) {
+            toast('로그인 후 알림 기능을 사용할 수 있어요');
+            navigate('/login');
+            return;
+          }
+          navigate('/notifications');
+        }}>
           <Bell size={22} className="text-textPrimary" />
         </button>
       </div>
