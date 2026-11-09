@@ -11,6 +11,9 @@ import { Bell, Search, MapPin, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
 import { MeetingCard } from '../../components/meeting/MeetingCard';
+import { TrialCard } from '../../components/meeting/TrialCard';
+import { ReviewCard } from '../../components/meeting/ReviewCard';
+import { TRIAL_MEETING_IDS } from '../../data/seedData';
 import { meetingImg } from '../../utils/meetingImage';
 import { cn } from '../../utils/cn';
 import type { Meeting, Review, ScheduleItem } from '../../data/models';
@@ -145,8 +148,13 @@ export function HomeScreen() {
   // ── 날짜별 일정 ───────────────────────────────────────────────────────
   const daySchedules = useMemo(() => schedules.filter((s) => s.date === selDate), [schedules, selDate]);
 
-  // ── 체험 가능 모임 (처음 4개) ─────────────────────────────────────────
-  const trialMeetings = useMemo(() => meetings.slice(0, 4), [meetings]);
+  // ── 체험 가능 모임 — Android SampleData.trialMeetings 순서 ───────────
+  const trialMeetings = useMemo(
+    () => TRIAL_MEETING_IDS
+      .map((id) => meetings.find((m) => m.id === id))
+      .filter((m): m is Meeting => m !== undefined),
+    [meetings],
+  );
 
   return (
     <div className="relative flex flex-col overflow-y-auto pb-4 pt-safe">
@@ -229,36 +237,30 @@ export function HomeScreen() {
 
       {/* ── 체험 가능 모임 ─────────────────────────────────── */}
       <div className="mt-6">
-        <h2 className="px-5 text-h3 text-textPrimary">체험 가능 모임</h2>
+        <div className="flex items-center justify-between px-5">
+          <h2 className="text-h3 text-textPrimary">체험 가능 모임</h2>
+          <button type="button" onClick={() => navigate('/trials')}
+            className="text-caption text-textHint">더보기 ›</button>
+        </div>
         <div className="mt-2 flex gap-3 overflow-x-auto px-5 pb-2 [&::-webkit-scrollbar]:hidden">
           {trialMeetings.map((m) => (
-            <button key={m.id} type="button" onClick={() => navigate(`/meeting/${m.id}`)}
-              className="relative h-[180px] w-[140px] flex-shrink-0 overflow-hidden rounded-card">
-              <img src={meetingImg(m.image)} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
-              <div className="absolute inset-x-3 bottom-3">
-                <p className="text-[11px] font-bold leading-tight text-textWhite">{m.title}</p>
-                <p className="mt-0.5 text-[10px] text-textWhite/60">{m.location}</p>
-              </div>
-            </button>
+            <TrialCard key={m.id} meeting={m}
+              onApply={() => navigate(`/meeting/${m.id}`)}
+              onClick={() => navigate(`/meeting/${m.id}`)} />
           ))}
         </div>
       </div>
 
       {/* ── 후기 ───────────────────────────────────────────── */}
       <div className="mt-6">
-        <h2 className="px-5 text-h3 text-textPrimary">후기</h2>
+        <div className="flex items-center justify-between px-5">
+          <h2 className="text-h3 text-textPrimary">후기</h2>
+          <button type="button" onClick={() => navigate('/reviews')}
+            className="text-caption text-textHint">더보기 ›</button>
+        </div>
         <div className="mt-2 flex gap-3 overflow-x-auto px-5 pb-2 [&::-webkit-scrollbar]:hidden">
           {reviews.map((r) => (
-            <div key={r.id}
-              className="relative h-[160px] w-[140px] flex-shrink-0 overflow-hidden rounded-card">
-              <img src={meetingImg(r.image)} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/85" />
-              <div className="absolute inset-x-3 bottom-3">
-                <p className="text-[10px] font-bold text-textWhite">{r.nickname}</p>
-                <p className="mt-0.5 text-[10px] leading-tight text-textWhite/70 line-clamp-2">{r.text}</p>
-              </div>
-            </div>
+            <ReviewCard key={r.id} review={r} />
           ))}
         </div>
       </div>

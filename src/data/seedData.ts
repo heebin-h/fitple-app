@@ -28,7 +28,7 @@ export const SEED_DEMO_ACCOUNTS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────
-// Meetings — 15 entries (3 per sport × 5 sports)
+// Meetings — 17 entries (3 per sport × 5 sports + 체험 2)
 // ────────────────────────────────────────────────────────────────────────
 
 export const SEED_MEETINGS: Meeting[] = [
@@ -55,8 +55,15 @@ export const SEED_MEETINGS: Meeting[] = [
   // ── 골프
   { id: 'm-glf-1', title: '주말 골프 모임',        groupName: '골프클럽',       sport: '골프',   image: 'img_meeting_golf_field1',    location: '남양주CC',         memberCount:  8, maxMembers: 12, level: '상급', date: '2026-05-30', time: '06:00', lastActiveMinutes: 30, description: '주말 라운딩 함께할 분! 스크린골프도 진행',           meetingTime: '매주 토 오전 6:00' },
   { id: 'm-glf-2', title: '골린이들 골프 모임',    groupName: '골린이골프',     sport: '골프',   image: 'img_meeting_golf_field1',    location: '미사 1동',         memberCount: 12, maxMembers: 16, level: '보통', date: '2026-05-28', time: '16:20', lastActiveMinutes: 12, description: '골린이들 모집합니다. 같이 배워요',                    meetingTime: '매주 목 오후 4:20' },
-  { id: 'm-glf-3', title: '남양주 골프 모임',      groupName: '남양주골프',     sport: '골프',   image: 'img_meeting_golf_field1',    location: '남양주CC',         memberCount:  8, maxMembers: 12, level: '상급', date: '2026-05-30', time: '06:00', lastActiveMinutes: 45, description: '주말 라운딩 동호회. 스크린 + 필드',                    meetingTime: '매주 토 오전 6:00' },
+  { id: 'm-glf-3', title: '남양주 골프 모임',     groupName: '남양주골프',     sport: '골프',   image: 'img_meeting_golf_field1',    location: '남양주CC',         memberCount:  8, maxMembers: 12, level: '상급', date: '2026-05-30', time: '06:00', lastActiveMinutes: 45, description: '주말 라운딩 동호회. 스크린 + 필드',                    meetingTime: '매주 토 오전 6:00' },
+
+  // ── 체험 — Android SampleData.trialMeetings t2/t3 (t1 = m-cyc-3)
+  { id: 'm-trial-hik-1', title: '싱글벙글 등산 크루 체험', groupName: '싱글벙글등산', sport: '등산', image: 'img_trial_hiking_group1', location: '여의도구', memberCount: 14, maxMembers: 30, lastActiveMinutes: 3, description: '함께 산을 오르면 더 즐거워요!', meetingTime: '매주 일 오전 8:00' },
+  { id: 'm-trial-hik-2', title: '북한산 초보 등산 체험',   groupName: '초보등산클럽', sport: '등산', image: 'img_trial_hiking_group2', location: '도봉구',   memberCount:  8, maxMembers: 20, lastActiveMinutes: 5, description: '처음 산행이라도 걱정 없어요!',  meetingTime: '매주 토 오전 9:00' },
 ];
+
+/** 체험 가능 모임 — Android `SampleData.trialMeetings` 순서 그대로 (홈 섹션 + /trials 공용). */
+export const TRIAL_MEETING_IDS = ['m-cyc-3', 'm-trial-hik-1', 'm-trial-hik-2'] as const;
 
 // ────────────────────────────────────────────────────────────────────────
 // Reviews

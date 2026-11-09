@@ -2,7 +2,7 @@
  * 라우트 테이블. SPEC §10.1.
  *
  * ① MainLayout 그룹 (BottomNav 있음): /home · /exercise · /explore · /upcoming · /my
- * ② 인증 전용 그룹 (BottomNav 없음): /meeting/:id · /meeting/:id/chat
+ * ② 인증 전용 그룹 (BottomNav 없음): /meeting/:id · /meeting/:id/chat · /trials · /reviews
  * ③ 비인증 공개: / · /login · /email-login · /signup/*
  */
 
@@ -25,6 +25,8 @@ import { PostDetailScreen }       from '../screens/main/PostDetailScreen';
 import { PostChatScreen }         from '../screens/main/PostChatScreen';
 import { UpcomingMeetingScreen }  from '../screens/main/UpcomingMeetingScreen';
 import { MyScreen }               from '../screens/main/MyScreen';
+import { TrialListScreen }        from '../screens/main/TrialListScreen';
+import { ReviewListScreen }       from '../screens/main/ReviewListScreen';
 
 export function AppRoutes() {
   return (
@@ -55,6 +57,8 @@ export function AppRoutes() {
           <Route element={<RequireAuth><Outlet /></RequireAuth>}>
             <Route path="/meeting/:id"      element={<PostDetailScreen />} />
             <Route path="/meeting/:id/chat" element={<PostChatScreen />} />
+            <Route path="/trials"           element={<TrialListScreen />} />
+            <Route path="/reviews"          element={<ReviewListScreen />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

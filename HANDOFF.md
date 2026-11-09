@@ -96,6 +96,8 @@ git log --oneline -5
 | `/my` | MyScreen | ✅ |
 | `/meeting/:id` | PostDetailScreen | ✗ |
 | `/meeting/:id/chat` | PostChatScreen | ✗ |
+| `/trials` | TrialListScreen | ✗ |
+| `/reviews` | ReviewListScreen | ✗ |
 
 ## 5. 의도된 "준비 중" 항목 (v1 데모 범위 외)
 

@@ -589,13 +589,15 @@ Local component state remains the default. Only promote to Zustand when:
 /upcoming                       UpcomingMeetingScreen
 /meeting/:meetingId             PostDetailScreen
 /meeting/:meetingId/chat        PostChatScreen         (standalone chat, used by floating "Chat" entry points)
+/trials                         TrialListScreen        (홈 "체험 가능 모임" 더보기 — Android TrialListFragment)
+/reviews                        ReviewListScreen       (홈 "후기" 더보기 — Android ReviewListFragment)
 ```
 
 * React Router v6 + `BrowserRouter`. Inside the Capacitor WKWebView this still works because Capacitor serves `index.html` from the bundle and the SPA handles every path client-side.
 * `RequireAuth` wraps any route that demands a real account (chat send, meeting create, MY tab). On rejection it pushes to `/login` and surfaces a `react-hot-toast` notification.
 * Header/tab visibility:
   * `BottomNav` is rendered by `HomeScreen`, `ExerciseScreen`, `RecommendedGroupScreen` (top-level "Explore"), `UpcomingMeetingScreen` (when accessed from a tab).
-  * The auth screens, signup flow, and `PostDetailScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
+  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, and `ReviewListScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
 
 ### 10.2 Slide transitions
 
@@ -781,8 +783,8 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
   2. Hero card: greeting "안녕하세요 {nickname}님!", contextual subtitle + CTA — see three states below.
   3. Sport icon row (5 sports). Tap routes to `/explore/{sport}`.
   4. Section "활동 중인 모임" with filter chips (`가까운순`, `편하게`, `평일오후`, `주말`) and 3+ `MeetingCard` rows. "더보기 ›" routes to `/exercise`.
-  5. Section "체험 가능 모임" — horizontal carousel of `TrialMeetingCard`. Apply button on each card routes to `/meeting/{id}`.
-  6. Section "후기" — horizontal carousel of `ReviewCard` (image + gradient overlay + quote).
+  5. Section "체험 가능 모임" — horizontal carousel of `TrialCard` (Android `SampleData.trialMeetings` 3건 = seed `TRIAL_MEETING_IDS`). Card tap and "신청하기" both route to `/meeting/{id}`. "더보기 ›" routes to `/trials`.
+  6. Section "후기" — horizontal carousel of `ReviewCard` (image + gradient overlay + quote). "더보기 ›" routes to `/reviews`.
   7. Section "다가오는 정기모임" — `DateStrip` (7 days, today centred) + vertical list of `ScheduleCard`. "더보기 ›" routes to `/upcoming`.
   8. CTA banner: "나에게 딱맞는 모임이 없어 아쉬우신가요? / 직접 모임장이 되어 모임을 운영해보세요!" with "모임 만들기 →".
   9. Floating `+` FAB bottom-right (above bottom nav) → toast "모임 만들기 기능 준비 중이에요".
@@ -854,6 +856,19 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Data:** `authStore.currentUser`.
 * **Interactions:** Logout → `userManager.logoutUser()` → `authStore.setUser(null)` → `/login`.
 * **Edge cases:** Tab is hidden when `isGuest` (login required toast instead).
+
+### 12.18 TrialListScreen
+* **Source:** Android `TrialListFragment.kt` + `fragment_trial_list.xml` (no design PNG for the list screen).
+* **Layout:** Toolbar `56 pt` (back arrow left, centred title "체험 가능한 모임" `text-h2`). Scroll list `px-5 pt-3 pb-6`, `TrialCard` (162 pt fixed width) stacked vertically with `12 pt` gap (Android has 0 vertical gap — deliberate deviation).
+* **Data:** `meetings` filtered by `TRIAL_MEETING_IDS` in that order.
+* **Interactions:** Card tap / "신청하기" → `/meeting/{id}`. Back → previous route.
+* **Access:** member + guest (`RequireAuth`), no BottomNav.
+
+### 12.19 ReviewListScreen
+* **Source:** Android `ReviewListFragment.kt` + `fragment_review_list.xml` (no design PNG for the list screen).
+* **Layout:** Toolbar identical to §12.18 with title "이용 후기". `ReviewCard` (180 × 240 pt) stacked vertically with `12 pt` gap.
+* **Data:** `reviews` collection. Cards are not tappable (Android parity).
+* **Access:** member + guest, no BottomNav.
 
 ## 13. Component Inventory
 
@@ -1427,9 +1442,9 @@ Order top→bottom on the same single scrollable surface.
 | 4a | Filter chips                                 | Horizontal scroll, `8 pt` gap. Chip height `32 pt`, radius `999`, padding `0 14 pt`. Unselected: border `borderDefault`, label `13 pt / 500 / textSecondary`. Selected: solid `orangeTint`, `1 pt orange`, label `13 pt / 600 / orange`. First chip "가까운 순 ▾" adds chevron. |
 | 4b | Recommended cards (list)                     | 4 visible. Card `100% × 84 pt`, radius `12 pt`, white background. Left: image `64 × 64`, radius `10 pt`, `16 pt` from card-left. Right: title `15 pt / 700 / textPrimary` (single line, ellipsis), desc `13 pt / 400 / textSecondary` (single line), meta row `12 pt / 400 / textHint` "멤버 {n}명 · {n}분전 활동". Top-right: heart icon `20 × 20`, `textHint` outline. Sport badge pill bottom-right of image area: height `20 pt`, radius `999`, padding `0 8 pt`, label `11 pt / 600`, color scheme matches the sport (default `orangeTint` + `orange` text). |
 | 5  | **활동 중인 모임 section**                    | Same card pattern as 4b. Header "활동 중인 모임" + 더보기. |
-| 6  | **체험 가능 모임 section**                    | Horizontal carousel. Card `160 × 240 pt`, radius `14 pt`, white background with light shadow. Image top `160 × 140`, radius corners `14 pt` top-only. Two overlay badges on the image: "3분전 활동" pill (badgeDark + white text, top-left) + sport pill (orange tint, top-right). Title `14 pt / 700`, padding `10 pt 12 pt 0`. One-line subtitle gray. Footer row: pin icon + location `12 pt / 500 / textHint`, then row "👥 멤버 10/30" `12 pt / 500 / textSecondary`. Bottom CTA inside the card: orange `36 pt` tall pill "신청하기", `12 pt` from card-bottom. |
+| 6  | **체험 가능 모임 section**                    | Header + "더보기 ›" (`13 pt / textHint`) → `/trials`. Horizontal carousel of `TrialCard` (`components/meeting/TrialCard.tsx`, source `item_trial_card.xml` + `designs/home_trial_card_detail_apply.png`, PNG wins on conflict). Card `162 pt` wide, no border. Image square, radius `12 pt` all corners. Badges top-left: "{n}분전 활동" pill (blueTint bg / blue text) + sport pill (orangeTint / orange), `11 pt`. "한자리 남았어요!!" bottom-left when remaining seats ≤ 2. Title `15 pt / 500`, description `13 pt`, pin + location `12 pt / textSecondary`, avatar stack (4 grey `22 pt` circles + dark "+{memberCount−5}" circle) + "멤버 {n}/{max}" `13 pt / textHint`. CTA "신청하기" full card width, `52 pt` tall, radius `8 pt`, `14 pt / 700`. |
 | 7  | **CTA banner**                                | Card `100% × 96 pt`, radius `14 pt`, background `#FFF0ED`. Title `14 pt / 700`, subtitle `13 pt / 500 / textSecondary` underneath. Right side: orange outline button "모임 만들기 →" `36 pt` tall, padding `0 14 pt`, radius `999`, label `13 pt / 700 / orange`. |
-| 8  | **후기 section**                              | Carousel. Card `220 × 140 pt`, radius `14 pt`, image fills card with linear gradient overlay top-transparent→bottom `rgba(0,0,0,0.85)`. Text stack bottom-left, `14 pt` padding: nickname `12 pt / 500 / white80`, activity `12 pt / 500 / white80` (e.g. "싱글벙글 러닝모임 후기"), quote `13 pt / 600 / white` with leading `"`. |
+| 8  | **후기 section**                              | Header + "더보기 ›" (`13 pt / textHint`) → `/reviews`. Carousel of `ReviewCard` (`components/meeting/ReviewCard.tsx`, source `item_review_card.xml` + `designs/home_review_billboard_cards.png`). Card `180 × 240 pt`, radius `12 pt`, image fills card with gradient `gradientStart → gradientEnd`. Text stack bottom, `12 pt` padding: nickname `11 pt / white80`, activity `11 pt / white60` (1 line), quote `12 pt / 700 / white` wrapped in `"…"`, max 3 lines. |
 | 9  | **다가오는 정기모임 section**                 | Header "다가오는 정기모임" + 더보기. Below header: "{YYYY}년 {M}월" `13 pt / 500 / textSecondary`. |
 | 9a | Date strip                                   | 7 day cells centered on today. Each cell `40 × 56 pt`. Number `15 pt / 600 / textPrimary` on white circle `32 × 32` (no fill when not today). Today: circle solid `orange`, number white, day-of-week label `12 pt / 700 / orange` below. Other days: dow `12 pt / 500 / textHint`. Horizontal scroll if more than 7 visible. |
 | 9b | Schedule cards                               | List, gap `10 pt`. Card `100% × 100 pt`, radius `12 pt`, white background. Left text column padding `14 pt`. Top: small badge row "Level·{보통/중급/상급}" `11 pt / 700 / orange` on `orangeTint` pill + sport badge "{러닝/…}" same style. Title `15 pt / 700`, single-line. "한자리 남았어요!!" red bold below title when `isUrgent`. Info row: `{location} · 매주({day}) {time} · {n}명 참석중` `12 pt / 500 / textSecondary`. Right: thumbnail `80 × 80 pt`, radius `10 pt`. |
