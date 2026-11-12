@@ -13,6 +13,8 @@ import { useAuthStore } from '../../store/authStore';
 import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import type { Meeting, ChatMessage } from '../../data/models';
 
+const EMPTY_MESSAGES: ChatMessage[] = [];
+
 function readMeetings(): Meeting[] {
   try { return JSON.parse(localStorage.getItem('meetings') ?? '[]') as Meeting[]; }
   catch { return []; }
@@ -33,7 +35,8 @@ export function PostChatScreen() {
   const currentUser  = useAuthStore((s) => s.currentUser);
   const initMessages = useChatStore((s) => s.initMessages);
   const addMessage   = useChatStore((s) => s.addMessage);
-  const messages     = useChatStore((s) => s.messages[id ?? ''] ?? []);
+  // 안정 참조 필요: `?? []`는 매 호출 새 배열 → zustand v5 getSnapshot 불일치 경고/무한 렌더 위험
+  const messages     = useChatStore((s) => s.messages[id ?? ''] ?? EMPTY_MESSAGES);
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 

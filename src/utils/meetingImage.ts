@@ -12,6 +12,8 @@ import imgCycling  from '../assets/images/meetings/cycling_group1.png';
 // 코드 배지와 이중 노출됨 → 배지 없는 버전 사용 (디자인 PNG home_trial_card_detail_apply 기준).
 //   - trial_cycling_group.png = img_trial_cycling_group.png 상단 32px(배지 영역) 크롭본 (140×108)
 //   - img_trial_hiking_group1/2 → img_meeting_hiking_group3/2 (디자인과 동일한 사진, 배지 없음)
+import imgGroupPhoto1  from '../assets/images/meetings/group_photo1.png';
+import imgOutdoorWinter from '../assets/images/meetings/outdoor_winter.png';
 import imgTrialCycling from '../assets/images/meetings/trial_cycling_group.png';
 import imgHiking2      from '../assets/images/meetings/hiking_group2.png';
 import imgHiking3      from '../assets/images/meetings/hiking_group3.png';
@@ -20,7 +22,9 @@ const MAP: Record<string, string> = {
   img_meeting_running_night:  imgRunning,
   img_meeting_running_group1: imgRunning,
   img_meeting_running_track:  imgRunning,
-  img_meeting_outdoor_winter: imgRunning,
+  img_meeting_outdoor_winter: imgOutdoorWinter,
+  img_meeting_group_photo1:   imgGroupPhoto1,
+  img_meeting_running_beach:  imgRunning,
   img_meeting_futsal_field1:  imgFutsal,
   img_meeting_hiking_group1:  imgHiking,
   img_meeting_hiking_group2:  imgHiking,

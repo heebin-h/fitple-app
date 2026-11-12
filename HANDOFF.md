@@ -110,7 +110,7 @@ git log --oneline -5
 - 위치 변경
 - 이용약관/개인정보처리방침 (MyScreen)
 - 찜하기, 공유 (PostDetailScreen)
-- 게시판 탭 상세, 사진첩/멤버 탭
+- 게시판 탭 상세
 - UpcomingMeetingScreen 카드 탭 → toast (ScheduleItem에 meetingId 필드 없음)
 
 ## 6. 알려진 한계 / 다음 세션 주의사항

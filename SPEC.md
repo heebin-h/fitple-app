@@ -845,7 +845,9 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
     * Sticky "1회 참가하기" button at the bottom.
   * **게시판 tab body:** Vertical list of `NoticeListItem` (title, preview, date, optional thumbnail).
   * **채팅 tab body:** Notice banner + scrollable message list + input row (text + send). Mirrors `PostChatScreen` markup.
-  * **사진첩 / 멤버 tabs:** Placeholder "{tab} 기능을 준비 중이에요" centered.
+  * **사진첩 tab:** Android `setupPhotoGrid` — 9 fixed photos (group_photo1 · running_beach · hiking_group1 · futsal_field1 · cycling_group1 · golf_field1 · trial_hiking_group1 · outdoor_winter · hiking_group2) in a 3-column grid, each `110 pt` tall, `1 pt` gaps, centre-crop, not tappable.
+  * **멤버 tab:** Android `setupMemberList` + `item_member_row` — 5 fixed members (김상미 모임장 · 이현우 운영진 · 박지훈 · 최유진 · 정다은). Row `px-5 py-3`: `48 pt` round avatar (`img_profile_default` on background), name `14 pt`, role chip (orangeTint + `1.5 pt` orange border, orange `11 pt`) only when a role exists.
+  * The join CTA is shown only on the 홈 tab (Android `layoutJoinBtn`).
 * **Data:** Reads `meetingsRepo.get(meetingId)`, `notices:{meetingId}`, `chats:{meetingId}`.
 * **Interactions:**
   * "1회 참가하기" → toast "참가 신청이 완료되었어요!" + button becomes disabled with label "참가 완료". State persists in `joined:{email}`.

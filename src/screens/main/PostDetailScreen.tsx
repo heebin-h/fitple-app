@@ -9,6 +9,7 @@ import { ArrowLeft, Heart, Share2, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../../utils/cn';
 import { meetingImg } from '../../utils/meetingImage';
+import profileDefault from '../../assets/images/profile/profile_default.png';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
@@ -40,6 +41,24 @@ function setJoined(email: string, meetingId: string) {
 
 const TABS = ['홈', '게시판', '채팅', '사진첩', '멤버'] as const;
 type Tab = typeof TABS[number];
+
+const EMPTY_MESSAGES: ChatMessage[] = [];
+
+// 사진첩 — Android PostDetailFragment.setupPhotoGrid 9장 순서 그대로 (seed image 키)
+const PHOTOS = [
+  'img_meeting_group_photo1', 'img_meeting_running_beach', 'img_meeting_hiking_group1',
+  'img_meeting_futsal_field1', 'img_meeting_cycling_group1', 'img_meeting_golf_field1',
+  'img_trial_hiking_group1', 'img_meeting_outdoor_winter', 'img_meeting_hiking_group2',
+] as const;
+
+// 멤버 — Android setupMemberList 5명 (채팅 샘플 발신자와 동일 구성)
+const MEMBERS: readonly { name: string; role: string }[] = [
+  { name: '김상미', role: '모임장' },
+  { name: '이현우', role: '운영진' },
+  { name: '박지훈', role: '' },
+  { name: '최유진', role: '' },
+  { name: '정다은', role: '' },
+];
 
 // 게시판 더미 데이터
 const NOTICES = [
@@ -79,7 +98,8 @@ export function PostDetailScreen() {
   // ── 채팅 ──────────────────────────────────────────────────────────────────
   const initMessages = useChatStore((s) => s.initMessages);
   const addMessage   = useChatStore((s) => s.addMessage);
-  const messages     = useChatStore((s) => s.messages[id ?? ''] ?? []);
+  // 안정 참조 필요: `?? []`는 매 호출 새 배열 → zustand v5 getSnapshot 불일치 경고/무한 렌더 위험
+  const messages     = useChatStore((s) => s.messages[id ?? ''] ?? EMPTY_MESSAGES);
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -297,10 +317,30 @@ export function PostDetailScreen() {
         )}
 
         {/* 사진첩 / 멤버 탭 */}
-        {(activeTab === '사진첩' || activeTab === '멤버') && (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-caption text-textHint">{activeTab} 기능을 준비 중이에요</p>
+        {/* 사진첩 — Android setupPhotoGrid: 3열 그리드, item_photo_grid(높이 110dp, margin 1dp, centerCrop), 탭 동작 없음 */}
+        {activeTab === '사진첩' && (
+          <div className="grid grid-cols-3 gap-0.5 bg-surface px-px">
+            {PHOTOS.map((key, i) => (
+              <img key={i} src={meetingImg(key)} alt="모임 사진" className="h-[110px] w-full object-cover" />
+            ))}
           </div>
+        )}
+
+        {/* 멤버 — Android setupMemberList + item_member_row: 48dp 원형 아바타 / 이름 14sp / 역할 칩(있을 때만) */}
+        {activeTab === '멤버' && (
+          <ul className="bg-surface">
+            {MEMBERS.map((mb) => (
+              <li key={mb.name} className="flex items-center px-5 py-3">
+                <img src={profileDefault} alt="" className="h-12 w-12 flex-shrink-0 rounded-full bg-background object-cover" />
+                <span className="ml-3 min-w-0 flex-1 truncate text-label text-textPrimary">{mb.name}</span>
+                {mb.role && (
+                  <span className="rounded-full border-[1.5px] border-orange bg-orangeTint px-2 py-0.5 text-mini text-orange">
+                    {mb.role}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
