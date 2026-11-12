@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
+import { useLocationPicker } from '../../components/common/LocationPicker';
 import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import { MeetingCard } from '../../components/meeting/MeetingCard';
 import { TrialCard } from '../../components/meeting/TrialCard';
@@ -62,14 +63,13 @@ function Fab({ onClick }: { onClick: () => void }) {
   );
 }
 
-const locationToast = () => toast('위치 변경 기능을 준비 중이에요');
-
 // ── 회원 홈 — Android HomeFragment ──────────────────────────────────────────
 function MemberHome() {
   const navigate = useNavigate();
   const nickname = useAuthStore((s) => s.currentUser?.nickname ?? '');
   const created = useCreatedMeetingsStore((s) => s.meetings);
   const { meetings, reviews, schedules, trials } = useHomeData();
+  const location = useLocationPicker();
 
   const recommended = useMemo(() => pick(meetings, HOME_RECOMMENDED_IDS), [meetings]);
   // setupActiveMeetings: UserCreatedMeetings + activeMeetings (필터 없음)
@@ -89,7 +89,7 @@ function MemberHome() {
 
   return (
     <div className="relative flex flex-col bg-background/50 pt-safe">
-      <HomeTopBar onLocation={locationToast} onBell={() => navigate('/notifications')} onSearch={() => navigate('/search')} />
+      <HomeTopBar location={location.current} onLocation={location.openPicker} onBell={() => navigate('/notifications')} onSearch={() => navigate('/search')} />
       <HomeHero title={hero.title} cta={hero.cta} onCta={() => navigate(hero.to)} />
 
       <div className="rounded-t-[16px] bg-surface">
@@ -132,6 +132,7 @@ function MemberHome() {
       </div>
 
       <Fab onClick={() => navigate('/create-meeting')} />
+      {location.dialog}
     </div>
   );
 }
@@ -141,6 +142,7 @@ function GuestHome() {
   const navigate = useNavigate();
   const { meetings, reviews, schedules, trials } = useHomeData();
   const recommended = useMemo(() => pick(meetings, GUEST_RECOMMENDED_IDS), [meetings]);
+  const location = useLocationPicker(); // 비회원도 위치 탐색 가능 (GuestHomeFragment)
 
   // showLoginRequired(featureName): 토스트 + 로그인 화면 push (뒤로 = 게스트 홈 복귀)
   const loginRequired = (feature: string) => () => {
@@ -150,7 +152,7 @@ function GuestHome() {
 
   return (
     <div className="relative flex flex-col bg-background/50 pt-safe">
-      <HomeTopBar onLocation={locationToast} onBell={loginRequired('알림')} onSearch={() => navigate('/search')} />
+      <HomeTopBar location={location.current} onLocation={location.openPicker} onBell={loginRequired('알림')} onSearch={() => navigate('/search')} />
       <HomeHero title="로그인하고 다양한 모임에 참여해요!" cta="로그인하기 →" onCta={() => navigate('/login')} />
 
       <div className="rounded-t-[16px] bg-surface">
@@ -189,6 +191,7 @@ function GuestHome() {
       </div>
 
       <Fab onClick={loginRequired('모임 만들기')} />
+      {location.dialog}
     </div>
   );
 }

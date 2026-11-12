@@ -5,7 +5,8 @@
 
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
+import { useLocationPicker } from '../../components/common/LocationPicker';
 import { MeetingCard } from '../../components/meeting/MeetingCard';
 import { cn } from '../../utils/cn';
 import type { Meeting } from '../../data/models';
@@ -29,6 +30,7 @@ function applyChips(meetings: Meeting[], active: Set<Chip>): Meeting[] {
 
 export function RecommendedGroupScreen() {
   const navigate = useNavigate();
+  const location = useLocationPicker();
   const { sport } = useParams<{ sport: string }>();
   const [activeChips, setActiveChips] = useState<Set<Chip>>(new Set());
 
@@ -60,6 +62,15 @@ export function RecommendedGroupScreen() {
         <div className="w-8" />
       </div>
 
+      {/* 위치 — Android RecommendedGroupFragment tvLocationFilter + showLocationPicker, PNG "미사 1동 ▾" */}
+      <div className="px-5 pb-2">
+        <button type="button" onClick={location.openPicker} aria-label={`동네 선택: ${location.current}`}
+          className="flex items-center gap-0.5 text-caption-strong text-textPrimary">
+          {location.current}
+          <ChevronDown size={14} strokeWidth={3} />
+        </button>
+      </div>
+
       {/* 조건 칩 */}
       <div className="flex gap-2 overflow-x-auto px-5 pb-2 pt-1 [&::-webkit-scrollbar]:hidden">
         {CHIPS.map((chip) => {
@@ -87,6 +98,7 @@ export function RecommendedGroupScreen() {
           <p className="py-8 text-center text-caption text-textHint">조건에 맞는 모임이 없어요</p>
         )}
       </div>
+      {location.dialog}
     </div>
   );
 }

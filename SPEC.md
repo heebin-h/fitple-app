@@ -299,7 +299,8 @@ src/
 │   ├── authStore.ts               # currentUser, isGuest
 │   ├── preferenceStore.ts         # SELECTION → DETAIL state machine
 │   ├── chatStore.ts               # Active meetingId → messages
-│   └── createdMeetingsStore.ts    # 사용자가 만든 모임 (세션 메모리 전용 — Android UserCreatedMeetings)
+│   ├── createdMeetingsStore.ts    # 사용자가 만든 모임 (세션 메모리 전용 — Android UserCreatedMeetings)
+│   └── locationStore.ts           # 선택한 동네 (세션 메모리 전용 — Android LocationState)
 ├── storage/
 │   ├── userManager.ts
 │   ├── seedRunner.ts
@@ -787,7 +788,7 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 ### 12.10 HomeScreen (member)
 * **Source:** Android `HomeFragment.kt` + `fragment_home.xml`; visuals from `designs/home_main_postdetail_share_chat.png` ("홈 -가입 x") and `home_bottom_banner_schedule.png` (PNG wins over XML). Shared sections live in `components/home/HomeSections.tsx`. `HomeScreen` renders `MemberHome` for a logged-in user and `GuestHome` (§12.11) otherwise.
 * **Layout (top-to-bottom, XML order):**
-  1. Top bar: location "미사 1동 ▾" (Android `LocationState.current` default; tap → toast "위치 변경 기능을 준비 중이에요"), bell → `/notifications`.
+  1. Top bar: location "미사 1동 ▾" (`locationStore`, default "미사 1동"; tap → location picker §12.25), bell → `/notifications`.
   2. Search field (full width, orange outline) → `/search`.
   3. Hero: date "M월 D일(요일)", title (states below), orange CTA, illustration right (`ic_banner_schedule_illust`). Top area (1–3) sits on a faint grey background; from the sport row down a white panel with rounded top corners.
   4. Sport icon row (5) → `/explore/{sport}`.
@@ -813,12 +814,14 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Login prompts** (toast "로그인 후 {기능} 기능을 사용할 수 있어요" + push `/login`): bell (알림), recommended card (모임 상세 보기), recommended heart (찜하기), trial card (모임 상세 보기), trial 신청하기 (체험 신청), CTA banner (맞춤 모임 추천), FAB (모임 만들기).
 
 ### 12.12 ExerciseScreen
+* **Location pill:** "{동네} ▾" → location picker §12.25.
 * **Purpose:** Vertical list of every meeting (Android `ExerciseFragment`).
 * **Layout:** Toolbar with back + bell, location filter pill ("미사 1동 ▾"), then vertical `MeetingCard` list.
 * **Data:** `meetingsRepo.list()` (no filter in v1; backing seed has 7+ rows).
 * **Interactions:** Card tap → `/meeting/{id}`.
 
 ### 12.13 RecommendedGroupScreen
+* **Location:** "{동네} ▾" (`13 pt / 700`) below the toolbar → location picker §12.25 (Android `tvLocationFilter`).
 * **Purpose:** Sport-filtered discover view (Android `RecommendedGroupFragment`).
 * **Layout:** Toolbar with back + title (`"{sport} 추천 모임"` or "추천 모임"). Condition chips (`가까운 순`, `편하게`, `평일 오후`, `주말`). Vertical `GroupListItem`.
 * **Data:** `meetingsRepo.list().filter(sportMatch + chipPredicates)`.
@@ -921,6 +924,12 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **On submit:** toast "모임이 만들어졌어요!" → push `/meeting/{id}` (back returns to the form, Android `pushWithSlide`).
 * **Persistence:** `createdMeetingsStore` (Zustand), **session memory only** — not written to localStorage, gone after reload (Android parity). Prepended to Home active list, Exercise list, ChatList, Search pool; resolved by `PostDetailScreen` / `PostChatScreen`.
 * **Access:** member only; guest is stopped at the entry points and a direct visit redirects to `/login`.
+
+### 12.25 Location picker (동네 선택)
+* **Source:** Android `FragmentNavExt.showLocationPicker` + `LocationState` (no design PNG — AlertDialog structure in app tokens).
+* **Entry:** location label on Home (member and guest — guests may browse by location), Exercise pill, RecommendedGroup label.
+* **Dialog:** centred card (max `320 pt`, radius `12`, dim `black/40`). Title "동네 선택" `18 / 700`. 8 single-choice rows (`48 pt`, radio + `15 pt`): 미사 1동 · 미사 2동 · 미사 3동 · 풍산동 · 창우동 · 신장동 · 덕풍동 · 위례동; current value checked. Tapping a row selects and closes. "취소" text button (orange) bottom-right; backdrop tap and Esc also cancel.
+* **State:** `locationStore` (Zustand), **session memory only**, default "미사 1동", shared by every screen. Display only — no list filtering (Android parity).
 
 ## 13. Component Inventory
 
@@ -1308,7 +1317,7 @@ Pulled verbatim from `app/src/main/res/values/strings.xml` and the Fragment sour
 재개 다이얼로그   회원가입을 이어서 하시겠습니까?  /  이전에 시작한 회원가입이 있어요.\n선호 운동 설정만 하면 완료돼요!  /  이어서 하기  /  나중에
 로그인 실패        이메일 또는 비밀번호가 올바르지 않아요.
 이메일 중복        이미 가입된 이메일이에요.  로그인하기
-미구현 토스트     준비 중인 기능이에요  /  위치 변경 기능 준비 중이에요
+미구현 토스트     준비 중인 기능이에요
 종료 안내         뒤로 버튼을 한번 더 누르면 종료됩니다   (Android only — drop on iOS)
 ```
 

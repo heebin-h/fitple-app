@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useLocationPicker } from '../../components/common/LocationPicker';
 import { MeetingCard } from '../../components/meeting/MeetingCard';
 import type { Meeting } from '../../data/models';
 import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
@@ -17,6 +17,7 @@ function readMeetings(): Meeting[] {
 
 export function ExerciseScreen() {
   const navigate = useNavigate();
+  const location = useLocationPicker(); // Android ExerciseFragment.showLocationPicker
   // Android setupMeetingList: UserCreatedMeetings + exerciseMeetings — 만든 모임이 맨 앞
   const created = useCreatedMeetingsStore((s) => s.meetings);
   const seeded = useMemo(readMeetings, []);
@@ -37,9 +38,9 @@ export function ExerciseScreen() {
 
       {/* 위치 필터 pill */}
       <div className="px-5 py-2">
-        <button type="button" onClick={() => toast('위치 변경 기능을 준비 중이에요')}
+        <button type="button" onClick={location.openPicker} aria-label={`동네 선택: ${location.current}`}
           className="rounded-full border border-borderDefault px-4 py-1.5 text-caption text-textSecondary">
-          미사 1동 ▾
+          {location.current} ▾
         </button>
       </div>
 
@@ -52,6 +53,7 @@ export function ExerciseScreen() {
           <p className="py-8 text-center text-caption text-textHint">모임이 없어요</p>
         )}
       </div>
+      {location.dialog}
     </div>
   );
 }

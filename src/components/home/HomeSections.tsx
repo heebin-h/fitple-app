@@ -23,16 +23,17 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 /**
  * PNG: 위치 "미사 1동 ▾" 13pt semibold(XML 18sp bold), bell outline 24(XML ic_bell_filled 28),
  *      검색창 44pt · radius 8 · 1pt orange 테두리 · 우측 회색 돋보기.
- * 위치 텍스트: Android LocationState.current 기본값 "미사 1동" (회원·게스트 공통).
+ * 위치 텍스트: locationStore(= Android LocationState.current, 기본 "미사 1동"), 탭 → 동네 선택 다이얼로그.
  */
-export function HomeTopBar({ onLocation, onBell, onSearch }: {
-  onLocation: () => void; onBell: () => void; onSearch: () => void;
+export function HomeTopBar({ location, onLocation, onBell, onSearch }: {
+  location: string; onLocation: () => void; onBell: () => void; onSearch: () => void;
 }) {
   return (
     <>
       <div className="flex h-12 items-center justify-between px-5">
-        <button type="button" onClick={onLocation} className="flex items-center gap-0.5 text-caption-strong text-textPrimary">
-          미사 1동
+        <button type="button" onClick={onLocation} aria-label={`동네 선택: ${location}`}
+          className="flex items-center gap-0.5 text-caption-strong text-textPrimary">
+          {location}
           <ChevronDown size={14} strokeWidth={3} />
         </button>
         <button type="button" onClick={onBell} aria-label="알림">
