@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const BASE = 'http://localhost:5173';
-const SS = '/private/tmp/claude-501/-Users-heebiny-fitple-app/630af659-6a9e-4145-a390-22cd1518d0e0/scratchpad';
+const SS = process.env.SS ?? '/private/tmp/claude-501/-Users-heebiny-fitple-app/630af659-6a9e-4145-a390-22cd1518d0e0/scratchpad';
 const VIEWPORT = { width: 430, height: 932 };
 
 const issues = [];
@@ -50,7 +50,7 @@ await page.getByText('활동 중인 모임').isVisible().catch(() => false)
   ? ok('"활동 중인 모임" 섹션') : flag('"활동 중인 모임" 없음');
 await page.getByText('체험 가능 모임').isVisible().catch(() => false)
   ? ok('"체험 가능 모임" 섹션') : flag('"체험 가능 모임" 없음');
-await page.getByText('후기').isVisible().catch(() => false)
+await page.getByText('후기', { exact: true }).isVisible().catch(() => false)
   ? ok('"후기" 섹션') : flag('"후기" 없음');
 await page.getByText('다가오는 정기모임').isVisible().catch(() => false)
   ? ok('"다가오는 정기모임" 섹션') : flag('"다가오는 정기모임" 없음');
@@ -72,14 +72,14 @@ if (navBox) {
 await page.evaluate(() => window.scrollTo(0, 0));
 
 // ── 5. 종목 아이콘 → 추천 모임 (SPA 이동) ──────────────────────────────────
-await page.locator('button').filter({ has: page.locator('img[alt="러닝"]') }).click();
+await page.getByRole('button', { name: '러닝', exact: true }).first().click();
 await page.waitForURL('**/explore/**');
 await page.screenshot({ path: `${SS}/05_explore.png` });
-await page.getByText('편하게').isVisible().catch(() => false)
+await page.getByRole('button', { name: '편하게', exact: true }).isVisible().catch(() => false)
   ? ok('추천 모임 조건 칩') : flag('조건 칩 없음');
 
 // ── 6. PostDetailScreen (카드 클릭) ────────────────────────────────────────
-const firstCard = page.locator('button.flex.w-full.items-start').first();
+const firstCard = page.locator('[role="button"].flex.w-full.items-start').first();
 await firstCard.click();
 await page.waitForURL('**/meeting/**');
 await page.waitForLoadState('networkidle');
@@ -116,7 +116,7 @@ await page.locator('nav').getByText('운동').click();
 await page.waitForURL('**/exercise');
 await page.waitForLoadState('networkidle');
 await page.screenshot({ path: `${SS}/08_exercise.png` });
-const cardCount = await page.locator('button.flex.w-full.items-start').count();
+const cardCount = await page.locator('[role="button"].flex.w-full.items-start').count();
 cardCount >= 10 ? ok(`운동 화면 카드 ${cardCount}개`) : flag(`운동 카드 부족: ${cardCount}개`);
 
 // ── 8. 다가오는 정기모임 (/upcoming) ───────────────────────────────────────

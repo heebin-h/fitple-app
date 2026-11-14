@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const BASE = 'http://localhost:5173';
-const SS = '/private/tmp/claude-501/-Users-heebiny-fitple-app/630af659-6a9e-4145-a390-22cd1518d0e0/scratchpad/detail';
+const SS = process.env.SS ?? '/private/tmp/claude-501/-Users-heebiny-fitple-app/630af659-6a9e-4145-a390-22cd1518d0e0/scratchpad/detail';
 const VIEWPORT = { width: 430, height: 932 };
 
 const issues = [];
@@ -41,7 +41,7 @@ ok('로그인 → /home');
 console.log('\n=== A. 모임 상세 — 탭 컨텐츠 ===');
 
 // 첫 번째 모임 카드 진입
-await page.locator('button.flex.w-full.items-start').first().click();
+await page.locator('[role="button"].flex.w-full.items-start').first().click();
 await page.waitForURL('**/meeting/**');
 await page.waitForLoadState('networkidle');
 await shot('A01_detail_home_tab.png');
@@ -184,7 +184,7 @@ await page.locator('nav').getByText('홈').click().catch(async () => {
 await page.waitForURL('**/home');
 await page.waitForTimeout(400);
 
-await page.locator('button').filter({ has: page.locator('img[alt="러닝"]') }).click();
+await page.getByRole('button', { name: '러닝', exact: true }).first().click();
 await page.waitForURL('**/explore/**');
 await page.waitForLoadState('networkidle');
 await shot('B01_explore_running.png');
@@ -225,7 +225,7 @@ if (await upcomingMore.isVisible().catch(() => false)) {
 
   const upcomingContent = await page.locator('body').textContent();
   upcomingContent?.includes('다가오는 정기모임') ? ok('C: 타이틀 "다가오는 정기모임"') : flag('C: 타이틀 없음');
-  const scheduleItems = await page.locator('button.flex.w-full.items-start, [class*="card"], [class*="item"]').count();
+  const scheduleItems = await page.locator('[role="button"].flex.w-full.items-start, [class*="card"], [class*="item"]').count();
   info(`C: 렌더링된 아이템 요소 수: ${scheduleItems}개`);
   const upcomingCrash = await page.locator('text=문제가 발생했어요').isVisible().catch(() => false);
   upcomingCrash ? flag('C: UpcomingMeeting ErrorBoundary') : ok('C: 에러 없이 렌더링');
