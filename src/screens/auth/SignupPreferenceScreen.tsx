@@ -27,6 +27,7 @@ import {
 import { SPORTS } from '../../constants/sports';
 import { cn } from '../../utils/cn';
 import { SignupToolbar } from '../../components/auth/SignupToolbar';
+import { signupDraft } from '../../storage/signupDraft';
 
 import iconRunning from '../../assets/images/sports/sport_running.png';
 import iconFutsal from '../../assets/images/sports/sport_futsal.png';
@@ -76,6 +77,7 @@ export function SignupPreferenceScreen() {
     if (!email) return;
     await userManager.savePreferences(email, sports, details);
     userManager.clearPendingSignup(); // setLoggedIn 전에 제거해야 재개 다이얼로그 미표시
+    signupDraft.clear();              // 임시 비밀번호(메모리) 폐기
     userManager.setLoggedIn(email);
     setUser(await userManager.getCurrentUser());
     navigate('/signup/complete', { replace: true });

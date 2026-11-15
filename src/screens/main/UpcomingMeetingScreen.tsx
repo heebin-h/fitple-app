@@ -10,20 +10,22 @@ import toast from 'react-hot-toast';
 import { cn } from '../../utils/cn';
 import { meetingImg } from '../../utils/meetingImage';
 import type { ScheduleItem } from '../../data/models';
+import { isoDate } from '../../utils/date';
 
 function readSchedules(): ScheduleItem[] {
   try { return JSON.parse(localStorage.getItem('schedules') ?? '[]') as ScheduleItem[]; }
   catch { return []; }
 }
 
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+/** 로컬 날짜 기준 (toISOString은 UTC → KST 00~09시에 하루 어긋남) */
+function todayStr() { return isoDate(new Date()); }
 
 function DateStrip({ schedules, selected, onSelect }: {
   schedules: ScheduleItem[]; selected: string; onSelect: (d: string) => void;
 }) {
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() + i);
-    const date = d.toISOString().slice(0, 10);
+    const date = isoDate(d);
     const labels = ['일','월','화','수','목','금','토'];
     return { date, label: labels[d.getDay()], num: d.getDate() };
   });
@@ -102,16 +104,16 @@ export function UpcomingMeetingScreen() {
                 <div className="relative h-[100px] overflow-hidden bg-background">
                   <img src={meetingImg(s.image)} alt="" className="h-full w-full object-cover" />
                   {s.isUrgent && (
-                    <span className="absolute right-2 top-2 rounded-[4px] bg-error px-1.5 py-0.5 text-[10px] text-textWhite">
+                    <span className="absolute right-2 top-2 rounded-[4px] bg-error px-1.5 py-0.5 text-tiny text-textWhite">
                       마감임박
                     </span>
                   )}
                 </div>
                 <div className="flex flex-col gap-0.5 p-2.5">
                   <p className="truncate text-micro-strong text-textPrimary">{s.title}</p>
-                  <p className="text-[10px] text-textSecondary">{s.time}</p>
-                  <p className="text-[10px] text-textHint">{s.location} · {s.level}</p>
-                  <p className="text-[10px] text-textHint">멤버 {s.memberCount}명</p>
+                  <p className="text-tiny text-textSecondary">{s.time}</p>
+                  <p className="text-tiny text-textHint">{s.location} · {s.level}</p>
+                  <p className="text-tiny text-textHint">멤버 {s.memberCount}명</p>
                 </div>
               </button>
             ))}

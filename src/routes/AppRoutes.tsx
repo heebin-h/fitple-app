@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { MobileFrame }            from '../components/layout/MobileFrame';
 import { MainLayout }             from '../components/layout/MainLayout';
 import { RequireAuth }            from './RequireAuth';
+import { ScrollManager }          from './ScrollManager';
 import { SplashScreen }           from '../screens/SplashScreen';
 import { LoginScreen }            from '../screens/auth/LoginScreen';
 import { EmailLoginScreen }       from '../screens/auth/EmailLoginScreen';
@@ -35,6 +36,7 @@ import { CreateMeetingScreen }    from '../screens/main/CreateMeetingScreen';
 export function AppRoutes() {
   return (
     <BrowserRouter>
+      <ScrollManager />
       <MobileFrame>
         <Routes>
           {/* 공개 라우트 */}

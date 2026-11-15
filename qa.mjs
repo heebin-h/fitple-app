@@ -78,46 +78,46 @@ await page.screenshot({ path: `${SS}/05_explore.png` });
 await page.getByRole('button', { name: '편하게', exact: true }).isVisible().catch(() => false)
   ? ok('추천 모임 조건 칩') : flag('조건 칩 없음');
 
-// ── 6. PostDetailScreen (카드 클릭) ────────────────────────────────────────
-const firstCard = page.locator('[role="button"].flex.w-full.items-start').first();
+// ── 6. PostDetailScreen (추천 모임 행 클릭 — item_group_list) ──────────────
+const firstCard = page.locator('[role="button"]').filter({ has: page.locator('img') }).first();
 await firstCard.click();
 await page.waitForURL('**/meeting/**');
 await page.waitForLoadState('networkidle');
 await page.screenshot({ path: `${SS}/06_post_detail.png` });
 
-for (const tab of ['홈', '게시판', '채팅', '사진첩', '멤버']) {
+for (const tab of ['홈', '공지', '채팅', '사진첩', '멤버']) {
   await page.getByText(tab, { exact: true }).first().isVisible().catch(() => false)
     ? ok(`탭 "${tab}"`) : flag(`탭 "${tab}" 없음`);
 }
 
-const joinVisible = await page.getByText('1회 참가하기').isVisible().catch(() => false);
-joinVisible ? ok('"1회 참가하기" 확인') : flag('"1회 참가하기" 없음');
+const joinVisible = await page.getByRole('button', { name: '가입하기', exact: true }).isVisible().catch(() => false);
+joinVisible ? ok('"가입하기" 확인') : flag('"가입하기" 없음');
 if (joinVisible) {
-  await page.getByText('1회 참가하기').click();
+  await page.getByRole('button', { name: '가입하기', exact: true }).click();
   await page.waitForTimeout(500);
-  await page.getByText('참가 완료').isVisible().catch(() => false)
-    ? ok('"참가 완료" 상태 전환') : flag('"참가 완료" 미전환');
+  await page.getByText('가입 완료').isVisible().catch(() => false)
+    ? ok('"가입 완료" 상태 전환') : flag('"가입 완료" 미전환');
 }
 
-await page.getByText('채팅', { exact: true }).first().click();
+await page.getByRole('tab', { name: '채팅' }).click();
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${SS}/07_chat.png` });
-await page.locator('input[placeholder*="메시지"]').isVisible().catch(() => false)
+await page.getByPlaceholder('작성').isVisible().catch(() => false)
   ? ok('채팅 입력창') : flag('채팅 입력창 없음');
 
-// ── 7. 운동 화면 (뒤로가기 → BottomNav "운동") ─────────────────────────────
+// ── 7. 체험 탭(운동 화면) (뒤로가기 → BottomNav "체험") ─────────────────────
 await page.goBack();
 await page.waitForTimeout(500);
 // PostDetailScreen에서 뒤로 = explore/:sport
 await page.goBack();
 await page.waitForTimeout(500);
-// 홈으로 복귀 or 다른 화면 — BottomNav "운동" 클릭
-await page.locator('nav').getByText('운동').click();
+// 홈으로 복귀 or 다른 화면 — BottomNav "체험" 클릭
+await page.locator('nav').getByText('체험', { exact: true }).click();
 await page.waitForURL('**/exercise');
 await page.waitForLoadState('networkidle');
 await page.screenshot({ path: `${SS}/08_exercise.png` });
 const cardCount = await page.locator('[role="button"].flex.w-full.items-start').count();
-cardCount >= 10 ? ok(`운동 화면 카드 ${cardCount}개`) : flag(`운동 카드 부족: ${cardCount}개`);
+cardCount >= 10 ? ok(`체험 탭 카드 ${cardCount}개`) : flag(`체험 탭 카드 부족: ${cardCount}개`);
 
 // ── 8. 다가오는 정기모임 (/upcoming) ───────────────────────────────────────
 // 홈 탭으로 이동 후 "더보기" 클릭

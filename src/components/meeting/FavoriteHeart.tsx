@@ -48,6 +48,8 @@ export function FavoriteHeart({ meetingId, onGuestTap }: Props) {
     <button
       type="button"
       onClick={onTap}
+      // Enter/Space keydown이 카드(role=button)의 onKeyDown으로 올라가 상세 이동까지 일으키지 않게
+      onKeyDown={(e) => e.stopPropagation()}
       aria-label="찜하기"
       aria-pressed={liked}
       className="ml-2 flex-shrink-0"

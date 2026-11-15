@@ -66,7 +66,7 @@ git log --oneline -5
 - `chatStore.ts` (Zustand, meetingId 키)
 - `ExerciseScreen`: MeetingCard 전체 목록 + 위치 필터
 - `RecommendedGroupScreen`: 종목 필터 + 조건 칩 (편하게/평일오후/주말)
-- `PostDetailScreen`: 히어로 이미지 + 5탭 (홈/게시판/채팅/사진첩/멤버) + 참가하기 persist
+- `PostDetailScreen`: 툴바(검색·알림) + 5탭 (홈/공지/채팅/사진첩/멤버) — 디자인 PNG·Android 기준 (2026-11-15 재구성: 공유하기·1회 체험하기·지도·문의하기·가입하기 persist)
 - `PostChatScreen`: `/meeting/:id/chat` 독립형 채팅 (SPEC §12.16)
 - `UpcomingMeetingScreen`: DateStrip + 2열 그리드
 - `MyScreen`: 아바타 이니셜, 닉네임/이메일, 로그아웃
@@ -108,8 +108,7 @@ git log --oneline -5
 아래 기능은 SPEC에서 데모 범위 외로 명시 → toast 처리, 미구현이 정상:
 - 카카오/Apple/Google 소셜 로그인
 - 이용약관/개인정보처리방침 (MyScreen)
-- 찜하기, 공유 (PostDetailScreen)
-- 게시판 탭 상세
+- 공지 탭 항목 탭 동작 없음 (Android도 리스너 없음)
 - UpcomingMeetingScreen 카드 탭 → toast (ScheduleItem에 meetingId 필드 없음)
 
 ## 6. 알려진 한계 / 다음 세션 주의사항
@@ -118,10 +117,13 @@ git log --oneline -5
 |------|------|
 | ScheduleItem.meetingId 미존재 | `UpcomingMeetingScreen` 카드 탭이 /meeting/:id로 이동 불가. 해결하려면 `models.ts`에 `meetingId?: string` 추가 + 시드 업데이트 필요 |
 | 시드 날짜 고정 | `SEED_SCHEDULES`의 날짜는 첫 실행 시점 기준. 오래된 기기라면 HomeScreen hero "오늘/내일" 매칭 안 됨 → DevResetButton으로 재시드 |
-| 게시판 더미 데이터 | `PostDetailScreen` 게시판 탭은 하드코딩 3건 (NOTICES) |
-| 채팅 미영속 | 새로고침 시 chatStore 초기화 → localStorage에서 재로드 (시드 대화만 복원) |
+| 공지 고정 데이터 | `PostDetailScreen` 공지 탭은 Android `setupNoticeList` 4건 하드코딩 |
+| 시드 변경 반영 | 2026-11-15 채팅 시드(m-fut-1·m-hik-1 제거, m-run-1 = Android 샘플) 변경은 `seeded` 플래그 때문에 기존 설치엔 미반영 → `/?reset` 또는 DevResetButton. 저장본 없는 모임은 자동으로 Android 샘플 대화 표시 |
+| 이미지 해상도 | 모임 사진 원본이 70~100px(Android drawable 동일) — 상세 헤더(236pt)에서 흐림. 고해상도 소스 없음 |
+| 채팅 미영속 | 새로고침 시 chatStore 초기화 → 저장본(없으면 Android 샘플)만 복원, 보낸 메시지는 사라짐 |
+| 세션 복원 | 회원은 어느 화면에서 새로고침해도 `RequireAuth`가 `current_user`로 복원. 게스트는 복원 안 함(Android 동일) |
 
-## 7. 다음 작업 — Phase 7 iOS 통합 (SPEC §20)
+## 7. ~~다음 작업 — Phase 7 iOS 통합 (SPEC §20)~~ — 프로젝트 중단으로 iOS 미개발 (아래는 참고용 기록)
 
 ```bash
 # 전제: Xcode 설치 완료 + CocoaPods 설치

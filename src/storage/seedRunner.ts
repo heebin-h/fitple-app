@@ -31,7 +31,7 @@ export async function seedIfFirstRun(): Promise<void> {
         await userManager.savePreferences(
           acc.email,
           ['러닝'],
-          { 러닝: { '평균 페이스를 알려주세요 (1km 기준)': '5:00~5:59' } },
+          { 러닝: { '평균 페이스를 알려주세요(1km 기준)': '5:00~5:59' } },
         );
       }
     }

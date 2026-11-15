@@ -75,6 +75,7 @@ export default {
         // ── Notice badge ─────────────────────────────────────────
         noticeBg:  '#FEF7F7',
         noticeRed: '#EB5048',
+        crownGold: '#F4B949',   // 채팅 "(모임장)" 이름 — home_postdetail_noticelist_chattab.png 샘플링
 
         // ── Google brand glyph slices ────────────────────────────
         googleBlue:   '#4285F4',
@@ -105,6 +106,7 @@ export default {
         'micro-strong':  ['12px', { lineHeight: '1.40', fontWeight: '700' }],
         mini:            ['11px', { lineHeight: '1.30', fontWeight: '500' }],
         'mini-strong':   ['11px', { lineHeight: '1.30', fontWeight: '700' }],
+        tiny:            ['10px', { lineHeight: '1.30', fontWeight: '500' }], // Android text_tiny 10sp (채팅 시각·카드 메타)
       },
 
       maxWidth: {
@@ -112,7 +114,7 @@ export default {
       },
 
       fontFamily: {
-        sans: ['Pretendard', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Pretendard Variable"', 'Pretendard', 'system-ui', '-apple-system', 'sans-serif'],
       },
 
       borderRadius: {

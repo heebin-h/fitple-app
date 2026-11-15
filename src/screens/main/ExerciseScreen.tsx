@@ -1,5 +1,5 @@
 /**
- * 운동 — 전체 모임 목록. SPEC §12.12 / Android ExerciseFragment.
+ * 체험 탭 — "활동 중인 모임" 전체 목록. SPEC §12.12 / Android ExerciseFragment (fragment_exercise.xml tvTitle 17sp).
  */
 
 import { useMemo } from 'react';
@@ -30,7 +30,7 @@ export function ExerciseScreen() {
         <button type="button" onClick={() => navigate(-1)} className="p-1">
           <ArrowLeft size={22} className="text-textPrimary" />
         </button>
-        <span className="flex-1 text-center text-h3 text-textPrimary">운동</span>
+        <span className="flex-1 text-center text-h2 text-textPrimary">활동 중인 모임</span>
         <button type="button" onClick={() => navigate('/notifications')} className="p-1">
           <Bell size={22} className="text-textPrimary" />
         </button>

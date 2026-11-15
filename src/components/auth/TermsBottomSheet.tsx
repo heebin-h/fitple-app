@@ -61,7 +61,8 @@ export function TermsBottomSheet({ open, onOpenChange, onAgree }: Props) {
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[60] bg-black/40" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-[70] mx-auto flex max-w-mobile flex-col rounded-t-sheet bg-surface px-6 pb-safe">
+        {/* 별도 설명 문단 없음 — Radix 규약대로 describedby를 명시적으로 비워 a11y 경고 제거 */}
+        <Drawer.Content aria-describedby={undefined} className="fixed inset-x-0 bottom-0 z-[70] mx-auto flex max-w-mobile flex-col rounded-t-sheet bg-surface px-6 pb-safe">
           {/* 핸들바 */}
           <div className="mx-auto mt-3 mb-6 h-1 w-10 rounded-full bg-borderDefault" />
 

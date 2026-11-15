@@ -27,6 +27,7 @@ import {
   TRIAL_MEETING_IDS, HOME_RECOMMENDED_IDS, GUEST_RECOMMENDED_IDS, ACTIVE_MEETING_IDS,
 } from '../../data/seedData';
 import type { Meeting, Review, ScheduleItem } from '../../data/models';
+import { isoDate } from '../../utils/date';
 
 // ── localStorage helpers ────────────────────────────────────────────────────
 function readLS<T>(key: string): T[] {
@@ -38,10 +39,11 @@ function pick(all: Meeting[], ids: readonly string[]): Meeting[] {
   return ids.map((id) => all.find((m) => m.id === id)).filter((m): m is Meeting => m !== undefined);
 }
 
+/** 로컬 날짜 YYYY-MM-DD (toISOString은 UTC라 KST 00~09시에 하루 어긋남) */
 function todayMD(offset: number): string {
   const d = new Date();
   d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
+  return isoDate(d);
 }
 
 function useHomeData() {
@@ -54,7 +56,7 @@ function useHomeData() {
 
 function Fab({ onClick }: { onClick: () => void }) {
   return (
-    <div className="pointer-events-none fixed bottom-20 left-1/2 z-10 h-14 w-full max-w-mobile -translate-x-1/2">
+    <div className="pointer-events-none fixed bottom-[calc(96px+env(safe-area-inset-bottom))] left-1/2 z-10 h-14 w-full max-w-mobile -translate-x-1/2">
       <button type="button" onClick={onClick} aria-label="모임 만들기"
         className="pointer-events-auto absolute right-4 top-0 flex h-14 w-14 items-center justify-center rounded-full bg-orange shadow-lg">
         <Plus size={24} className="text-textWhite" />

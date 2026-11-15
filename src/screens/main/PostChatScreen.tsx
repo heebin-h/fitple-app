@@ -7,8 +7,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { cn } from '../../utils/cn';
 import { useChatStore } from '../../store/chatStore';
+import { loadChat } from '../../storage/chatRepo';
+import { ChatMessageList } from '../../components/chat/ChatMessageList';
 import { useAuthStore } from '../../store/authStore';
 import { useCreatedMeetingsStore } from '../../store/createdMeetingsStore';
 import type { Meeting, ChatMessage } from '../../data/models';
@@ -19,20 +22,11 @@ function readMeetings(): Meeting[] {
   try { return JSON.parse(localStorage.getItem('meetings') ?? '[]') as Meeting[]; }
   catch { return []; }
 }
-function readChats(meetingId: string): ChatMessage[] {
-  try { return JSON.parse(localStorage.getItem(`chats:${meetingId}`) ?? '[]') as ChatMessage[]; }
-  catch { return []; }
-}
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  const h = d.getHours(), m = d.getMinutes();
-  return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(m).padStart(2, '0')}`;
-}
-
 export function PostChatScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const currentUser  = useAuthStore((s) => s.currentUser);
+  const isGuest      = useAuthStore((s) => s.isGuest);
   const initMessages = useChatStore((s) => s.initMessages);
   const addMessage   = useChatStore((s) => s.addMessage);
   // 안정 참조 필요: `?? []`는 매 호출 새 배열 → zustand v5 getSnapshot 불일치 경고/무한 렌더 위험
@@ -47,7 +41,7 @@ export function PostChatScreen() {
   );
 
   useEffect(() => {
-    if (id) initMessages(id, readChats(id));
+    if (id) initMessages(id, loadChat(id));
   }, [id, initMessages]);
 
   useEffect(() => {
@@ -56,9 +50,10 @@ export function PostChatScreen() {
 
   function handleSend() {
     if (!input.trim() || !id) return;
+    if (isGuest || !currentUser) { toast('로그인이 필요해요'); return; }
     const msg: ChatMessage = {
       id: `my-${Date.now()}`,
-      senderName: currentUser?.nickname ?? '나',
+      senderName: currentUser.nickname,
       message: input.trim(),
       timestamp: Date.now(),
       isMe: true,
@@ -87,39 +82,17 @@ export function PostChatScreen() {
       </div>
 
       {/* 메시지 목록 */}
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-3 pb-[72px]">
-        {messages.map((msg) => {
-          if (msg.isSystem) {
-            return (
-              <div key={msg.id} className="text-center text-micro text-textHint">
-                {msg.message}
-              </div>
-            );
-          }
-          return (
-            <div key={msg.id} className={cn('flex flex-col', msg.isMe ? 'items-end' : 'items-start')}>
-              {!msg.isMe && (
-                <span className="mb-1 text-micro text-textHint">{msg.senderName}</span>
-              )}
-              <div className={cn(
-                'max-w-[75%] rounded-[12px] px-3 py-2 text-caption',
-                msg.isMe ? 'bg-orange text-textWhite' : 'bg-background text-textPrimary',
-              )}>
-                {msg.message}
-              </div>
-              <span className="mt-0.5 text-[10px] text-textHint">{formatTime(msg.timestamp)}</span>
-            </div>
-          );
-        })}
+      <div className="flex flex-1 flex-col overflow-y-auto px-4 py-3 pb-[88px]">
+        <ChatMessageList messages={messages} />
         <div ref={chatEndRef} />
       </div>
 
       {/* 입력 바 */}
-      <div className="fixed inset-x-0 bottom-0 flex items-center gap-2 border-t border-borderDefault bg-surface px-4 py-3 pb-safe">
+      <div className="fixed bottom-0 left-1/2 w-full max-w-mobile -translate-x-1/2 flex items-center gap-2 border-t border-borderDefault bg-surface px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))]">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleSend(); }}
           placeholder="메시지를 입력해주세요"
           className="flex-1 rounded-[8px] bg-background px-3 py-2 text-caption text-textPrimary outline-none placeholder:text-textHint"
         />

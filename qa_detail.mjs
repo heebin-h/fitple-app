@@ -49,20 +49,20 @@ await shot('A01_detail_home_tab.png');
 // ─ A1. 홈 탭 컨텐츠 ─
 const homeTabContent = await page.locator('body').textContent();
 homeTabContent?.includes('기본정보') ? ok('A1: 홈 탭 — "기본정보" 카드 렌더링') : flag('A1: 홈 탭 기본정보 없음');
-homeTabContent?.includes('운영진 공지') ? ok('A1: 홈 탭 — "운영진 공지" 섹션') : flag('A1: 운영진 공지 없음');
-homeTabContent?.includes('정기모임시간') ? ok('A1: 홈 탭 — 정기모임시간 필드') : flag('A1: 정기모임시간 없음');
+homeTabContent?.includes('📢 필독: 모임 유의사항이에요') ? ok('A1: 홈 탭 — "필독" 안내') : flag('A1: 필독 안내 없음');
+homeTabContent?.includes('정기 모임시간') ? ok('A1: 홈 탭 — 정기 모임시간 필드') : flag('A1: 정기 모임시간 없음');
 homeTabContent?.includes('장소') ? ok('A1: 홈 탭 — 장소 필드') : flag('A1: 장소 필드 없음');
 
-// ─ A2. 게시판 탭 ─
-console.log('\n  [게시판 탭]');
-await page.getByText('게시판', { exact: true }).first().click();
+// ─ A2. 공지 탭 ─
+console.log('\n  [공지 탭]');
+await page.getByRole('tab', { name: '공지' }).click();
 await page.waitForTimeout(500);
 await shot('A02_detail_board_tab.png');
 const boardContent = await page.locator('body').textContent();
-// 게시판은 seedData에 없을 수 있음 — 렌더링 자체가 안 깨지는지 확인
+// 공지은 seedData에 없을 수 있음 — 렌더링 자체가 안 깨지는지 확인
 const boardCrashed = await page.locator('text=문제가 발생했어요').isVisible().catch(() => false);
-boardCrashed ? flag('A2: 게시판 탭 — ErrorBoundary 발생') : ok('A2: 게시판 탭 — 에러 없이 렌더링');
-info(`게시판 탭 텍스트 스니펫: "${boardContent?.slice(0, 80).replace(/\s+/g, ' ').trim()}"`);
+boardCrashed ? flag('A2: 공지 탭 — ErrorBoundary 발생') : ok('A2: 공지 탭 — 에러 없이 렌더링');
+info(`공지 탭 텍스트 스니펫: "${boardContent?.slice(0, 80).replace(/\s+/g, ' ').trim()}"`);
 
 // ─ A3. 채팅 탭 — 메시지 목록 + 전송 ─
 console.log('\n  [채팅 탭]');
@@ -83,7 +83,7 @@ msgCount > 0
   : info('A3: 채팅 메시지 DOM 요소 미탐지 (class명 다를 수 있음)');
 
 // 입력창 확인
-const chatInput = page.locator('input[placeholder*="메시지"], textarea[placeholder*="메시지"]');
+const chatInput = page.getByPlaceholder('작성');
 const chatInputVisible = await chatInput.isVisible().catch(() => false);
 chatInputVisible ? ok('A3: 채팅 입력창 표시') : flag('A3: 채팅 입력창 없음');
 
@@ -92,7 +92,7 @@ if (chatInputVisible) {
   await chatInput.fill('테스트 메시지 — QA 자동화');
   await shot('A04_detail_chat_typed.png');
 
-  const sendBtn = page.locator('button[aria-label*="전송"], button[type="submit"]').last();
+  const sendBtn = page.getByRole('button', { name: '전송', exact: true });
   const sendVisible = await sendBtn.isVisible().catch(() => false);
   if (sendVisible) {
     await sendBtn.click();
@@ -147,23 +147,23 @@ memberCrashed ? flag('A5: 멤버 탭 — ErrorBoundary 발생') : ok('A5: 멤버
 const memberContent = await page.locator('body').textContent();
 info(`멤버 탭 텍스트: "${memberContent?.slice(0, 100).replace(/\s+/g, ' ').trim()}"`);
 
-// ─ A6. 탭 전환 후 홈 탭 복귀 — 참가 버튼/고정 바 정상 여부 ─
+// ─ A6. 탭 전환 후 홈 탭 복귀 — 가입 버튼/고정 바 정상 여부 ─
 console.log('\n  [탭 전환 후 홈 복귀]');
 await page.getByText('홈', { exact: true }).first().click();
 await page.waitForTimeout(400);
 await shot('A08_detail_home_tab_return.png');
-const joinOrComplete = await page.getByText('1회 참가하기').isVisible().catch(() => false)
-  || await page.getByText('참가 완료').isVisible().catch(() => false);
-joinOrComplete ? ok('A6: 홈 탭 복귀 — 참가 버튼 정상') : flag('A6: 홈 탭 복귀 후 참가 버튼 없음');
+const joinOrComplete = await page.getByRole('button', { name: '가입하기', exact: true }).isVisible().catch(() => false)
+  || await page.getByRole('button', { name: '가입 완료', exact: true }).isVisible().catch(() => false);
+joinOrComplete ? ok('A6: 홈 탭 복귀 — 가입 버튼 정상') : flag('A6: 홈 탭 복귀 후 가입 버튼 없음');
 
-// 참가 버튼 fixed 위치 확인
-const joinBtn = page.locator('button', { hasText: /1회 참가하기|참가 완료/ }).first();
+// 가입 버튼 fixed 위치 확인
+const joinBtn = page.locator('button', { hasText: /^(가입하기|가입 완료)$/ }).first();
 if (await joinBtn.isVisible().catch(() => false)) {
   const joinBox = await joinBtn.boundingBox();
   if (joinBox) {
     joinBox.y + joinBox.height <= VIEWPORT.height + 5
-      ? ok(`A6: 참가 버튼 뷰포트 내 고정 (bottom=${Math.round(VIEWPORT.height - joinBox.y - joinBox.height)}px 여유)`)
-      : flag(`A6: 참가 버튼 뷰포트 벗어남`);
+      ? ok(`A6: 가입 버튼 뷰포트 내 고정 (bottom=${Math.round(VIEWPORT.height - joinBox.y - joinBox.height)}px 여유)`)
+      : flag(`A6: 가입 버튼 뷰포트 벗어남`);
   }
 }
 

@@ -6,7 +6,7 @@
  *   - 입력 1: "비밀번호" 라벨 + 입력 (regex `^(?=.*[A-Za-z])(?=.*\d).{8,20}$`)
  *   - 라이브 안내: 통과 전엔 회색 도움말, 위반 시 빨강 에러 텍스트
  *   - 입력 1 밑에 "비밀번호 표시" 별도 체크박스 (Android 디자인) — 1번 입력에만 적용
- *   - 입력 2: "비밀번호 확인" 라벨 + 입력 (항상 마스킹) + 일치 검증
+ *   - 입력 2: "비밀번호를 한번 더 입력해주세요." 라벨 + 입력 (항상 마스킹) + 일치 검증
  *   - 하단 풀와이드 "다음" 버튼 (활성/비활성)
  */
 
@@ -17,6 +17,7 @@ import { ClearIcon, CheckCircleIcon, WarningIcon } from '../../components/icons'
 import { isValidPassword } from '../../utils/validation';
 import { cn } from '../../utils/cn';
 import { SignupToolbar } from '../../components/auth/SignupToolbar';
+import { signupDraft } from '../../storage/signupDraft';
 
 export function SignupPasswordScreen() {
   const navigate = useNavigate();
@@ -54,8 +55,8 @@ export function SignupPasswordScreen() {
 
   const handleNext = () => {
     if (!canProceed || !email) return;
-    // password는 navigate state(브라우저 history)가 아닌 sessionStorage로 전달
-    sessionStorage.setItem('_sp', pw);
+    // password는 navigate state(브라우저 history)·sessionStorage가 아닌 메모리로 전달
+    signupDraft.setPassword(pw);
     navigate('/signup/nickname', { state: { email } });
   };
 
@@ -111,14 +112,14 @@ export function SignupPasswordScreen() {
         </button>
 
         {/* 비밀번호 확인 */}
-        <label className="mt-6 block text-label text-textPrimary">비밀번호 확인</label>
+        <label className="mt-6 block text-label text-textPrimary">비밀번호를 한번 더 입력해주세요.</label>
         <div className={cn('mt-2 flex h-[52px] items-center gap-2 rounded-lg border px-3.5', pw2Border)}>
           <input
             type="password"
             autoComplete="new-password"
             value={pw2}
             onChange={(e) => setPw2(e.target.value)}
-            placeholder="비밀번호를 한번 더 입력해주세요"
+            placeholder="비밀번호를 다시 입력해주세요"
             className="flex-1 bg-transparent text-body text-textPrimary outline-none placeholder:text-textHint"
           />
           {pw2.length > 0 && (
@@ -130,7 +131,7 @@ export function SignupPasswordScreen() {
           {pw2Error && <WarningIcon size={20} className="text-error" />}
         </div>
         {pw2Error && (
-          <p className="mt-2 text-caption text-error">비밀번호가 일치하지 않습니다</p>
+          <p className="mt-2 text-caption text-error">작성한 비밀번호가 일치하지 않습니다.</p>
         )}
       </div>
 

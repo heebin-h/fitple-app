@@ -20,6 +20,7 @@ import { isValidNickname } from '../../utils/validation';
 import { cn } from '../../utils/cn';
 import { TermsBottomSheet } from '../../components/auth/TermsBottomSheet';
 import { SignupToolbar } from '../../components/auth/SignupToolbar';
+import { signupDraft } from '../../storage/signupDraft';
 
 const MAX_LEN = 10;
 
@@ -27,8 +28,9 @@ export function SignupNicknameScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const { email } = (location.state as { email?: string } | null) ?? {};
-  // SignupPasswordScreen이 sessionStorage에 임시 저장한 값 — 사용 즉시 소거
-  const password = sessionStorage.getItem('_sp') ?? '';
+  // SignupPasswordScreen이 메모리(signupDraft)에 넘긴 값. 가입 완료(Preference) 시 소거되므로
+  // 선호운동 화면에서 뒤로 와도 유지된다. 새로고침이면 비어 있어 아래 방어가 Step 1로 보냄.
+  const [password] = useState(() => signupDraft.getPassword());
 
   // URL 직접 진입 방어
   useEffect(() => {
@@ -61,7 +63,6 @@ export function SignupNicknameScreen() {
 
   const handleAgree = async () => {
     if (!email || !password) return;
-    sessionStorage.removeItem('_sp'); // 사용 즉시 소거
     const ok = await userManager.saveUser(email, password, trimmed);
     if (!ok) {
       toast.error('이미 가입된 이메일이에요');

@@ -38,6 +38,8 @@ export interface ChatMessage {
   timestamp: number;        // Unix epoch ms
   isMe: boolean;
   isSystem: boolean;
+  /** 발신자 역할 — Android ChatMessage.role. 이름 앞 "(모임장)"/"(운영진)" + 왕관(골드/블루) */
+  role?: '모임장' | '운영진';
 }
 
 export interface Review {
