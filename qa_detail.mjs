@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const BASE = 'http://localhost:5173';
-const SS = process.env.SS ?? '/private/tmp/claude-501/-Users-heebiny-fitple-app/630af659-6a9e-4145-a390-22cd1518d0e0/scratchpad/detail';
+const SS = process.env.SS ?? 'test-results/qa/detail';
 const VIEWPORT = { width: 430, height: 932 };
 
 const issues = [];

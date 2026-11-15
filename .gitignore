@@ -43,3 +43,6 @@ Thumbs.db
 
 # oh-my-claudecode runtime state
 .omc/
+
+# E2E screenshots (tests/e2e, qa*.mjs)
+test-results/

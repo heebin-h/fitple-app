@@ -1,7 +1,9 @@
 # FitPle
 
 운동 모임 매칭 앱 FitPle의 **React 웹 + PWA** 데모. 백엔드 없음, localStorage 기반.
-**Capacitor**로 iOS 앱 빌드도 가능 (본인 아이폰 테스트용, Free Apple ID).
+
+> **상태 (2026-11-15):** 웹 데모 완성 — Android 원본 21개 화면 포팅, 회귀 249건 통과.
+> iOS(Capacitor) 앱은 계획했으나 **프로젝트 중단으로 개발하지 않음**. 인계 문서는 [`HANDOFF.md`](HANDOFF.md).
 
 > 별도로 Android 네이티브(Kotlin) 원본 앱이 존재하며 본 프로젝트는 그것과 데이터 공유하지 않음.
 
@@ -15,6 +17,8 @@ npm run dev               # 로컬 개발 서버 (http://localhost:5173)
 npm run dev -- --host     # LAN 공개 (같은 Wi-Fi의 폰 Safari로 접속 가능)
 npm run build             # 프로덕션 빌드 (dist/)
 npm run preview           # 빌드 결과 로컬 확인
+npm run typecheck         # tsc --noEmit
+npm run e2e               # 전체 회귀 테스트 (dev 서버 실행 중이어야 함)
 ```
 
 ## 데모 계정
@@ -25,7 +29,9 @@ demo@fitple.app / demo1234
 
 앱 첫 실행 시 시드 데이터로 자동 등록 (모임/후기/스케줄/채팅 포함).
 
-## iOS 앱으로 본인 폰에 빌드 (옵션)
+## iOS 앱으로 본인 폰에 빌드 (미개발 — 참고용)
+
+> 아래는 원래 계획된 절차다. 실제로 수행하지 않았고 `ios/` 폴더도 없다.
 
 전제: macOS, Xcode 설치, 본인 Apple ID, USB 케이블.
 
@@ -47,11 +53,15 @@ npx cap open ios          # Xcode 열림
 | **`SPEC.md`** | 전체 기술 사양 (25 섹션). 무엇을 만드는지, 어떻게 생겼는지의 단일 출처. |
 | **`BUILD.md`** | iOS 빌드/사이닝/TestFlight 절차 치트시트. |
 | **`CLAUDE.md`** | 코드베이스 가이드. AI 에이전트가 새 세션에서 빠르게 컨텍스트 잡을 때 사용. |
-| **`HANDOFF.md`** | 진행 상황 + 다음 작업 + 환경 정보 (세션 인계용). |
+| **`HANDOFF.md`** | **인계 문서** — 현재 상태, 구조, 다음 할 일, 함정. 여기서 시작. |
+| **`docs/README.md`** | 위키 홈 — 전체 문서 색인 (Obsidian 볼트로 열 수 있음). |
+| **`docs/HISTORY.md`** | 개발 이력과 교훈. |
+| **`docs/COMPLETION_STATUS.md`** | 화면별 Android 대비 완성도. |
+| **`tests/e2e/README.md`** | 회귀 테스트 구성·실행법. |
 | 외부 | `/Users/heebiny/AndroidStudioProjects/FitPle/REACT_WEB_PLAN.md` (Android→웹 마이그레이션 원안) |
 
 ## 기술 스택
 
-React 18 · TypeScript 5 · Vite 8 · Tailwind CSS 3 · Zustand · React Router 6 · vite-plugin-pwa · Capacitor 7
+React 18 · TypeScript 6 · Vite 8 · Tailwind CSS 3 · Zustand 5 · React Router 6 · vite-plugin-pwa · Playwright(테스트) · Capacitor 8(설치만, iOS 미개발)
 
 저장소: localStorage + Web Crypto SHA-256

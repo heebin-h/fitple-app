@@ -10,7 +10,8 @@
 * **What:** iOS app for FitPle (Korean sports meet-up matching). Same product as the Android Studio reference project, ported to React + Capacitor.
 * **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Capacitor iOS. No backend.
 * **Persistence:** `localStorage` only. SHA-256 via Web Crypto. The full key schema is in SPEC §8.
-* **Build target:** TestFlight / App Store (iOS 15+). Web PWA build is a free side-effect.
+* **Build target:** Web PWA demo (complete). The planned iOS/TestFlight build (P7–P8) was **not developed — project stopped 2026-11-15**; see HANDOFF.md §9 to resume.
+* **Status / next steps:** `HANDOFF.md` (start here), history in `docs/HISTORY.md`, wiki index `docs/README.md`.
 * **Don't:** add a backend, swap in a UI framework, change the bundle id, or rename design tokens without updating SPEC.md first.
 
 ## Read these before touching code
@@ -34,25 +35,17 @@ Reference material outside this repo (read-only):
 
 ```
 src/
-├── App.tsx                  app shell (currently placeholder)
-├── main.tsx                 React root
-├── index.css                Tailwind base + safe-area helpers + iOS 16px enforce
-├── constants/
-│   ├── colors.ts            COLORS object (mirrors tailwind.config.ts)
-│   └── sports.ts            5-sport catalog + 14 detail questions (matches SPEC §15)
-├── data/
-│   ├── models.ts            UserProfile, Meeting, ChatMessage, Review, ScheduleItem
-│   └── seedData.ts          demo accounts + 15 meetings + reviews + schedules + chats
-├── storage/
-│   ├── userManager.ts       async UserManager (Android UserManager.kt 1:1 port)
-│   └── seedRunner.ts        first-run seed injection ("seeded" flag)
-├── utils/
-│   ├── hash.ts              Web Crypto SHA-256 wrapper
-│   ├── validation.ts        email / password / nickname rules (matches Android)
-│   ├── date.ts              dayjs helpers — DateStrip, hero date, Korean weekday
-│   ├── cn.ts                className combiner
-│   └── platform.ts          isNative / isIOS / isStandalonePWA detection
-└── vite-env.d.ts
+├── App.tsx / main.tsx       shell (ErrorBoundary, Toaster, dev reset button) / root + `/?reset` hatch
+├── index.css                Tailwind base + safe-area utilities + iOS-only 16px input rule
+├── routes/                  AppRoutes (route table) · RequireAuth (guard + session restore) · ScrollManager
+├── screens/                 auth/ (login + signup 5 steps) · main/ (13 screens) · SplashScreen
+├── components/              layout/ · home/ · meeting/ · chat/ · common/ (LocationPicker) · auth/ · icons/ · dev/
+├── store/                   authStore · chatStore · createdMeetingsStore · locationStore · preferenceStore
+├── storage/                 userManager (async, SHA-256) · seedRunner · chatRepo · signupDraft (memory-only pw)
+├── data/                    models.ts · seedData.ts (21 meetings, reviews, schedules, Android sample chat)
+├── constants/               colors.ts · sports.ts (5-sport catalog + questions)
+└── utils/                   date (isoDate — local, never toISOString) · meetingImage · hash · validation · cn · platform
+tests/e2e/                   Playwright regression scripts + run-all.mjs (`npm run e2e`)
 ```
 
 Target layout for new screens, stores, and components is documented in SPEC §5.
@@ -99,13 +92,15 @@ Inline Korean text in the UI must match the source. SPEC Appendix C has the full
 * Primary CTA height: `52pt` (`h-[52px]`).
 * Card radius: `12pt` (`rounded-card` or `rounded-[12px]`).
 * Bottom-sheet radius (top corners only): `20pt` (`rounded-t-sheet`).
-* Safe area: every full-screen view wraps in a `PageFrame` (to be created in Phase 2) that applies `pt-safe` and `pb-safe` utilities defined in `index.css`.
+* Safe area: no `PageFrame` component was created — each screen root applies `pt-safe`; fixed bottom bars use `pb-[calc(Npx+env(safe-area-inset-bottom))]` (plain `pb-safe` next to `pb-N`/`py-N` overrides it). Tab screens get `pb-nav-safe` from `MainLayout`.
 
 ### 7. State management
 
 * `authStore.ts` (Zustand) — current user + isGuest. Created in Phase 1.
 * `preferenceStore.ts` (Zustand) — signup-preference state machine. Created in Phase 3.
-* `chatStore.ts` (Zustand) — chat message lists, keyed by meetingId. Created in Phase 5.
+* `chatStore.ts` (Zustand) — chat message lists, keyed by meetingId. Initial value from `storage/chatRepo.loadChat`.
+* `createdMeetingsStore.ts` / `locationStore.ts` (Zustand) — session-only, mirroring Android `UserCreatedMeetings` / `LocationState`.
+* Selectors must return stable references — never `s.x ?? []`; use a module-level `EMPTY_*` constant (zustand v5 `getSnapshot` warning / render loop).
 * Local component state otherwise. Don't promote ephemeral form state to Zustand.
 
 ### 8. Routes
@@ -120,8 +115,8 @@ React Router v6, BrowserRouter (Capacitor serves `index.html` from the bundle, h
 
 ### 10. Testing
 
-* `npx tsc --noEmit` is the minimum bar. Run after every meaningful change.
-* If you add unit tests, use Vitest (zero config needed). Add `npm run test` to `package.json` when you do.
+* `npm run typecheck` (`tsc --noEmit`) is the minimum bar. Run after every meaningful change.
+* Before calling work done: `npm run build`, then with `npm run dev` running, `npm run e2e` (all Playwright suites, 249 checks as of 2026-11-15). Add a regression check in `tests/e2e/` for every bug you fix. See `tests/e2e/README.md`.
 
 ## When to update SPEC.md
 
@@ -137,15 +132,14 @@ If the change is purely a refactor (no behaviour change, no API surface change) 
 
 ## Phase status
 
-Per HANDOFF.md, the project is between Phase 0 (foundations) and Phase 1 (data + routing). The Phase 0 polish that just landed:
+As of 2026-11-15 (see `HANDOFF.md` / `docs/COMPLETION_STATUS.md`):
 
-* `tailwind.config.ts` now has the final 24 colours + 14 typography tokens.
-* `constants/sports.ts` has the correct 5-sport catalog with full question banks.
-* `constants/colors.ts`, `utils/cn.ts`, `utils/date.ts`, `utils/platform.ts` added.
-* `data/seedData.ts` rebuilt against the correct sports + real image filenames.
-* `BUILD.md`, `CLAUDE.md`, `.nvmrc` added.
+* P0–P6 (foundations → all screens) ✅ — all 21 Android fragments ported; 20 match Android + design PNGs, 1 partial (UpcomingMeeting card tap has no detail link).
+* Full code/design review fixes landed in `92ce567`; regression 249/249.
+* P7–P8 (iOS integration / release) — **not developed, project stopped.**
+* All work lives on `feature/phase-2-login`; it has not been merged to `develop` yet (HANDOFF §0, §7-1).
 
-Next up is **Phase 1: routing, slide transitions, auth store, repos.** See SPEC §20.
+**Source-of-truth precedence for porting:** layout/visual → design PNG; copy/behaviour → Android Kotlin + `strings.xml`. Record the decision in the file's header comment when they differ.
 
 ## Quick orientation snippets
 
@@ -169,4 +163,4 @@ cat /Users/heebiny/AndroidStudioProjects/FitPle/app/src/main/java/com/example/fi
 
 ---
 
-Last updated: 2026-05-25.
+Last updated: 2026-11-15.
