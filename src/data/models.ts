@@ -8,6 +8,8 @@ export interface UserProfile {
   passwordHash: string;
   selectedSports: string[];
   sportDetails: Record<string, Record<string, string>>;
+  /** 찜한 모임 id — Android optJSONArray 호환처럼 필드 도입 전 유저는 undefined */
+  favoriteMeetingIds?: string[];
 }
 
 export interface Meeting {
@@ -36,6 +38,8 @@ export interface ChatMessage {
   timestamp: number;        // Unix epoch ms
   isMe: boolean;
   isSystem: boolean;
+  /** 발신자 역할 — Android ChatMessage.role. 이름 앞 "(모임장)"/"(운영진)" + 왕관(골드/블루) */
+  role?: '모임장' | '운영진';
 }
 
 export interface Review {
@@ -50,7 +54,7 @@ export interface ScheduleItem {
   id: string;
   title: string;
   date: string;             // YYYY-MM-DD
-  time: string;             // HH:mm
+  time: string;             // 한국어 표기, e.g. '오전 8:00' / '오후 8:30'
   sport: string;
   image: string;
   day: string;              // 월/화/수…

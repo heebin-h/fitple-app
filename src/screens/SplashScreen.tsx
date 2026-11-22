@@ -3,7 +3,7 @@
  *
  * 부트 시퀀스(이 화면이 단독 소유 — App.tsx와 중복 호출 금지하여 첫 실행 시드 레이스 방지):
  *   1. seedIfFirstRun() (idempotent — `seeded` 플래그)
- *   2. 최소 노출 지연: 로그인 상태면 1.5s, 비로그인이면 4.6s (Android FitpleMainActivity 일치)
+ *   2. 최소 노출 지연 800ms (시드 시간보다 살짝 길게 — Android 1.5s/4.6s는 dev에서 멈춘 듯 보여 단축)
  *   3. getCurrentUser() → 있으면 setUser + /home, 없으면 /login
  *
  * 시드 실패 시 콘솔 로그 후 /login으로 폴백(§12.1 edge case).
@@ -27,8 +27,7 @@ export function SplashScreen() {
 
     (async () => {
       try {
-        const loggedIn = userManager.isLoggedIn();
-        await Promise.all([seedIfFirstRun(), minDelay(loggedIn ? 1500 : 4600)]);
+        await Promise.all([seedIfFirstRun(), minDelay(800)]);
         if (cancelled) return;
 
         const user = await userManager.getCurrentUser();
@@ -51,10 +50,15 @@ export function SplashScreen() {
     };
   }, [navigate, setUser]);
 
+  // 스플래시 디자인 (`sign_splash_login_emaillogin.png` panel 1):
+  // 큰 통주황 bolt 아이콘(테두리 X, 묵직한 fill) + 그 아래 "Fit Ple" 워드마크.
+  // lucide Zap은 기본 stroke 스타일이라 strokeWidth=0 + fill=currentColor 로 통주황 실루엣.
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-surface">
-      <h1 className="text-display text-orange">FitPle</h1>
-      <Zap size={40} className="mt-3 text-orange" fill="currentColor" />
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-surface">
+      <Zap size={160} className="text-orange" fill="currentColor" strokeWidth={0} />
+      <h1 className="mt-3 text-[44px] font-extrabold tracking-tight text-textPrimary">
+        Fit<span className="text-orange">Ple</span>
+      </h1>
     </div>
   );
 }

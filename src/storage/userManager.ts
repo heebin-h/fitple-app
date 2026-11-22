@@ -2,7 +2,7 @@
  * 유저 데이터 관리. Android `UserManager.kt`의 1:1 포트.
  *
  * 저장 위치는 localStorage이며, 키 구조는 다음과 같음:
- *   user:{sha256(email)}   — UserProfile JSON 1건
+ *   user:{sha256(email)}   — UserProfile JSON 1건 (찜 목록 favoriteMeetingIds 포함)
  *   current_user           — 현재 로그인된 이메일 (없으면 비로그인)
  *   pending_signup         — 미완성 가입(닉네임까지 완료, 선호운동 미완료) 이메일
  *
@@ -46,6 +46,7 @@ export const userManager = {
       passwordHash: await sha256(password),
       selectedSports: [],
       sportDetails: {},
+      favoriteMeetingIds: [],
     };
     const key = await userKey(normalized);
     localStorage.setItem(key, JSON.stringify(profile));
@@ -59,7 +60,10 @@ export const userManager = {
     details: Record<string, Record<string, string>>,
   ): Promise<void> {
     const user = await this.getUserByEmail(email);
-    if (!user) return;
+    if (!user) {
+      console.error('[userManager] savePreferences: user not found —', email);
+      return;
+    }
     user.selectedSports = sports;
     user.sportDetails = details;
     const key = await userKey(email);
@@ -117,6 +121,34 @@ export const userManager = {
   async isEmailTaken(email: string): Promise<boolean> {
     const key = await userKey(email);
     return localStorage.getItem(key) !== null;
+  },
+
+  // ── 찜 (Android isFavorite / toggleFavorite) ──────────────
+
+  /** 해당 모임을 찜했는지 여부. 필드 도입 전 유저(favoriteMeetingIds 없음)는 false. */
+  async isFavorite(email: string, meetingId: string): Promise<boolean> {
+    const user = await this.getUserByEmail(email);
+    return user?.favoriteMeetingIds?.includes(meetingId) === true;
+  },
+
+  /**
+   * 찜 상태 토글.
+   * @returns 토글 후 상태 (true: 찜함 / false: 찜 해제 또는 유저 없음)
+   */
+  async toggleFavorite(email: string, meetingId: string): Promise<boolean> {
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      console.error('[userManager] toggleFavorite: user not found —', email);
+      return false;
+    }
+    const favorites = user.favoriteMeetingIds ?? [];
+    const nowFavorite = !favorites.includes(meetingId);
+    user.favoriteMeetingIds = nowFavorite
+      ? [...favorites, meetingId]
+      : favorites.filter((id) => id !== meetingId);
+    const key = await userKey(email);
+    localStorage.setItem(key, JSON.stringify(user));
+    return nowFavorite;
   },
 
   // ── 회원가입 재개 ─────────────────────────────────────────

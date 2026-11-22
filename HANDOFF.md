@@ -1,186 +1,223 @@
-# FitPle React Web — 세션 인계 노트
+# HANDOFF — FitPle React Web 인계 문서
 
-> 최종 갱신: 2026-05-25 (Phase 0 폴리쉬 완료 + 디자인 토큰 + 유틸리티 + AI 가이드 추가)
-> 새 세션이 `CLAUDE.md` → 이 파일 → `SPEC.md` 순으로 보면 즉시 이어받을 수 있음.
+> 최종 갱신: **2026-11-15** · 기준 브랜치 `feature/phase-2-login` (HEAD `92ce567` 이후 문서 커밋)
+> 처음 받는 사람은 이 문서 → [[docs/README|위키 홈]] → `CLAUDE.md` → `SPEC.md` 순서로 보면 된다.
+> 우선순위: 사양 충돌 시 **SPEC.md > CLAUDE.md > HANDOFF.md**.
 
 ---
 
-## 0. 새 세션 시작 시 첫 3분
+## 0. 현재 상태 한 줄
+
+**웹(PWA) 데모는 완성, iOS 앱은 프로젝트 중단으로 미개발.**
+Android 원본의 21개 화면이 모두 React에 있고 20개는 동작·디자인이 일치한다(1개 부분 일치 — §7-2). 회귀 테스트 249건 전부 통과.
+
+⚠️ **가장 먼저 할 일:** 모든 작업이 아직 `feature/phase-2-login`에만 있다.
+
+| 비교 | 상태 |
+|---|---|
+| vs `origin/feature/phase-2-login` | 로컬이 **10커밋 앞섬** (push 안 됨) |
+| vs `origin/develop` | 로컬이 **45커밋 앞섬**, develop에 한 번도 머지 안 됨 |
+| vs `origin/main` | 46커밋 앞섬 |
+
+→ push 후 `develop` 대상 PR을 열어 머지해야 한다 (CONTRIBUTING.md §3 흐름). `.obsidian/`(Obsidian 설정)은 추적하지 않는다.
+
+---
+
+## 1. 5분 시작
 
 ```bash
 cd /Users/heebiny/fitple-app
-cat CLAUDE.md           # AI용 단일 출처 가이드 (10개 하우스 룰 + 파일 매핑)
-cat HANDOFF.md          # 이 파일 — 어디까지 했고 다음 뭐 할지
-git status              # 현재 변경사항
-git log --oneline -5
-# SPEC.md 는 필요 섹션만 grep해서 참조
+npm install
+npm run dev                 # http://localhost:5173
+# 로그인: demo@fitple.app / demo1234   (또는 "회원가입 없이 둘러보기" = 게스트)
 ```
 
-> **`CLAUDE.md`가 fitple-app 디렉토리의 cwd에서 자동 로드됨** — 새 세션을 fitple-app 안에서 시작하면 별도 Read 없이 컨텍스트 진입.
+| 하고 싶은 것 | 방법 |
+|---|---|
+| 처음 상태로 초기화 (시드 재주입) | 주소에 `/?reset`, 개발 모드 우하단 "↻ 리셋" 버튼, 콘솔 `fitpleReset()` |
+| 타입 검사 | `npm run typecheck` |
+| 빌드 | `npm run build` |
+| 전체 회귀 테스트 | dev 서버를 켠 상태에서 `npm run e2e` → 249건, 실패 시 exit 1 |
+| 폰에서 보기 | `npm run dev -- --host` 후 같은 Wi-Fi 폰 Safari로 접속 |
 
-## 1. 단일 출처 문서
+---
 
-| 문서 | 역할 |
-|------|------|
-| **`CLAUDE.md`** | AI 에이전트용 가이드 — TL;DR, 하우스 룰 10개, 파일 매핑, 다음 작업 포인터 |
-| **`SPEC.md`** | 풀스펙 (1624줄, 25 섹션) — **무엇을** 만들지 / 색상 / 타이포 / 화면 / 데이터 |
-| **`BUILD.md`** | 빌드/배포 치트시트 (SPEC §18 동반) — every `npx cap` 명령 |
-| **`HANDOFF.md`** (이 파일) | 진행 상황 + 다음 작업 + 환경 + 미해결 |
-| `/Users/heebiny/AndroidStudioProjects/FitPle/REACT_WEB_PLAN.md` | 외부 계획서, Phase 정의 |
-| `/Users/heebiny/AndroidStudioProjects/FitPle/RN_MIGRATION_PLAN.archive.md` | 폐기된 RN 노선, 참고용 |
+## 2. 문서 지도
 
-⚠️ 충돌 시 **SPEC.md > CLAUDE.md > HANDOFF.md** 우선.
+| 문서 | 용도 |
+|---|---|
+| [[docs/README\|docs/README.md]] | **위키 홈** — 모든 문서 색인 |
+| `HANDOFF.md` (이 문서) | 현재 상태 · 구조 · 다음 할 일 · 함정 |
+| [[docs/HISTORY\|docs/HISTORY.md]] | 단계별 개발 이력과 교훈 |
+| [[docs/COMPLETION_STATUS\|docs/COMPLETION_STATUS.md]] | 화면별 Android 대비 완성도 |
+| `SPEC.md` | 풀 사양 (화면·데이터·토큰·라우트) — **단일 진실 출처** |
+| `CLAUDE.md` | AI 에이전트용 작업 규칙 (사람에게도 유효) |
+| `CONTRIBUTING.md` | 브랜치 전략 · 커밋/PR 규칙 |
+| `docs/DESIGN_IMPLEMENTATION_GUIDE.md` | 디자인 구현 함정 33+항목 — 화면 작업 전 필독 |
+| `docs/SOURCE_INVENTORY.md` | Android/디자인 원본 파일 전수 체크리스트 |
+| `tests/e2e/README.md` | 테스트 구성과 실행법 |
+| `BUILD.md` | 빌드·Capacitor 명령 (iOS 부분은 미사용) |
 
-## 2. 작업 디렉토리 / 외부 참조
+외부 원본 (읽기 전용, 수정 금지):
 
-| 항목 | 경로 |
-|------|------|
-| 코드 (작업) | `/Users/heebiny/fitple-app/` |
-| GitHub | `https://github.com/heebin-h/fitple-app` (main) |
-| Android 원본 (수정 X) | `/Users/heebiny/AndroidStudioProjects/FitPle/app/src/main/java/com/example/fitple/` |
-| Android colors.xml | `.../app/src/main/res/values/colors.xml` (이미 tailwind.config.ts로 추출 완료) |
-| 디자인 시안 PNG | `/Users/heebiny/AndroidStudioProjects/FitPle/designs/` |
-| Android 인증 플로우 다이어그램 | `/Users/heebiny/AndroidStudioProjects/FitPle/docs/login_signup_flow.md` (SPEC §11에 미러됨) |
+| 원본 | 경로 | 무엇의 기준인가 |
+|---|---|---|
+| Android 소스 | `/Users/heebiny/AndroidStudioProjects/FitPle/app/src/main/java/com/example/fitple/` | **동작·문구** |
+| Android 리소스 | `.../app/src/main/res/` (layout, values/strings.xml, colors.xml, drawable) | 문구·크기·아이콘 |
+| 디자인 PNG | `/Users/heebiny/AndroidStudioProjects/FitPle/designs/` | **레이아웃·스타일** |
 
-## 3. 완료된 작업
+---
 
-### Phase 0 — 프로젝트 초기화 ✅ (커밋 `3416a47`)
-- Vite 8 + React 18 + TypeScript 5 + Tailwind CSS 3 + vite-plugin-pwa
-- 폴더 구조: `src/{screens/{auth,main},components/{layout,common,home,meeting},store,storage,data,utils,constants,routes,assets/images}`, `public/icons/`
-- 설정: `tsconfig.json`, `tsconfig.node.json`, `vite.config.ts`, `tailwind.config.ts`, `postcss.config.js`, `index.html`, `vite-env.d.ts`
-- 엔트리: `src/main.tsx`, `src/App.tsx` (임시), `src/index.css`
-- `npm run build` 통과
+## 3. 구조
 
-### Capacitor iOS 래퍼 ✅ (커밋 `8782025`)
-- `@capacitor/core`, `@capacitor/ios`, `@capacitor/cli` 설치
-- `capacitor.config.ts` (`appId=team.fitple.sideproject`, `appName=FitPle`, `webDir=dist`)
-- ❌ `ios/` 네이티브 폴더 미생성 (Xcode 완료 후 `npx cap add ios`)
+### 3.1 스택
+React 18 · TypeScript (strict) · Vite 8 · Tailwind 3 · React Router 6 (BrowserRouter) · Zustand 5 · react-hot-toast · vaul(바텀시트) · lucide-react · dayjs · vite-plugin-pwa · Playwright(테스트). **백엔드 없음 — 모든 데이터는 localStorage.**
 
-### Phase 0 폴리쉬 ✅ (사용자 직접 보강 — 다음 커밋 대상)
-**디자인 토큰 완성** (`tailwind.config.ts` + `src/constants/colors.ts`):
-- 24개 색상 토큰 (brand `#FF5722`, text/border/surface/button/semantic/card tint/badge/google glyph)
-- 14개 타이포 토큰 (`display`/`h1-3`/`body`/`label`/`caption`/`micro`/`mini` × `-strong`)
-- `borderRadius` (`card=12`, `sheet=20`), iOS 애니메이션 토큰
-
-**유틸 추가**:
-- `src/utils/cn.ts` — className 결합 (clsx 미사용, 0 deps)
-- `src/utils/date.ts` — dayjs 기반 Korean 요일/월/날짜 헬퍼
-- `src/utils/platform.ts` — Capacitor 안전 감지 (`isNative`, `isIOS`, `isStandalonePWA`)
-- `src/constants/colors.ts` — Tailwind 토큰의 JS 상수 미러 (Capacitor 플러그인 인자용)
-
-**문서**:
-- `CLAUDE.md` — AI 에이전트 가이드 (TL;DR + 10개 하우스 룰 + 파일 매핑 + 다음 작업 포인터)
-- `BUILD.md` — 빌드/배포 치트시트
-- `.nvmrc` — Node 20 핀
-
-**기존 인프라 정확화**:
-- `src/constants/sports.ts` — 5종목 SPEC 확정값 (러닝/풋살/등산/사이클/골프, 종목별 2~4 질문, 정확한 옵션 문구)
-- `src/data/models.ts` — Meeting 인터페이스에 `lastActiveMinutes`, `meetingTime`, `tags` 추가
-- `src/data/seedData.ts` — 모임 15개 (3 per sport × 5 sports), Android HomeFragment/ExerciseFragment 기반 실제 location/image 매칭
-- `README.md` — 사용자 다듬음
-
-### Phase 1 인프라 (절반) ✅ (커밋 `8782025`)
-- `src/utils/hash.ts` — Web Crypto SHA-256 async
-- `src/utils/validation.ts` — email/password/nickname
-- `src/storage/userManager.ts` — Android `UserManager.kt` 1:1 포트
-- `src/storage/seedRunner.ts` — 첫 실행 시드
-
-## 4. 다음 작업 — Phase 1 후반 (SPEC §20 / CLAUDE.md "Next up")
-
-13개 파일 한 번에 작성 후 빌드 검증:
-
-| # | 파일 | 핵심 |
-|---|------|---------|
-| 1 | `src/store/authStore.ts` | Zustand: `currentUser`, `isGuest`, `setUser`, `enterGuest`, `clearUser` |
-| 2 | `src/components/layout/MobileFrame.tsx` | max-w-mobile 가운데 정렬 + 좌우 회색 |
-| 3 | `src/components/layout/BottomNav.tsx` | 5탭 (Home/Exercise/Explore/Chat/My). Chat/My는 `toast('준비 중')` |
-| 4 | `src/components/layout/MainLayout.tsx` | `<Outlet />` + BottomNav |
-| 5 | `src/routes/RequireAuth.tsx` | 비로그인 시 `/login` redirect |
-| 6 | `src/routes/AppRoutes.tsx` | BrowserRouter + MobileFrame + MainLayout nested |
-| 7 | `src/screens/SplashScreen.tsx` | 1.5s 후 `pendingSignup`/`isLoggedIn` 기반 분기 |
-| 8 | `src/screens/auth/LoginScreen.tsx` | placeholder: 데모 빠른 로그인 + 게스트 + 소셜 Toast |
-| 9 | `src/screens/main/HomeScreen.tsx` | placeholder |
-| 10 | `src/screens/main/ExerciseScreen.tsx` | placeholder |
-| 11 | `src/screens/main/RecommendedGroupScreen.tsx` | placeholder |
-| 12 | `src/App.tsx` 수정 | `seedIfFirstRun()` + `<AppRoutes/>` + `<Toaster/>` |
-| 13 | 검증 | `npx tsc --noEmit && npm run build` |
-
-상세 구현: SPEC §9 (State), §10 (Routing — 라우트 테이블 §10.1), §11 (Auth Flows), §12 (Screen Specs).
-주의: CLAUDE.md 하우스 룰 #1 (토큰만 사용), #2 (타이포 토큰), #4 (모두 await), #6 (레이아웃 primitives: `px-5`/`h-12`/`h-[52px]`/`rounded-card`).
-
-## 5. 결정된 사항 (변경 금지)
-
-| 항목 | 값 |
-|------|---|
-| Bundle ID / appId | `team.fitple.sideproject` |
-| 앱 이름 | FitPle |
-| 모바일 폭 | `max-w-mobile = 430px` |
-| 로컬 DB | localStorage |
-| 해싱 | Web Crypto SHA-256 (모두 `async`) |
-| 종목 5개 (불변) | **러닝 · 풋살 · 등산 · 사이클 · 골프** |
-| 데모 계정 | `demo@fitple.app` / `demo1234` (선호운동까지 자동 시드) |
-| 브랜드 컬러 | `#FF5722` (orange), `#FFF0ED` (orangeTint) |
-| iOS 배포 | Capacitor + Free Apple ID + Xcode → 본인 폰 7일 (무료) |
-| 친구 폰 배포 | PWA URL 공유 (Safari "홈 화면에 추가") |
-| 호스팅 | Phase 7에서 결정 (Vercel / GH Pages / Cloudflare Pages) |
-| 푸시/소셜 로그인 | 데모 범위 외 (Toast 처리) |
-| Apple Developer Program | 미가입 ($99/년 — 친구 폰 IPA 배포 시에만) |
-
-## 6. 환경
-
-| 항목 | 값 |
-|------|---|
-| Node | v25.8.1 (단, `.nvmrc` = Node 20 — 새 세션에서 `nvm use` 권장) |
-| npm | 11.11.0 |
-| git | 2.50.1 |
-| Homebrew | `/opt/homebrew/bin/brew` |
-| VS Code 확장 | ESLint, Prettier, Tailwind CSS IntelliSense (사용자 GUI 설치) |
-| Xcode | ⚠️ 사용자 측 설치 진행 중 — **다음 세션에서 진행 상황 확인 필요** |
-| CocoaPods | ❌ 미설치 — Xcode 완료 후 `brew install cocoapods` (BUILD.md §0 참조) |
-
-## 7. 사용자 측 미해결 / 다음 세션 첫 확인
-
-1. **Xcode 설치 완료 + 첫 실행 라이센스 동의 여부**
-2. **`brew install cocoapods`** 완료 여부
-3. **`nvm install && nvm use`** (`.nvmrc`의 Node 20으로 전환)
-4. **폰에서 `npm run dev --host` 테스트** — 아직 안 해봄
-5. PWA 아이콘 PNG (192/512px) — placeholder (Phase 7 직전에 생성)
-
-## 8. 다음 세션 첫 액션 시퀀스
-
-1. **확인 질의**: Xcode/CocoaPods/Node 버전/폰 테스트 진행 상황
-2. **Phase 1 후반 진행**: §4의 13개 파일을 한 번에 작성 → 빌드 검증
-3. **commit**: `feat(phase-1): auth store + router + layout + screen scaffolds`
-4. **사용자가 `npm run dev`로 화면 확인** → 데모 로그인 / 게스트 / BottomNav 동작 확인
-5. **Phase 2 진입** (공통 컴포넌트 — `InputBox` 5-state, `EmailSuggestion`, `PrimaryButton`, `SportIcon`, `Chip`, `TermsBottomSheet`, `MeetingCard`)
-6. **Xcode 완료 시 Capacitor iOS 빌드** (BUILD.md §2 참조):
-   ```bash
-   npm run build
-   npx cap add ios          # 최초 1회
-   npx cap sync
-   npx cap open ios
-   # Xcode → Signing & Capabilities → Team을 본인 Apple ID로 → 폰 USB → ▶ Run
-   ```
-
-## 9. 트러블슈팅
-
-- **TS strict**: 빌드 전 `npx tsc --noEmit` 권장 (CLAUDE.md 룰 #10).
-- **`crypto.subtle.digest` Promise**: await 누락 시 비번 해시가 `[object Promise]` (CLAUDE.md 룰 #4).
-- **localStorage 도메인 격리**: dev (localhost:5173) vs prod URL 키 분리됨. 정상.
-- **vite-plugin-pwa manifest icons**: 현재 빈 배열 — Phase 7 직전 PNG 추가 시 경고 해소.
-- **Vite 8 + plugin-react latest**: peer dep React 18 명시 안 됐어도 정상 동작.
-
-## 10. (옵션) 글로벌 프로필 갱신
-
-`/Users/heebiny/.claude/profile/current-projects.md`에 FitPle 항목 추가 — 다음 세션 자동 인지:
-
-```markdown
-## 7. fitple-app — React + Capacitor iOS 데모 (Phase 1 후반 진행 중)
-
-- **현재**: Phase 0 폴리쉬 + Phase 1 인프라 완료, 후반 13개 (routing + auth store + layout + 화면 placeholder) 대기 (2026-05-25)
-- **노선**: React 웹 + PWA + Capacitor iOS 래퍼 (백엔드 없음, localStorage)
-- **위치**: `/Users/heebiny/fitple-app/` (참조: `CLAUDE.md`, `HANDOFF.md`, `SPEC.md`, `BUILD.md`)
-- **외부 계획서**: `/Users/heebiny/AndroidStudioProjects/FitPle/REACT_WEB_PLAN.md`
-- **미해결**: Xcode 설치 / CocoaPods / 폰 PWA 테스트 / PWA 아이콘
-- **grep**: `fitple|fitple-app|capacitor|react.*pwa`
+### 3.2 폴더
 ```
+src/
+├── routes/        AppRoutes(라우트 표) · RequireAuth(가드+세션 복원) · ScrollManager(전환 스크롤)
+├── screens/       auth/(로그인·가입 7) · main/(13) · SplashScreen
+├── components/    layout/(BottomNav·MainLayout·MobileFrame) · home/(HomeSections) · meeting/(카드·하트)
+│                  chat/(ChatMessageList) · common/(LocationPicker) · auth/(약관 시트 등) · dev/(리셋 버튼)
+├── store/         authStore · chatStore · createdMeetingsStore · locationStore · preferenceStore
+├── storage/       userManager(Android UserManager 포트) · seedRunner · chatRepo · signupDraft
+├── data/          models.ts · seedData.ts
+├── constants/     colors · sports(5종목·질문)
+└── utils/         date(isoDate 등) · meetingImage(이미지 키→에셋) · hash · validation · cn
+tests/e2e/         회귀 스크립트 8종 + run-all.mjs        (qa.mjs·qa_detail.mjs는 루트)
+```
+
+### 3.3 라우트 (SPEC §10.1)
+
+| 경로 | 화면 | Android 원본 | 하단 탭 | 접근 |
+|---|---|---|---|---|
+| `/` | Splash | FitpleMainActivity 시작 로고(imgFitpleLogo) | ✗ | 공개 |
+| `/login` · `/email-login` | 로그인 | LoginFragment · EmailLoginFragment | ✗ | 공개 |
+| `/signup/email·password·nickname·preference·complete` | 가입 5단계 | Signup*Fragment, TermsBottomSheet | ✗ | 공개 |
+| `/home` | 홈 (회원/게스트 분기) | HomeFragment · GuestHomeFragment | ✅ | 회원+게스트 |
+| `/exercise` | 체험 탭 "활동 중인 모임" | ExerciseFragment | ✅ | 회원+게스트 |
+| `/explore`, `/explore/:sport` | 추천 모임 | RecommendedGroupFragment | ✅ | 회원+게스트 |
+| `/upcoming` | 다가오는 정기모임 | UpcomingMeetingFragment | ✅ | 회원+게스트 |
+| `/chat` | 채팅 목록 | ChatListFragment | ✅ | 회원 |
+| `/my` | MY | MyFragment | ✅ | 회원 |
+| `/meeting/:id` | 모임 상세 (홈·공지·채팅·사진첩·멤버) | PostDetailFragment | ✗ | 회원+게스트 |
+| `/trials` · `/reviews` · `/notifications` · `/search` | 체험·후기·알림·검색 | 각 Fragment | ✗ | 회원+게스트 |
+| `/create-meeting` | 모임 만들기 | CreateMeetingFragment | ✗ | 회원 |
+| `/meeting/:id/chat` | 독립 채팅 | (Android 없음) | ✗ | UI 진입점 없음 |
+
+하단 탭 = Android `bottom_nav_menu` 4개: **홈 · 체험(/exercise) · 채팅 · MY**. `/explore`는 홈의 종목 아이콘·"추천 모임 더보기"로 진입.
+
+### 3.4 상태와 저장소
+
+| 이름 | 위치 | 수명 | 내용 |
+|---|---|---|---|
+| `authStore` | 메모리 | 세션 | currentUser · isGuest. 새로고침 시 `RequireAuth`가 `current_user`로 복원(게스트는 복원 안 함) |
+| `chatStore` | 메모리 | 세션 | 모임별 메시지. 초기값 = `chats:{id}` 또는 Android 샘플 대화 |
+| `createdMeetingsStore` | 메모리 | 세션 | 만든 모임 (Android도 세션 한정) |
+| `locationStore` | 메모리 | 세션 | 선택 동네 (기본 "미사 1동") |
+| `preferenceStore` | 메모리 | 가입 중 | 선호 운동 상태 머신 |
+| `signupDraft` | 모듈 변수 | 가입 중 | 가입 비밀번호 임시 보관 — 저장소에 평문을 두지 않기 위해 |
+| localStorage | 영구 | — | `user:{sha256}` · `current_user` · `pending_signup` · `meetings` · `reviews` · `schedules` · `chats:{id}` · `joined:{email}` · `seeded` (SPEC §8.1) |
+
+**시드:** 첫 실행 때 `seedRunner`가 한 번만 주입하고 `seeded=true`를 남긴다. 그래서 `seedData.ts`를 바꿔도 기존 브라우저에는 반영되지 않는다 → `/?reset`.
+
+---
+
+## 4. 작업 규칙 (핵심만 — 전체는 CLAUDE.md)
+
+1. **기준 우선순위:** 레이아웃·스타일은 **디자인 PNG**, 문구·동작은 **Android Kotlin/strings.xml**. 둘이 다르면 그 판단을 코드 주석에 남긴다(기존 파일 상단 주석 참고).
+2. **토큰만 쓴다.** 색(`tailwind.config.ts` colors), 글자 크기(`text-h2`, `text-label`, `text-tiny` …). `text-[13px]`·hex 직접 입력 금지.
+3. **SPEC.md는 같은 커밋에서 갱신**한다 (화면·문구·모델·토큰·라우트 변경 시).
+4. **한국어 문구는 Android 원문 그대로.** 바꿔 쓰지 않는다. Android에 없는 문구를 새로 만들면 SPEC에 "React-only"로 표시한다.
+5. **날짜 키는 `isoDate()`**(로컬). `toISOString()` 금지 — UTC라 KST 새벽에 하루 어긋난다.
+6. **zustand 셀렉터는 안정 참조**를 반환해야 한다. `s.x ?? []` 대신 모듈 상수 `EMPTY_*`를 쓴다.
+7. **userManager는 전부 async** (SHA-256). await 누락 시 `[object Promise]`가 저장된다.
+8. **완료 게이트:** `npm run typecheck` → `npm run build` → `npm run e2e`(dev 서버 필요). 새 동작에는 `tests/e2e/`에 검증을 추가한다.
+
+---
+
+## 5. 검증
+
+| 스위트 | 파일 | 건수 | 다루는 것 |
+|---|---|---|---|
+| trial_review | `tests/e2e/trial_review.mjs` | 9 | 체험·후기 목록, 게스트 접근 |
+| noti_chat | `tests/e2e/noti_chat.mjs` | 15 | 알림, 채팅 목록, 상세 채팅 탭 진입 |
+| search_fav | `tests/e2e/search_fav.mjs` | 16 | 검색, 찜 영속 |
+| create | `tests/e2e/create.mjs` | 21 | 모임 만들기 검증·생성·노출 |
+| home | `tests/e2e/home.mjs` | 30 | 회원/게스트 홈 섹션·Hero 문구·더보기·로그인 유도 |
+| detail_tabs | `tests/e2e/detail_tabs.mjs` | 11 | 사진첩·멤버 탭 |
+| location | `tests/e2e/location.mjs` | 16 | 동네 선택 공유 |
+| fixes | `tests/e2e/fixes.mjs` | 63 | 11-15 리뷰 결함 재현 방지 (세션 복원, 스크롤, IME, 가입 이력, KST 새벽, 추천·상세·내비, 문구, 폰트) |
+| qa / qa_detail | `qa.mjs` · `qa_detail.mjs` | 26 · 42 | 전체 흐름 스모크, 가입 D1~D6 |
+| **합계** | `npm run e2e` | **249** | 마지막 실행 2026-11-15: 249/249, 콘솔 error/warning 0 |
+
+**미검증:** Safari/WebKit, 실제 iPhone/Android 기기, 실제 한글 IME 키보드(조합 이벤트 시뮬레이션만 함).
+
+---
+
+## 6. 결정된 사항 (바꾸지 말 것)
+
+| 항목 | 값 |
+|---|---|
+| 종목 5개 (순서 고정) | 러닝 · 풋살 · 등산 · 사이클 · 골프 |
+| 저장소 / 해싱 | localStorage / Web Crypto SHA-256 |
+| 데모 계정 | `demo@fitple.app` / `demo1234` |
+| 모바일 폭 | `max-w-mobile` 430px |
+| 브랜드 컬러 | orange `#ff5432`, orangeTint `#FFF0ED` |
+| 하단 탭 | 홈 · 체험 · 채팅 · MY (Android 4탭) |
+| 상세 탭 | 홈 · 공지 · 채팅 · 사진첩 · 멤버 (Android tabTitles) |
+| Bundle ID (iOS 재개 시) | `team.fitple.sideproject` |
+| 글꼴 | Pretendard Variable dynamic subset v1.3.9 (jsdelivr, 버전 고정) |
+
+---
+
+## 7. 다음 할 일 (우선순위 순)
+
+| # | 할 일 | 왜 / 어디 | 크기 |
+|---|---|---|---|
+| 1 | **push + `develop` PR + 머지** | §0 — 45커밋이 통합 안 됨 | 작음 |
+| 2 | 정기모임 카드 → 모임 상세 이동 | 유일한 Android 불일치. `ScheduleItem`에 `meetingId?` 추가 + `SEED_SCHEDULES` 연결 + `UpcomingMeetingScreen` 카드 onClick (지금은 "준비 중" 토스트). SPEC §12.14 갱신 | 작음 |
+| 3 | 시드 버전 관리 | `seeded` 불리언이라 시드 변경이 기존 설치에 안 들어감 → `seedVersion` 숫자로 바꾸고 증가 시 컬렉션만 재주입(사용자 계정·찜 보존) | 중간 |
+| 4 | 채팅 영속화 | 보낸 메시지가 새로고침 시 사라짐 → `chatStore.addMessage`에서 `chats:{id}` 저장 | 작음 |
+| 5 | WebKit 테스트 | Playwright `webkit` 프로젝트로 `npm run e2e` 확장 → iOS Safari 차이 조기 발견 | 중간 |
+| 6 | 고해상도 모임 사진 | 원본이 70~100px라 상세 헤더에서 흐림. 디자인팀 원본 확보 시 `src/assets/images/meetings/` 교체 (키 매핑은 `utils/meetingImage.ts`) | 원본 의존 |
+| 7 | 남은 "준비 중" | MY 이용약관·개인정보처리방침 페이지, 소셜 로그인 3종 — v1 범위 외로 정해둔 항목 | 범위 결정 필요 |
+| 8 | 정리 | ① `/meeting/:id/chat`(PostChatScreen) 유지/삭제 결정 — UI 진입점 없음 ② React Router v7 future flag 경고 대응 ③ 게스트용 시드(`m-guest-*`)가 체험 탭·검색에도 노출되는 것 의도 확인 | 작음 |
+| — | (재개 시) iOS P7·P8 | §9 참고 | 큼 |
+
+---
+
+## 8. 알려진 한계와 함정
+
+| 증상 | 원인 / 대처 |
+|---|---|
+| 시드를 바꿨는데 화면이 그대로 | `seeded` 플래그 → `/?reset` |
+| Hero "오늘/내일" 일정이 안 맞음 | 시드 일정 날짜는 첫 실행일 기준으로 고정 → `/?reset` |
+| 새로고침 후 게스트가 로그인 화면으로 | 의도된 동작 (게스트 세션은 비영속, Android 동일) |
+| 보낸 채팅이 새로고침 후 사라짐 | 미영속 (§7-4) |
+| 모임 사진이 흐림 | 원본 해상도 한계 (§7-6) |
+| 동네를 바꿔도 목록이 안 바뀜 | 의도된 동작 — Android도 표시만 바꿈 |
+| Playwright `waitForLoadState('networkidle')`가 안 끝남 | 화면을 떠날 때 Chrome이 보류한 Pretendard 글자 조각 요청이 열린 채 남음. 사용자에게 보이는 영향은 없는 것으로 판단(추정). 테스트에서는 networkidle 대신 요소 대기를 쓴다 |
+| dev 서버 첫 접속 직후 테스트가 "Execution context was destroyed" | Vite 의존성 최적화로 1회 전체 새로고침 → 다시 실행 |
+| `Port 5173 is already in use` | 이전 서버 잔존 → `lsof -ti tcp:5173 \| xargs kill` |
+| 임시 스크립트가 사라짐 | macOS가 /tmp를 정리함 → 테스트는 `tests/e2e/`에 둔다 |
+| 외부 네트워크 의존 | 상세 지도(Google Maps embed), 글꼴(jsdelivr). 오프라인이면 지도 빈칸·시스템 글꼴 |
+
+---
+
+## 9. iOS (미개발 — 재개할 경우)
+
+프로젝트 중단으로 진행하지 않았다. `@capacitor/ios` 8.3.4와 `capacitor.config.ts`만 있고 `ios/` 폴더는 없다.
+재개 순서: Xcode·CocoaPods 설치 → `npm run build` → `npx cap add ios` → `npx cap sync` → `npx cap open ios` → Signing 설정 → 아이콘·스플래시·상태바(`@capacitor/status-bar`)·키보드(`@capacitor/keyboard`). 상세는 SPEC §16~§18, §20(P7·P8), `BUILD.md`.
+
+---
+
+## 10. 환경
+
+| 항목 | 값 |
+|---|---|
+| Node | 로컬 v26.4.0 확인 (`.nvmrc` = 20) |
+| npm | 11.17.0 |
+| Playwright | devDependency 1.62 — 처음이면 `npx playwright install chromium` |
+| 원격 | `git@github.com:heebin-h/fitple-app.git` |

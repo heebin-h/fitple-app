@@ -257,7 +257,7 @@ src/
 │   │   └── SignupCompleteScreen.tsx
 │   └── main/
 │       ├── HomeScreen.tsx
-│       ├── GuestHomeBranch.tsx    # Used inside HomeScreen when isGuest
+│       ├── (GuestHome / MemberHome live inside HomeScreen.tsx; shared sections in components/home/HomeSections.tsx)
 │       ├── ExerciseScreen.tsx
 │       ├── PostDetailScreen.tsx
 │       ├── PostChatScreen.tsx
@@ -298,7 +298,9 @@ src/
 ├── store/
 │   ├── authStore.ts               # currentUser, isGuest
 │   ├── preferenceStore.ts         # SELECTION → DETAIL state machine
-│   └── chatStore.ts               # Active meetingId → messages
+│   ├── chatStore.ts               # Active meetingId → messages
+│   ├── createdMeetingsStore.ts    # 사용자가 만든 모임 (세션 메모리 전용 — Android UserCreatedMeetings)
+│   └── locationStore.ts           # 선택한 동네 (세션 메모리 전용 — Android LocationState)
 ├── storage/
 │   ├── userManager.ts
 │   ├── seedRunner.ts
@@ -340,11 +342,13 @@ ios/
 
 ### 6.1 Brand colours
 
-Direct port of `app/src/main/res/values/colors.xml`. Drop these into `tailwind.config.ts` under `theme.extend.colors`:
+Ported from `app/src/main/res/values/colors.xml`, then reconciled to the Figma
+design file (`스플래시/온보딩/로그인` 섹션) — **Figma is the source of truth** when the
+two disagree (2026-05-28). Drop these into `tailwind.config.ts` under `theme.extend.colors`:
 
 | Token                      | Hex        | Used for                                                |
 |----------------------------|-----------|----------------------------------------------------------|
-| `orange`                   | `#FF5722` | Brand primary, CTA, active tab indicator                 |
+| `orange`                   | `#ff5432` | Brand primary, CTA, active tab indicator (Figma `Text Icon/Primary`) |
 | `orangeTint`               | `#FFF0ED` | Sport icon backgrounds when selected                     |
 | `textPrimary`              | `#111111` | Body text                                                |
 | `textSecondary`            | `#555555` | Sub-text, captions                                       |
@@ -356,7 +360,12 @@ Direct port of `app/src/main/res/values/colors.xml`. Drop these into `tailwind.c
 | `borderError`              | `#FF4444` | Input failed validation                                  |
 | `surface`                  | `#FFFFFF` | Card / sheet background                                  |
 | `background`               | `#F2F2F2` | Page background                                          |
-| `btnKakao`                 | `#FEE500` | Kakao login button                                       |
+| `btnKakao`                 | `#fae100` | Kakao login button (Figma)                               |
+| `kakaoLabel`               | `#3c1d1e` | Kakao button label (dark brown)                          |
+| `appleBg`                  | `#0a0b0c` | Apple login button background (near-black)               |
+| `neutralLow`               | `#bdbdbd` | Figma `Text Icon/Neutral/Low Emphasis` — borders, low-emphasis |
+| `neutralMid`               | `#999999` | Low-emphasis link text (e.g. "둘러보기")                  |
+| `neutralHigh`              | `#424242` | Figma `Text Icon/Neutral/High Emphasis` — links, high-emphasis |
 | `btnDisabled`              | `#CCCCCC` | Primary button disabled state                            |
 | `blue`                     | `#2196F3` | Email verification, check icons                          |
 | `blueTint`                 | `#E3F2FD` | Card tint (signup complete preview)                      |
@@ -373,14 +382,15 @@ Direct port of `app/src/main/res/values/colors.xml`. Drop these into `tailwind.c
 | `sportLightTint`           | `#FFF5F2` | Light highlight background                               |
 | `noticeBg`                 | `#FEF7F7` | Notice badge background                                  |
 | `noticeRed`                | `#EB5048` | Notice badge text / icon                                 |
+| `crownGold`                | `#F4B949` | Chat "(모임장)" sender name (sampled from `home_postdetail_noticelist_chattab.png`) |
 | `googleBlue / Green / Yellow / Red` | `#4285F4 / #34A853 / #FBBC05 / #EA4335` | Google logo glyph slices |
 
 > The current `tailwind.config.ts` has placeholder values. Replacing them is **task 0** of any implementation pass.
 
 ### 6.2 Typography
 
-* Default font stack: **Pretendard**, then `system-ui`, then `-apple-system`, then `sans-serif`. Already configured in `tailwind.config.ts` and `index.css`. Pretendard is bundled via `https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css` (or self-host under `public/fonts/`).
-* Base size 14px / line-height 1.4 for body. 16px for inputs to avoid iOS Safari auto-zoom — already enforced in `src/index.css`.
+* Default font stack: **Pretendard Variable**, `Pretendard`, then `system-ui`, then `-apple-system`, then `sans-serif`. Configured in `tailwind.config.ts` and `index.css`. Loaded in `index.html` from `https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css` (version pinned; dynamic subset = CSS ~8 KB br + only the unicode-range chunks a screen uses; the static full woff2 is ~770 KB per weight and is not used).
+* Base size 14px / line-height 1.4 for body. Inputs keep their design size (14–15px) on desktop/Android; on iOS WebKit (`@supports (-webkit-touch-callout: none)`) `src/index.css` forces `16px !important` to prevent focus auto-zoom (utility classes otherwise win over the element selector). The viewport meta `maximum-scale=1` also blocks it.
 * Title weights match the Android `Typeface.BOLD` calls in the source. Use `font-bold` for headlines, `font-semibold` for card titles, default weight everywhere else.
 
 ### 6.3 Spacing, radii, shadows
@@ -412,6 +422,7 @@ export interface UserProfile {
   passwordHash: string;                                 // SHA-256 hex
   selectedSports: string[];                             // e.g. ['러닝', '골프']
   sportDetails: Record<string, Record<string, string>>; // sport → question → answer
+  favoriteMeetingIds?: string[];                        // 찜한 모임 id (Android favoriteMeetingIds). 필드 도입 전 유저는 undefined
 }
 
 export interface Meeting {
@@ -440,6 +451,7 @@ export interface ChatMessage {
   timestamp: number;        // Unix epoch ms (the seed also accepts '오후 3:20' style strings; normalise on read)
   isMe: boolean;
   isSystem: boolean;
+  role?: '모임장' | '운영진'; // sender role → "(모임장) 이름" + gold/blue crown (Android ChatMessage.role)
 }
 
 export interface Review {
@@ -485,13 +497,14 @@ A meeting maps roughly 1:1 to a "post" in the Android sense (`PostDetailFragment
 | `seeded`                         | `'true'`        | Set by `seedRunner` after a successful first-run injection.            |
 | `current_user`                   | `string`        | Normalised email of the currently logged-in user. Absent = signed-out. |
 | `pending_signup`                 | `string`        | Email of a user that finished nickname/terms but not preferences.      |
-| `user:{sha256(email)}`           | JSON string     | Serialised `UserProfile`.                                              |
+| `user:{sha256(email)}`           | JSON string     | Serialised `UserProfile` (incl. `favoriteMeetingIds` — 찜, `userManager.isFavorite / toggleFavorite`). |
 | `meetings`                       | JSON array      | Seeded meeting catalogue (Home + Exercise + RecommendedGroup pull from this). |
 | `reviews`                        | JSON array      | Review carousel.                                                       |
 | `schedules`                      | JSON array      | Upcoming meeting items.                                                |
-| `notices:{meetingId}`            | JSON array      | Notice/board entries for the post-detail "게시판" tab.                  |
-| `chats:{meetingId}`              | JSON array      | Chat transcript for a single meeting.                                  |
-| `joined:{email}`                 | JSON array      | Meeting IDs the current member has joined (drives `setupActiveMeetings`).|
+| `chats:{meetingId}`              | JSON array      | Chat transcript for a single meeting. Absent → `storage/chatRepo.loadChat` returns the Android sample transcript (`sampleChat()`, 8 messages incl. roles) — Android shows it in every meeting. Only `m-run-1` is persisted at first run. |
+| `joined:{email}`                 | JSON array      | Meeting IDs the member pressed "가입하기" on (PostDetail → "가입 완료").   |
+
+The post-detail "공지" tab uses the 4 fixed Android notices (`setupNoticeList`) — no storage key. The signup password is handed from Step 2 to Step 3 in **memory only** (`storage/signupDraft.ts`), never in history state / sessionStorage / localStorage, and is cleared when signup completes.
 
 ### 8.2 Hashing
 
@@ -581,14 +594,23 @@ Local component state remains the default. Only promote to Zustand when:
 /explore/:sport                 RecommendedGroupScreen
 /upcoming                       UpcomingMeetingScreen
 /meeting/:meetingId             PostDetailScreen
-/meeting/:meetingId/chat        PostChatScreen         (standalone chat, used by floating "Chat" entry points)
+/meeting/:meetingId/chat        PostChatScreen         (standalone chat — no UI entry point in v1; Android has no PostChatFragment)
+/trials                         TrialListScreen        (홈 "체험 가능 모임" 더보기 — Android TrialListFragment)
+/reviews                        ReviewListScreen       (홈 "후기" 더보기 — Android ReviewListFragment)
+/notifications                  NotificationScreen     (bell — Android NotificationFragment)
+/search                         SearchScreen           (홈 검색창 · Upcoming 검색 아이콘 — Android SearchFragment)
+/create-meeting                 CreateMeetingScreen    (홈 FAB · "모임 만들기 →" — Android CreateMeetingFragment, 회원 전용)
+/chat                           ChatListScreen         (BottomNav 채팅 탭 — Android ChatListFragment, 회원 전용)
 ```
 
 * React Router v6 + `BrowserRouter`. Inside the Capacitor WKWebView this still works because Capacitor serves `index.html` from the bundle and the SPA handles every path client-side.
 * `RequireAuth` wraps any route that demands a real account (chat send, meeting create, MY tab). On rejection it pushes to `/login` and surfaces a `react-hot-toast` notification.
+* **Session restore:** the auth store is runtime memory, so a reload on any guarded route (e.g. `/home`) starts empty. `RequireAuth` then checks `current_user`; if present it re-reads the profile, calls `setUser`, and only then renders (no redirect). Guest sessions are not restored (Android also drops guest mode on restart).
+* **Scroll (`routes/ScrollManager.tsx`):** PUSH/REPLACE → window scroll to top; POP (back/forward) → restore the position last seen on that history entry (stored per `location.key` on every scroll event).
 * Header/tab visibility:
-  * `BottomNav` is rendered by `HomeScreen`, `ExerciseScreen`, `RecommendedGroupScreen` (top-level "Explore"), `UpcomingMeetingScreen` (when accessed from a tab).
-  * The auth screens, signup flow, and `PostDetailScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
+  * `BottomNav` is rendered by `HomeScreen`, `ExerciseScreen`, `RecommendedGroupScreen`, `UpcomingMeetingScreen`, `ChatListScreen`, `MyScreen` (all in `MainLayout`).
+  * `BottomNav` = Android `bottom_nav_menu` **4 tabs: 홈(/home) · 체험(/exercise) · 채팅(/chat) · MY(/my)** (strings `nav_home / nav_exercise="체험" / nav_chat / nav_my`). Floating card per `bg_bottom_nav` + design PNG: 16 pt side/bottom margin, radius 20, shadow; icons = `ic_nav_*.xml` vectors in original colours. Active = label bold `textPrimary`, inactive = `textSecondary` + icon 40% opacity. Guests tapping 채팅/MY get "로그인 후 이용할 수 있어요" and the tab is not selected. `/explore` has no tab — it is reached from the home sport icons / "추천 모임 더보기".
+  * The auth screens, signup flow, `PostDetailScreen`, `TrialListScreen`, `ReviewListScreen`, `NotificationScreen`, `SearchScreen`, and `CreateMeetingScreen` hide the bottom nav (parity with Android `bottomNavigation.visibility = View.GONE`).
 
 ### 10.2 Slide transitions
 
@@ -632,7 +654,7 @@ Splash delays match Android (`FitpleMainActivity.kt`). For iOS we hide the nativ
 1. `EmailLoginScreen` validates email with `^[^\s@]+@[^\s@]+\.[^\s@]+$` and password with `^(?=.*[A-Za-z])(?=.*\d).{8,20}$`.
 2. While typing, auto-suggest `{id}@naver.com` / `{id}@gmail.com` (Android: `EmailSuggestion` chips above the keyboard).
 3. On submit: `await userManager.loginUser(email, password)`.
-4. On failure: red helper text "이메일 또는 비밀번호가 올바르지 않아요." under the password field.
+4. On failure: toast "이메일 또는 비밀번호가 맞지 않아요" (Android `EmailLoginFragment.kt:202`) + red border/icon on the password field.
 5. On success: `userManager.setLoggedIn(email)` → `userManager.clearPendingSignup()` → `navigate('/home', { replace: true })`.
 
 ### 11.3 Sign-up (6 steps)
@@ -657,11 +679,13 @@ The flag is also cleared if the user logs in successfully on the same device.
 
 ### 11.5 Guest mode
 
-`LoginScreen` → "회원가입 없이 둘러보기" → `authStore.enterGuest()` → `navigate('/home')`. The home screen reads `isGuest` from the store and renders the guest branch (`GuestHomeBranch.tsx`):
+`LoginScreen` → "회원가입 없이 둘러보기" → `authStore.enterGuest()` → `navigate('/home')`. The home screen reads `isGuest` from the store and renders `GuestHome` (inside `HomeScreen.tsx`, §12.11):
 
 * Hero copy is fixed: "모임을 둘러보는 중이에요!" with CTA "로그인하고 참여하기 →".
 * "Active Meetings" section is omitted.
-* Notification bell, FAB, "맞춤 모임 찾기" all show "로그인이 필요한 기능이에요" via `react-hot-toast`.
+* Notification bell → toast "로그인 후 알림 기능을 사용할 수 있어요" + `/login` (Android `GuestHomeFragment.showLoginRequired("알림")`).
+* BottomNav 채팅 탭 → toast "로그인 후 이용할 수 있어요", tab not selected (Android `FitpleMainActivity` nav_chat).
+* FAB → toast "로그인 후 모임 만들기 기능을 사용할 수 있어요" + `/login`; CTA "모임 만들기 →" → "로그인 후 맞춤 모임 추천 기능을 사용할 수 있어요" + `/login` (Android `showLoginRequired`).
 * Tabs **MY** and **Chat** are disabled; tapping them shows the same toast.
 
 ### 11.6 Logout
@@ -681,13 +705,17 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 
 ### 12.2 LoginScreen
 * **Purpose:** Entry point for non-authenticated users.
-* **Layout:**
-  * 1× hero illustration top (`sign_splash_login_emaillogin.png`).
-  * Title with brand-coloured "핏플" span: "가장 편한 방법으로\n핏플을 시작해보세요!".
-  * Trial coupon badge "회원가입하고 **1회 체험권** 받기!".
-  * 4 social buttons: 카카오 (`btnKakao`), Apple (`btnApple`), Google (`btnGoogle`), 이메일로 시작하기 (`btnEmail`).
-  * "회원가입" underlined text → `/signup/email`.
-  * "회원가입 없이 둘러보기" underlined → guest mode.
+* **Layout:** (Figma `1.로그인` 기준, 2026-05-28)
+  * Centered FitPle logo mark — 100×100 white rounded-square (radius 20, soft shadow) with the orange bolt + "F"/"P". Imported as `assets/images/login/logo_fitple.png`. (No separate hero illustration.)
+  * Title `text-hero` (26/600), centre: "가장 편한 방법으로\n핏플을 시작해보세요!" — "핏플" span `font-extrabold` in `orange`.
+  * Trial coupon speech-bubble badge "회원가입하고 **1회 체험권** 받기!" (`micro`, bubble art `login/badge.svg`).
+  * 4 social buttons (full-width `w-[346px]`, `rounded-[8px]`, label `text-label-semibold`), top-to-bottom:
+    * 카카오로 계속하기 — `bg-btnKakao`, text `kakaoLabel`, bubble icon (`login/kakao.svg`).
+    * Apple로 계속하기 — `bg-appleBg`, text white, apple icon (`login/apple.svg`).
+    * Google로 시작하기 — white bg, `border-neutralLow`, text `textPrimary`, multicolour G (`login/google*.svg`).
+    * 이메일로 시작하기 — `bg-neutralLow`, text white, envelope icon (`login/mail.svg`).
+  * "회원가입" underlined (`neutralHigh`) → `/signup/email`.
+  * "회원가입 없이 둘러보기" underlined (`neutralMid`) → guest mode.
 * **Data:** `userManager.getPendingSignupEmail()` for resume dialog (see §11.4).
 * **Interactions:**
   * Kakao / Apple / Google → toast "준비 중인 기능이에요".
@@ -716,7 +744,7 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 
 ### 12.5 SignupPasswordScreen
 * **Purpose:** Step 2.
-* **Layout:** Two `InputBox` (password + confirm). Live requirement chips: "영문 + 숫자", "8자 이상 20자 이하". Each turns green as it passes.
+* **Layout:** Two `InputBox` (password + confirm). Confirm label "비밀번호를 한번 더 입력해주세요.", hint "비밀번호를 다시 입력해주세요", mismatch error "작성한 비밀번호가 일치하지 않습니다." (Android `fragment_signup_password.xml` + PNG).
 * **Data:** None.
 * **Interactions:** "다음" enables when both rules pass and the values match.
 * **Edge cases:** Show / hide eye toggles on both inputs.
@@ -764,40 +792,46 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Edge cases:** Pressing back is intercepted — both back and the X icon in the toolbar should also `/home` because the account is already active.
 
 ### 12.10 HomeScreen (member)
-* **Purpose:** Authenticated landing.
-* **Layout (top-to-bottom):**
-  1. Top bar: location chip ("미사 1동 ▾"), search bar ("찾고싶은 모임이 있나요?"), bell icon.
-  2. Hero card: greeting "안녕하세요 {nickname}님!", contextual subtitle + CTA — see three states below.
-  3. Sport icon row (5 sports). Tap routes to `/explore/{sport}`.
-  4. Section "활동 중인 모임" with filter chips (`가까운순`, `편하게`, `평일오후`, `주말`) and 3+ `MeetingCard` rows. "더보기 ›" routes to `/exercise`.
-  5. Section "체험 가능 모임" — horizontal carousel of `TrialMeetingCard`. Apply button on each card routes to `/meeting/{id}`.
-  6. Section "후기" — horizontal carousel of `ReviewCard` (image + gradient overlay + quote).
-  7. Section "다가오는 정기모임" — `DateStrip` (7 days, today centred) + vertical list of `ScheduleCard`. "더보기 ›" routes to `/upcoming`.
-  8. CTA banner: "나에게 딱맞는 모임이 없어 아쉬우신가요? / 직접 모임장이 되어 모임을 운영해보세요!" with "모임 만들기 →".
-  9. Floating `+` FAB bottom-right (above bottom nav) → toast "모임 만들기 기능 준비 중이에요".
-* **Hero card states** (logic identical to Android `HomeFragment.setupHero`):
+* **Source:** Android `HomeFragment.kt` + `fragment_home.xml`; visuals from `designs/home_main_postdetail_share_chat.png` ("홈 -가입 x") and `home_bottom_banner_schedule.png` (PNG wins over XML). Shared sections live in `components/home/HomeSections.tsx`. `HomeScreen` renders `MemberHome` for a logged-in user and `GuestHome` (§12.11) otherwise.
+* **Layout (top-to-bottom, XML order):**
+  1. Top bar: location "미사 1동 ▾" (`locationStore`, default "미사 1동"; tap → location picker §12.25), bell → `/notifications`.
+  2. Search field (full width, orange outline) → `/search`.
+  3. Hero: date "M월 D일(요일)", title (states below), orange CTA, illustration right (`ic_banner_schedule_illust`). Top area (1–3) sits on a faint grey background; from the sport row down a white panel with rounded top corners.
+  4. Sport icon row (5) → `/explore/{sport}`.
+  5. "추천 모임" + 더보기 → `/explore`. Static filter row ("필터" + 가까운 순 · 편하게 · 평일 오후 · 주말 · 초보 환영 — display only, Android binds no listener). List = `HOME_RECOMMENDED_IDS` (= Android `homeRecommended`), `MeetingCard variant="recommended"` (no badges, meta "{location} | 멤버 {n}명").
+  6. "활동 중인 모임" + 더보기 → `/exercise`. List = session-created meetings + `ACTIVE_MEETING_IDS` (= `UserCreatedMeetings + activeMeetings`), no filter, `MeetingCard` (badges + meta "{location} | {meetingTime} | 멤버 n/max").
+  7. "체험 가능 모임" + 더보기 → `/trials`; `TrialCard` carousel, tap / 신청하기 → `/meeting/{id}`.
+  8. CTA banner "나에게 딱맞는 모임이 없어 아쉬우신가요?" / "직접 모임장이 되어 모임을 운영해보세요!" / "모임 만들기 →" → `/create-meeting`.
+  9. "후기" + 더보기 → `/reviews`; `ReviewCard` carousel.
+  10. "다가오는 정기모임" + 더보기 → `/upcoming`; month label "YYYY년 M월", static date strip (today ±3, today highlighted, not tappable), **all** schedules as `ScheduleCard` (no date filter — Android `populateSchedule`).
+  11. FAB → `/create-meeting`.
+  * Sections are separated by a `12 pt` background band.
+* **Hero card states** (Android `HomeFragment.setupHero`; greeting falls back to "안녕하세요!" without a nickname):
   | State                                         | Title                                                      | CTA                  |
   |-----------------------------------------------|------------------------------------------------------------|----------------------|
-  | No upcoming schedule today or tomorrow        | `안녕하세요 {nickname}님!\n아직 가입한 모임이 없어요`              | `가입하러 가기 →`     |
-  | Schedule found for tomorrow                   | `안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃`     | `일정 바로가기 →`     |
-  | Schedule found for today                      | `안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요`        | `일정 바로가기 →`     |
-* **Data:** `meetingsRepo.getActive(currentUser)`, `meetingsRepo.getTrials()`, `reviewsRepo.list()`, `schedulesRepo.next7()`.
-* **Interactions:** Search input is read-only in v1 (toast). Bell shows toast. Location chip shows toast.
+  | No schedule today or tomorrow                 | `안녕하세요 {nickname}님!\n아직 가입한 모임이 없어요`              | `가입하러 가기 →` → `/explore` |
+  | Schedule found for tomorrow                   | `안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃`     | `일정 바로가기 →` → `/upcoming` |
+  | Schedule found for today                      | `안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요`        | `일정 바로가기 →` → `/upcoming` |
 
-### 12.11 HomeScreen (guest branch)
-* Same skeleton minus the Active Meetings section, with the fixed hero text, and with login prompts replacing several actions (see §11.5).
+### 12.11 HomeScreen (guest)
+* **Source:** Android `GuestHomeFragment.kt` + `fragment_guest_home.xml` (no dedicated PNG — same visual system as §12.10).
+* **Layout:** same as §12.10 minus "활동 중인 모임" and minus the month label. Hero title "로그인하고 다양한 모임에 참여해요!", CTA "로그인하기 →" → `/login` (no toast). Recommended list = `GUEST_RECOMMENDED_IDS` (= Android `guestRecommended` g1–g4). CTA banner "나에게 맞는 모임을\n찾아드릴까요?" / "모임 찾아주기 →".
+* **Allowed:** search, sport icons, all 더보기 links, review carousel.
+* **Login prompts** (toast "로그인 후 {기능} 기능을 사용할 수 있어요" + push `/login`): bell (알림), recommended card (모임 상세 보기), recommended heart (찜하기), trial card (모임 상세 보기), trial 신청하기 (체험 신청), CTA banner (맞춤 모임 추천), FAB (모임 만들기).
 
 ### 12.12 ExerciseScreen
+* **Location pill:** "{동네} ▾" → location picker §12.25.
 * **Purpose:** Vertical list of every meeting (Android `ExerciseFragment`).
-* **Layout:** Toolbar with back + bell, location filter pill ("미사 1동 ▾"), then vertical `MeetingCard` list.
+* **Layout:** Toolbar with back + title **"활동 중인 모임"** (Android `fragment_exercise.xml` tvTitle 17sp) + bell, location filter pill ("미사 1동 ▾"), then vertical `MeetingCard` list. Reached from the BottomNav "체험" tab.
 * **Data:** `meetingsRepo.list()` (no filter in v1; backing seed has 7+ rows).
 * **Interactions:** Card tap → `/meeting/{id}`.
 
 ### 12.13 RecommendedGroupScreen
-* **Purpose:** Sport-filtered discover view (Android `RecommendedGroupFragment`).
-* **Layout:** Toolbar with back + title (`"{sport} 추천 모임"` or "추천 모임"). Condition chips (`가까운 순`, `편하게`, `평일 오후`, `주말`). Vertical `GroupListItem`.
-* **Data:** `meetingsRepo.list().filter(sportMatch + chipPredicates)`.
-* **Interactions:** Condition chip is a toggle (re-tap deselects). Card tap → `/meeting/{id}`.
+* **Location:** "{동네} ▼" (`15 pt / 700`) below the toolbar → location picker §12.25 (Android `tvLocationFilter` text "{current} ▼").
+* **Purpose:** Sport-filtered discover view (Android `RecommendedGroupFragment` + `home_recommended_group_list.png`).
+* **Layout:** Toolbar back + title (`"{sport} 추천 모임"` or "추천 모임") + bell (→ `/notifications`). Filter row: "필터" label · divider · 5 condition chips (`가까운 순`, `편하게`, `평일 오후`, `주말`, `초보 환영`) — PNG style orangeTint fill + orange border/text; selected chip = solid orange. Vertical `GroupListItem` rows (item_group_list: thumbnail · title · description · "{location} | 멤버 {n}명" · heart).
+* **Data:** `meetings` (localStorage) filtered by sport + Android `matchesCondition`: 평일 오후 = "오후" ∧ (월~금 ∨ "매일"); 주말 = 토/일 ∨ "매일"; 초보 환영 = description contains 초보/입문; 가까운 순 · 편하게 = pass-through (no distance/difficulty data — Android comment).
+* **Interactions:** **Single-select** (Android `selectedCondition`); none selected by default; re-tap deselects. Row tap → `/meeting/{id}`. Empty result → "조건에 맞는 모임이 없어요" (React-only).
 
 ### 12.14 UpcomingMeetingScreen
 * **Purpose:** Calendar-style upcoming meetings (Android `UpcomingMeetingFragment`).
@@ -806,35 +840,34 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Interactions:** Tapping a date filters the grid. Card tap → `/meeting/{id}`.
 
 ### 12.15 PostDetailScreen
-* **Purpose:** Meeting detail with tabbed body (Android `PostDetailFragment`).
+* **Purpose:** Meeting detail with tabbed body (Android `PostDetailFragment` + `fragment_post_detail.xml`; layout per `home_postdetail_participant_home.png`, `home_postdetail_noticelist_chattab.png`).
 * **Layout:**
-  * Hero image (meeting cover; falls back to `img_meeting_group_photo1` if missing).
-  * Toolbar overlay with back, "찜하기" heart, share icon.
-  * Title row: meeting name + sport badge.
-  * Tab strip: **홈 / 게시판 / 채팅 / 사진첩 / 멤버**.
-  * **홈 tab body:**
-    * Group description.
-    * Notice banner ("운영진 공지" + collapse toggle).
-    * `기본정보` card with rows for `정기모임시간`, `모집 인원` ({n}/{max}명), `장소`.
-    * Embedded map placeholder (WebView showing Kakao maps in Android; v1 uses a static map image with the location label overlay).
-    * Sticky "1회 참가하기" button at the bottom.
-  * **게시판 tab body:** Vertical list of `NoticeListItem` (title, preview, date, optional thumbnail).
-  * **채팅 tab body:** Notice banner + scrollable message list + input row (text + send). Mirrors `PostChatScreen` markup.
-  * **사진첩 / 멤버 tabs:** Placeholder "{tab} 기능을 준비 중이에요" centered.
-* **Data:** Reads `meetingsRepo.get(meetingId)`, `notices:{meetingId}`, `chats:{meetingId}`.
-* **Interactions:**
-  * "1회 참가하기" → toast "참가 신청이 완료되었어요!" + button becomes disabled with label "참가 완료". State persists in `joined:{email}`.
-  * Heart icon toasts "찜하기 기능 준비 중이에요" (kept for parity; even though wording differs we keep it).
-  * Share icon → `@capacitor/share` to open the iOS share sheet with text "FitPle 모임 — {title}" (v1.1; v1 may toast).
-* **Edge cases:**
-  * Bottom navigation must hide while on this screen.
-  * Notice banner collapse persists for the lifetime of the page (not stored).
+  * Toolbar: back · meeting title (`17 pt / 700`, truncated) · search (→ `/search`) · bell (→ `/notifications`). No hero overlay icons.
+  * Tab strip (Android `tabTitles`): **홈 / 공지 / 채팅 / 사진첩 / 멤버** — active label bold `textPrimary` + short orange underline.
+  * **홈 tab:**
+    * Header photo (`236 pt`) with translucent info card: group name, "조회 {memberCount×4} · 채팅 {n}분전 활동" (Android `tvViewMeta`), description (2 lines).
+    * "다가오는 정기 모임": 일시 (meetingTime) · 위치 · avatar stack + "참석 멤버 {n}/{max}" · Google Maps embed (`maps.google.com/maps?q={location}&output=embed&hl=ko&z=15`, same URL as the Android WebView) · buttons **공유하기 / 1회 체험하기**.
+    * "기본정보": sport badge · 정기 모임시간 · 회원수 `{n}/{max}` · 장소.
+    * Description, "📢 필독: 모임 유의사항이에요" box, "안내사항" (Android XML copy).
+    * Fixed bottom bar: **문의하기** (outline, 30%) / **가입하기** (orange).
+  * **공지 tab:** Android `setupNoticeList` 4 fixed notices (`item_notice_card`): "📢 공지" badge, title, 1-line preview, "{date} · 조회 {n}", comment count; 2nd item has a 72 pt thumbnail (`img_meeting_hiking_group1`). Not tappable.
+  * **채팅 tab:** collapsible guide banner ("🏃 {groupName} 채팅방입니다 🏃", guide text, ✓/✓/✗ rules, "접기 ∧" hides it for the page lifetime) · `ChatMessageList` (other: avatar 36 + crown + "(모임장)/(운영진) 이름", grey pill bubble; me: orange pill + avatar; system: grey strip) · input row hint "작성" + text button "전송". Enter ignored while IME composition is active (`isComposing`).
+  * **사진첩 tab:** Android `setupPhotoGrid` — 9 fixed photos in a 3-column grid, `110 pt` tall, `1 pt` gaps, centre-crop, not tappable.
+  * **멤버 tab:** Android `setupMemberList` — 5 fixed members, 48 pt avatar, name 14 pt, role chip when present.
+* **Data:** `meetings` (+ session-created meetings), `chats:{meetingId}` via `chatRepo.loadChat`, `joined:{email}`.
+* **Interactions (Android):**
+  * 공유하기 → Web Share API (`navigator.share`) with "[FitPle] {title}\n{location} · {meetingTime}\n{description}"; if unsupported, copies that text and toasts "공유할 내용을 복사했어요" (React-only fallback).
+  * 1회 체험하기 → toast "1회 체험 신청이 완료되었어요!" + button disabled (page lifetime).
+  * 문의하기 → `mailto:support@fitple.app` with subject "[FitPle 문의] {title}".
+  * 가입하기 → toast "가입 신청이 완료되었어요!" + "가입 완료" (hint fill, disabled); persisted in `joined:{email}`.
+  * Guest on 체험/가입/send → toast "로그인이 필요해요".
+* **Edge cases:** BottomNav hidden. Unknown id → "모임을 찾을 수 없어요".
 
 ### 12.16 PostChatScreen
 * **Purpose:** Standalone chat screen used by future direct-chat entry points.
 * **Layout:** Toolbar (back + title = meeting title), notice strip, scrollable message list, input row.
 * **Data:** Same `chats:{meetingId}` blob as the in-detail chat tab.
-* **Interactions:** Send appends a message with `isMe: true`, `senderName: '나'`, `timestamp: Date.now()`. Auto-scrolls to bottom.
+* **Interactions:** Send (members only — guests get "로그인이 필요해요") appends a message with `isMe: true`, `senderName: nickname`, `timestamp: Date.now()`. Shares `ChatMessageList`; input bar clamped to `max-w-mobile`. Auto-scrolls to bottom.
 * **Edge cases:** Keyboard avoidance — `@capacitor/keyboard` raises the input bar above the keyboard via `keyboardWillShow` events.
 
 ### 12.17 MyScreen (placeholder)
@@ -844,13 +877,71 @@ Member-only `MyScreen` (placeholder in v1) exposes a logout action. Implementati
 * **Interactions:** Logout → `userManager.logoutUser()` → `authStore.setUser(null)` → `/login`.
 * **Edge cases:** Tab is hidden when `isGuest` (login required toast instead).
 
+### 12.18 TrialListScreen
+* **Source:** Android `TrialListFragment.kt` + `fragment_trial_list.xml` (no design PNG for the list screen).
+* **Layout:** Toolbar `56 pt` (back arrow left, centred title "체험 가능한 모임" `text-h2`). Scroll list `px-5 pt-3 pb-6`, `TrialCard` (162 pt fixed width) stacked vertically with `12 pt` gap (Android has 0 vertical gap — deliberate deviation).
+* **Data:** `meetings` filtered by `TRIAL_MEETING_IDS` in that order.
+* **Interactions:** Card tap / "신청하기" → `/meeting/{id}`. Back → previous route.
+* **Access:** member + guest (`RequireAuth`), no BottomNav.
+
+### 12.19 ReviewListScreen
+* **Source:** Android `ReviewListFragment.kt` + `fragment_review_list.xml` (no design PNG for the list screen).
+* **Layout:** Toolbar identical to §12.18 with title "이용 후기". `ReviewCard` (180 × 240 pt) stacked vertically with `12 pt` gap.
+* **Data:** `reviews` collection. Cards are not tappable (Android parity).
+* **Access:** member + guest, no BottomNav.
+
+### 12.20 NotificationScreen
+* **Source:** Android `NotificationFragment.kt` + `fragment_notification.xml` + `item_notification.xml` (no design PNG).
+* **Entry:** bell on Home (member), Exercise, Upcoming. (Android also has bells on RecommendedGroup / PostDetail toolbars — not present in the React headers yet.)
+* **Layout:** Toolbar `56 pt` (back + centred "알림" `text-h2`). Rows `px-5 py-3.5`: `40 pt` orangeTint circle with filled bell (orange) + text `14 pt / textPrimary` + time `11 pt / textHint` (`4 pt` below).
+* **Data:** 5 static items hard-coded in the screen, copied verbatim from the Android fragment. Rows are not tappable.
+* **Access:** member + guest via route guard (guest home bell redirects to login before reaching it), no BottomNav.
+
+### 12.21 ChatListScreen
+* **Source:** Android `ChatListFragment.kt` + `fragment_chat_list.xml` + `item_chat_room.xml` (no design PNG).
+* **Layout:** Tab root (BottomNav visible, chat tab active). Toolbar `56 pt`, `px-5`, left-aligned "채팅" `text-heading` (20/700), no back button. Rows `px-5 py-3.5`: thumbnail `56 × 56`, radius `6 pt` + groupName `15 pt / 700` + preview `13 pt / textSecondary` (1 line each) + time `11 pt / textHint` right.
+* **Data:** session-created meetings (newest first) + `ACTIVE_MEETING_IDS` (seed, = Android `UserCreatedMeetings + SampleData.activeMeetings`). Preview "운영진이 공지를 등록했어요" and time "오후 3:40" are Android constants. Empty state "가입한 모임이 없어요.\n모임에 가입하면 채팅방이 생겨요!" `14 pt / textHint`, `120 pt` from top.
+* **Interactions:** Row → `/meeting/{id}` with router state `{ initialTab: '채팅' }` (Android `initialTab = 2`). `PostDetailScreen` honours `location.state.initialTab`.
+* **Access:** member only — guest is blocked at the tab (toast) and a direct `/chat` visit redirects to `/login`.
+
+### 12.22 SearchScreen
+* **Source:** Android `SearchFragment.kt` + `fragment_search.xml`; result rows `item_group_list.xml` + `designs/home_recommended_group_list.png` (PNG wins on conflict).
+* **Entry:** Home search bar (member + guest — Android GuestHome also opens it), Upcoming search icon. (Android PostDetail toolbar also has one — not in the React header.)
+* **Layout:** Toolbar `56 pt`, `px-3`: back + search field (`44 pt`, radius `12 pt`, `1 pt` orange border, `px-3.5`, trailing search icon, hint "찾고싶은 모임이 있나요?"). Field auto-focuses on entry.
+* **Behaviour:** Filters live on every change. Query is trimmed; empty → no rows and no empty message. Match = `title` contains query, case-insensitive. Pool = session-created meetings + all seed `meetings`. No match → "검색 결과가 없어요" `14 pt / textHint`, `80 pt` from top.
+* **Row (`GroupListItem`):** `px-5 py-3.5`, thumbnail `72 × 72` radius `8`, title `15 / 700`, description `13 / textPrimary` 1 line, meta "{location} | 멤버 {n}명" `12 / textHint` (separator in borderDefault), `FavoriteHeart` top-right. Row tap → `/meeting/{id}`.
+* **Access:** member + guest, no BottomNav.
+
+### 12.23 Favorites (찜)
+* **Source:** Android `HomeSectionBinders.bindFavoriteHeart` + `UserManager.isFavorite / toggleFavorite`.
+* **Where:** `FavoriteHeart` on every `MeetingCard` (Home active list, Exercise, RecommendedGroup) and `GroupListItem` (Search). Android has no heart on PostDetail; the React PostDetail heart remains a toast (pre-existing, not Android).
+* **Look:** `24 pt`. Not favourited → outline, textSecondary (design PNG). Favourited → filled, orange (Android `ic_heart` tint).
+* **Behaviour:** Toggle persists to `UserProfile.favoriteMeetingIds`. Tap does not trigger the card's navigation. Guest → no-op (Android registers no listener without a user).
+
+### 12.24 CreateMeetingScreen
+* **Source:** Android `CreateMeetingFragment.kt` + `fragment_create_meeting.xml` + `UserCreatedMeetings.kt` (no design PNG).
+* **Layout:** Toolbar `56 pt` (back + centred "모임 만들기"). Body `px-5 pt-4 pb-6`. Labels `13 / 700`: 모임 이름 · 종목 · 위치 · 일정 · 정원 · 소개 (`20 pt` apart). Inputs `44 pt`, radius `12`, `1 pt` orange border, `px-3.5`, `14 pt`; 소개 is a `96 pt` textarea. Hints: "예) 미사강변 주말 러닝 크루" / "예) 미사역" / "예) 매주 토 오전 8:00" / "예) 20" / "어떤 모임인지 소개해주세요". Sport chips (5, catalog order) `13 pt`, pill — selected orangeTint + `1.5 pt` orange border + orange text, unselected surface + borderDefault + textSecondary. Submit "모임 만들기" `54 pt`, radius `12`, `16 / 700`, `28 pt` top margin.
+* **Validation (in order):** trimmed title empty → toast "모임 이름을 입력해주세요"; no sport → "종목을 선택해주세요".
+* **Defaults:** location "위치 미정", schedule "일정 미정", capacity = integer parse (Kotlin `toIntOrNull`) else `20`, description "함께할 멤버를 기다려요!".
+* **Created meeting:** `id = created_{epoch ms}`, `groupName = title`, `memberCount 1`, `lastActiveMinutes 0`, image = sport's representative image (러닝 running_group1 · 풋살 futsal_field1 · 등산 hiking_group1 · 사이클 cycling_group1 · 골프 golf_field1).
+* **On submit:** toast "모임이 만들어졌어요!" → push `/meeting/{id}` (back returns to the form, Android `pushWithSlide`).
+* **Persistence:** `createdMeetingsStore` (Zustand), **session memory only** — not written to localStorage, gone after reload (Android parity). Prepended to Home active list, Exercise list, ChatList, Search pool; resolved by `PostDetailScreen` / `PostChatScreen`.
+* **Access:** member only; guest is stopped at the entry points and a direct visit redirects to `/login`.
+
+### 12.25 Location picker (동네 선택)
+* **Source:** Android `FragmentNavExt.showLocationPicker` + `LocationState` (no design PNG — AlertDialog structure in app tokens).
+* **Entry:** location label on Home (member and guest — guests may browse by location), Exercise pill, RecommendedGroup label.
+* **Dialog:** centred card (max `320 pt`, radius `12`, dim `black/40`). Title "동네 선택" `18 / 700`. 8 single-choice rows (`48 pt`, radio + `15 pt`): 미사 1동 · 미사 2동 · 미사 3동 · 풍산동 · 창우동 · 신장동 · 덕풍동 · 위례동; current value checked. Tapping a row selects and closes. "취소" text button (orange) bottom-right; backdrop tap and Esc also cancel.
+* **State:** `locationStore` (Zustand), **session memory only**, default "미사 1동", shared by every screen. Display only — no list filtering (Android parity).
+
 ## 13. Component Inventory
 
 | Component                | File                                      | Notes |
 |--------------------------|-------------------------------------------|-------|
 | `PageFrame`              | `components/layout/PageFrame.tsx`         | Safe-area wrapper (`pt-safe`, `pb-safe`), background colour, optional max width when running in browser preview. |
 | `Toolbar`                | `components/layout/Toolbar.tsx`           | Left slot (back/X), title, right slot (icons). Variants: transparent (over image) and solid white. |
-| `BottomNav`              | `components/layout/BottomNav.tsx`         | 5 tabs (홈 / 체험 / 탐색 / 채팅 / MY). Active tint = orange. `safe-area-inset-bottom` padding. |
+| `BottomNav`              | `components/layout/BottomNav.tsx`         | Floating 4 tabs (홈 / 체험 / 채팅 / MY) — see §10.1. `safe-area-inset-bottom` padding. |
+| `ChatMessageList`        | `components/chat/ChatMessageList.tsx`     | Chat rows (other / me / system) shared by PostDetail 채팅 tab and PostChat. |
 | `InputBox`               | `components/common/InputBox.tsx`          | 5-state field (default, typing, invalid, taken, valid). Clear button. Optional trailing icon. |
 | `EmailSuggestion`        | `components/common/EmailSuggestion.tsx`   | Renders chips above the input. |
 | `PasswordField`          | `components/common/PasswordField.tsx`     | Wraps `InputBox` with eye toggle and validation chips. |
@@ -1199,7 +1290,7 @@ Use the demo scenario from `REACT_WEB_PLAN.md` (translated to iOS):
 * **체험 (Trial):** A meet-up that accepts one-off attendees, distinct from recurring memberships.
 * **정기모임 (Recurring meeting):** Weekly cadence meet-up — what `ScheduleItem` represents.
 * **추천 모임 (Recommended group):** Sport-filtered list shown by `RecommendedGroupFragment`.
-* **공지 (Notice):** A board post inside a meeting, shown in the 게시판 tab.
+* **공지 (Notice):** A board post inside a meeting, shown in the 공지 tab (Android tab title; some PNGs label it 게시판).
 * **활동 시간 (Last active):** Minutes since the last chat activity in the group, rendered as "n분전 활동".
 * **한자리 남았어요 (One spot left):** Badge shown when `maxMembers - memberCount ≤ 2`.
 
@@ -1209,7 +1300,7 @@ Pulled verbatim from `app/src/main/res/values/strings.xml` and the Fragment sour
 
 ```
 앱 이름            FitPle
-하단 탭            홈 / 체험 / 탐색 / 채팅 / MY
+하단 탭            홈 / 체험 / 채팅 / MY
 검색창 placeholder 찾고싶은 모임이 있나요?
 홈 - hero 기본    안녕하세요 {nickname}님!\n아직 가입한 모임이 없어요   /  가입하러 가기 →
 홈 - hero 내일    안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃  /  일정 바로가기 →
@@ -1217,20 +1308,19 @@ Pulled verbatim from `app/src/main/res/values/strings.xml` and the Fragment sour
 게스트 hero       모임을 둘러보는 중이에요!                          /  로그인하고 참여하기 →
 종목 이름          러닝 / 풋살 / 등산 / 사이클 / 골프
 섹션 타이틀       추천 모임 / 활동 중인 모임 / 체험 가능 모임 / 후기 / 다가오는 정기모임
-필터 칩            가까운 순 / 편하게 / 평일 오후 / 주말
+필터 칩            가까운 순 / 편하게 / 평일 오후 / 주말 / 초보 환영
 멤버 표기          멤버 {n}명   ·   {n}/{max}명
 체험 카드 CTA     신청하기
-모임 상세 탭       홈 / 게시판 / 채팅 / 사진첩 / 멤버
-모임 상세 CTA     1회 참가하기 → (성공 토스트) 참가 신청이 완료되었어요!   → 버튼 상태 "참가 완료"
-공유 버튼 토스트  찜하기 기능 준비 중이에요
+모임 상세 탭       홈 / 공지 / 채팅 / 사진첩 / 멤버
+모임 상세 CTA     가입하기 → 가입 신청이 완료되었어요! → "가입 완료"  /  1회 체험하기 → 1회 체험 신청이 완료되었어요!  /  문의하기  /  공유하기
 탭 placeholder    {label} 기능을 준비 중이에요
 약관 5개          만 14세 이상입니다. / 서비스 이용약관 동의 / 커뮤니티 이용약관 동의 / 개인정보 수집 및 이용 동의 / 위치 정보 수집 동의
 약관 모두 동의 CTA 동의하고 가입하기
 회원가입 완료 카피 가입이 완료 되었어요!  /  이제 핏플과 함께 즐거운 운동을 시작해보세요  /  핏플 시작하기
 재개 다이얼로그   회원가입을 이어서 하시겠습니까?  /  이전에 시작한 회원가입이 있어요.\n선호 운동 설정만 하면 완료돼요!  /  이어서 하기  /  나중에
-로그인 실패        이메일 또는 비밀번호가 올바르지 않아요.
+로그인 실패        이메일 또는 비밀번호가 맞지 않아요
 이메일 중복        이미 가입된 이메일이에요.  로그인하기
-미구현 토스트     준비 중인 기능이에요  /  검색 기능 준비 중이에요  /  알림 기능 준비 중이에요  /  위치 변경 기능 준비 중이에요  /  모임 만들기 기능 준비 중이에요  /  맞춤 모임 추천 기능 준비 중이에요
+미구현 토스트     준비 중인 기능이에요
 종료 안내         뒤로 버튼을 한번 더 누르면 종료됩니다   (Android only — drop on iOS)
 ```
 
@@ -1405,34 +1495,29 @@ Password screen also includes "비밀번호 표시" row identical to EmailLogin 
 
 ### 25.11 HomeScreen (member, full layout)
 
-Order top→bottom on the same single scrollable surface.
+Order top→bottom on one scroll surface. Sizes are the implemented values (design PNG measured at ~1:1; XML where no PNG). Behaviour and copy: §12.10.
 
-| #  | Region                                       | Spec |
-|----|----------------------------------------------|------|
-| 1  | **Header row** (sticky)                      | Height `52 pt`. Left: location chip "미사 1동 ▾" `13 pt / 600 / textPrimary` with chevron-down `12 × 12`. Center: search bar fills remaining width, height `36 pt`, radius `999`, background `surface`, `1 pt borderDefault`, leading magnifier icon `16 × 16`, placeholder "찾고싶은 모임이 있나요?" `13 pt / 400 / textHint`. Right: bell icon `24 × 24`. |
-| 2  | **Hero card**                                | Margin `12 pt` top, `20 pt` horizontal. Card height `108 pt`, radius `14 pt`, background gradient from `#FFE2D7` (top-left) to `#FFD0C0` (bottom-right). Inside: date `12 pt / 500 / textSecondary` top-left, then bold 2-line title `15 pt / 700 / textPrimary` line-height `1.4`. Right side: schedule mascot illustration `90 × 90 pt`. CTA text "가입하러 가기 →" `13 pt / 700 / orange` aligned bottom-left. |
-| 3  | **Sport row**                                | Margin-top `20 pt`. Row of 5 tiles same as preference SELECTION sizing (`60 × 78`). Spacing `12 pt`. Horizontal padding `20 pt`. Hits route to `/explore/{sport}`. |
-| 4  | **추천 모임 section**                         | Header (see §25.1). Margin-top `28 pt`. |
-| 4a | Filter chips                                 | Horizontal scroll, `8 pt` gap. Chip height `32 pt`, radius `999`, padding `0 14 pt`. Unselected: border `borderDefault`, label `13 pt / 500 / textSecondary`. Selected: solid `orangeTint`, `1 pt orange`, label `13 pt / 600 / orange`. First chip "가까운 순 ▾" adds chevron. |
-| 4b | Recommended cards (list)                     | 4 visible. Card `100% × 84 pt`, radius `12 pt`, white background. Left: image `64 × 64`, radius `10 pt`, `16 pt` from card-left. Right: title `15 pt / 700 / textPrimary` (single line, ellipsis), desc `13 pt / 400 / textSecondary` (single line), meta row `12 pt / 400 / textHint` "멤버 {n}명 · {n}분전 활동". Top-right: heart icon `20 × 20`, `textHint` outline. Sport badge pill bottom-right of image area: height `20 pt`, radius `999`, padding `0 8 pt`, label `11 pt / 600`, color scheme matches the sport (default `orangeTint` + `orange` text). |
-| 5  | **활동 중인 모임 section**                    | Same card pattern as 4b. Header "활동 중인 모임" + 더보기. |
-| 6  | **체험 가능 모임 section**                    | Horizontal carousel. Card `160 × 240 pt`, radius `14 pt`, white background with light shadow. Image top `160 × 140`, radius corners `14 pt` top-only. Two overlay badges on the image: "3분전 활동" pill (badgeDark + white text, top-left) + sport pill (orange tint, top-right). Title `14 pt / 700`, padding `10 pt 12 pt 0`. One-line subtitle gray. Footer row: pin icon + location `12 pt / 500 / textHint`, then row "👥 멤버 10/30" `12 pt / 500 / textSecondary`. Bottom CTA inside the card: orange `36 pt` tall pill "신청하기", `12 pt` from card-bottom. |
-| 7  | **CTA banner**                                | Card `100% × 96 pt`, radius `14 pt`, background `#FFF0ED`. Title `14 pt / 700`, subtitle `13 pt / 500 / textSecondary` underneath. Right side: orange outline button "모임 만들기 →" `36 pt` tall, padding `0 14 pt`, radius `999`, label `13 pt / 700 / orange`. |
-| 8  | **후기 section**                              | Carousel. Card `220 × 140 pt`, radius `14 pt`, image fills card with linear gradient overlay top-transparent→bottom `rgba(0,0,0,0.85)`. Text stack bottom-left, `14 pt` padding: nickname `12 pt / 500 / white80`, activity `12 pt / 500 / white80` (e.g. "싱글벙글 러닝모임 후기"), quote `13 pt / 600 / white` with leading `"`. |
-| 9  | **다가오는 정기모임 section**                 | Header "다가오는 정기모임" + 더보기. Below header: "{YYYY}년 {M}월" `13 pt / 500 / textSecondary`. |
-| 9a | Date strip                                   | 7 day cells centered on today. Each cell `40 × 56 pt`. Number `15 pt / 600 / textPrimary` on white circle `32 × 32` (no fill when not today). Today: circle solid `orange`, number white, day-of-week label `12 pt / 700 / orange` below. Other days: dow `12 pt / 500 / textHint`. Horizontal scroll if more than 7 visible. |
-| 9b | Schedule cards                               | List, gap `10 pt`. Card `100% × 100 pt`, radius `12 pt`, white background. Left text column padding `14 pt`. Top: small badge row "Level·{보통/중급/상급}" `11 pt / 700 / orange` on `orangeTint` pill + sport badge "{러닝/…}" same style. Title `15 pt / 700`, single-line. "한자리 남았어요!!" red bold below title when `isUrgent`. Info row: `{location} · 매주({day}) {time} · {n}명 참석중` `12 pt / 500 / textSecondary`. Right: thumbnail `80 × 80 pt`, radius `10 pt`. |
-| 10 | **Bottom-nav** (fixed)                       | Height `56 pt + safe-area-inset-bottom`. White background, top `1 pt` divider in `borderDefault`. 5 equal-width slots. Icon `24 × 24` + label `11 pt / 500`. Selected: icon + label both `orange`; unselected: `textHint`. The active tab indicator is colour-only (no underline). |
-| 11 | **FAB**                                      | `56 × 56` round, orange, white `+ ` glyph, `bottom: 76 pt + safe-area`, `right: 20 pt`. Shadow `0 4pt 12pt rgba(255,87,34,0.30)`. |
+| #  | Region | Spec |
+|----|--------|------|
+| 1  | **Top bar** | `48 pt`, `px-5`. "미사 1동" `13 pt / 700` + chevron-down `14`. Bell outline `24` right. |
+| 2  | **Search** | `44 pt`, radius `8`, `1 pt` orange border, `px-3.5`, hint `14 pt / textHint`, search icon `20` right. `pb 12`. |
+| 3  | **Hero** | `px-5 pt-3 pb-5`. Date `13 pt / textPrimary`; title `15 pt / 700`, keep-all wrapping; CTA `36 pt`, radius `6`, `px-3`, `13 pt / 700` white on orange; illustration `80 pt` tall, right, bottom-aligned. Rows 1–3 on `background/50`. |
+| 4  | **Sport row** | White panel starts here (top radius `16`). 5 equal columns: box `52 × 52`, radius `14`, `background`; icon `30`; label `11 pt / textSecondary`, `5 pt` gap. |
+| 5  | **Section header** (all sections) | Title `17 pt / 700`; "더보기" `13 pt / textHint` + chevron-right `16`. `12 pt` below. |
+| 6  | **추천 모임** | Filter row: "필터" pill (`28 pt`, borderDefault, sliders icon `12`, `12 pt / textSecondary`) + chips (`28 pt`, radius full, orange border + orange `13 pt` text, white). `MeetingCard` rows. |
+| 7  | **MeetingCard** | Row `py-3`, no border/divider. Thumb `92 × 92`, radius `6`. Badges (active only): "{n}분전 활동" blueTint/blue, sport orangeTint/orange bold, radius `4`, `11 pt`. Title `15 pt / 500`, description `13 pt / textSecondary` 1 line, meta `11 pt / textHint` with borderDefault "\|" separators, optional `#tags` line. Heart `24` top-right (§12.23). |
+| 8  | **Section band** | `12 pt`, `background`. |
+| 9  | **체험 가능 모임** | `TrialCard` carousel (§25 row "체험 가능 모임" above / `TrialCard.tsx`). |
+| 10 | **CTA banner** | `mx-5 my-4`, radius `14`, `background`, `p-4`. Title `16 pt / 700`, sub `14 pt`. Button bottom-right: `40 pt`, radius `10`, orangeTint, orange `14 pt / 700`. No illustration (PNG). |
+| 11 | **후기** | `ReviewCard` carousel. |
+| 12 | **다가오는 정기모임** | `px-5 pt-5 pb-6`. Month `13 pt / 700` centred. Date strip: 7 cells `44 pt` wide, number `16 pt / 600`, weekday `12 pt / textSecondary`; today = textPrimary rounded rect (radius `8`) with white text; bottom `1 pt` borderDefault line. |
+| 12a| **ScheduleCard** | `py-3`. Badges "Level·{level}" blueTint/blue and sport orangeTint/orange, radius full, `11 pt`. Title `16 pt / 600`. "한자리 남았어요!!" `14 pt` (isUrgent). Info `11 pt`: "{location} · 매주({day}) {time}" blue + " · {n}명 참석중" textHint. Thumb `96 × 96`, radius `8`, right. Not tappable. |
+| 13 | **Bottom-nav** (fixed) | Height `56 pt + safe-area-inset-bottom`. |
+| 14 | **FAB** | `56 × 56` round, orange, white `+`, above the bottom nav. |
 
-#### Hero state copy (textually identical to §12.10):
-* No upcoming → "안녕하세요 {nickname}님!\n아직 가입한 모임이 없어요" / CTA "가입하러 가기 →".
-* Tomorrow → "안녕하세요 {nickname}님!\n다음 {sport}은 내일 {time}이에요 🏃" / CTA "일정 바로가기 →".
-* Today → "안녕하세요 {nickname}님!\n오늘 {time} · {title}이 있어요" / CTA "일정 바로가기 →".
+### 25.12 HomeScreen — guest
 
-### 25.12 HomeScreen — guest branch
-
-Identical scaffold minus the "활동 중인 모임" section (#5). Hero copy is fixed "모임을 둘러보는 중이에요!" / CTA "로그인하고 참여하기 →", and the hero background uses a slightly cooler tint (`#E7F0FF` → `#D3E1FF`) per the design exports.
+Same visual spec as §25.11 without row "활동 중인 모임" and without the month label (§12.11).
 
 ### 25.13 ExerciseScreen
 
@@ -1472,6 +1557,7 @@ Layered structure top→bottom:
 5. **Sticky bottom CTA bar** — only on 홈 tab. Two buttons in a row, padding `12 pt 20 pt` + safe-area-inset-bottom:
    * "공유하기" — secondary outline button, takes `32%` width. On tap triggers the iOS share sheet (Capacitor `Share` plugin) with payload `{ title, text: meeting.description, url: deep-link-or-placeholder }`. Confirmed by `home_main_postdetail_share_chat.png` sitemap.
    * "1회 체험하기" — primary CTA, takes the rest. Toast on tap: "참가 신청이 완료되었어요!" and the button becomes "참가 완료" with `btnDisabled` fill and `textPrimary` label.
+   * **Implementation note (2026-11-15):** the build follows Android + `home_postdetail_participant_home.png` — 공유하기/1회 체험하기 sit inside the 홈 tab under the map, and the fixed bottom bar is 문의하기/가입하기. Toast copy is Android's ("1회 체험 신청이 완료되었어요!", "가입 신청이 완료되었어요!"). See §12.15.
 
 #### 25.16.a 홈 tab body
 
@@ -1556,6 +1642,8 @@ Identical to the in-detail 채팅 tab but with a real toolbar at top instead of 
 
 | Token             | Size / Weight | Used for                                       |
 |-------------------|--------------|------------------------------------------------|
+| `hero`            | `26 / 600`   | Login hero title (Figma 2026-05-28). "핏플" span uses `font-extrabold` (800) |
+| `label-semibold`  | `14 / 600`   | Social/CTA button labels (Figma SemiBold)       |
 | `display`         | `22 / 700`   | Auth page titles, complete-screen headline      |
 | `h1`              | `19 / 700`   | PostDetail title                                |
 | `h2`              | `17 / 700`   | MyScreen nickname                               |
@@ -1570,11 +1658,14 @@ Identical to the in-detail 채팅 tab but with a real toolbar at top instead of 
 | `micro-strong`    | `12 / 700`   | "한자리 남았어요!!", date strip day label        |
 | `mini`            | `11 / 500`   | Bottom-nav label                                |
 | `mini-strong`     | `11 / 700`   | Badge text                                      |
+| `tiny`            | `10 / 500`   | Chat timestamp, card meta (Android `text_tiny`) |
 
 Encode this in `tailwind.config.ts` under `theme.extend.fontSize`:
 
 ```ts
 fontSize: {
+  hero:            ['26px', { lineHeight: '1.40', fontWeight: '600' }],
+  'label-semibold':['14px', { lineHeight: '1.40', fontWeight: '600' }],
   display:        ['22px', { lineHeight: '1.35', fontWeight: '700' }],
   h1:             ['19px', { lineHeight: '1.30', fontWeight: '700' }],
   h2:             ['17px', { lineHeight: '1.40', fontWeight: '700' }],
@@ -1589,6 +1680,7 @@ fontSize: {
   'micro-strong': ['12px', { lineHeight: '1.40', fontWeight: '700' }],
   mini:           ['11px', { lineHeight: '1.30', fontWeight: '500' }],
   'mini-strong':  ['11px', { lineHeight: '1.30', fontWeight: '700' }],
+  tiny:           ['10px', { lineHeight: '1.30', fontWeight: '500' }],
 },
 ```
 

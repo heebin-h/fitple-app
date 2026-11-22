@@ -9,6 +9,10 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  /* 플로팅 BottomNav(높이 64px + 하단 여백 16px) + 콘텐츠 여유 16px + iOS 홈 인디케이터 safe area */
+  .pb-nav-safe {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 html,
@@ -19,13 +23,17 @@ body,
 }
 
 body {
-  font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+  font-family: 'Pretendard Variable', 'Pretendard', system-ui, -apple-system, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* iOS Safari 입력창 자동 줌인 방지 */
-input,
-textarea,
-select {
-  font-size: 16px;
+/* iOS Safari 입력창 자동 줌인 방지 — 16px 미만 입력칸에 포커스하면 iOS가 화면을 확대한다.
+   `text-label`(14px) 등 유틸리티 클래스가 요소 선택자보다 우선하므로 !important 필요.
+   `-webkit-touch-callout`은 iOS WebKit만 지원 → 데스크톱·Android는 디자인 크기 유지. */
+@supports (-webkit-touch-callout: none) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }

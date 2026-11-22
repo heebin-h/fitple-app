@@ -1,5 +1,7 @@
 # FitPle iOS — Build & Release Cheatsheet
 
+> **상태 (2026-11-15):** 웹 빌드(`npm run build`)만 사용 중. iOS/Capacitor 절차는 프로젝트 중단으로 **실행된 적 없음** — 재개 시 참고용. 현재 상태는 `HANDOFF.md`.
+
 A condensed companion to SPEC.md §18. Every command is meant to be copy-pasted.
 
 ---

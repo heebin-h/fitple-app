@@ -14,11 +14,14 @@
  */
 
 import type { Meeting, Review, ScheduleItem, ChatMessage } from './models';
+import { isoDate } from '../utils/date';
 
 // ────────────────────────────────────────────────────────────────────────
 // Demo accounts
 // ────────────────────────────────────────────────────────────────────────
 
+// 비밀번호는 seedRunner.ts의 userManager.saveUser()에서 SHA-256 해싱됨.
+// 이 파일의 평문 값은 데모 전용 — 실제 사용자 자격증명이 아님.
 export const SEED_DEMO_ACCOUNTS = [
   { email: 'demo@fitple.app',  password: 'demo1234', nickname: '데모유저' },
   { email: 'alice@fitple.app', password: 'alice123', nickname: '앨리스'   },
@@ -26,7 +29,7 @@ export const SEED_DEMO_ACCOUNTS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────
-// Meetings — 15 entries (3 per sport × 5 sports)
+// Meetings — 21 entries (3 per sport × 5 sports + 체험 2 + 게스트 추천 4)
 // ────────────────────────────────────────────────────────────────────────
 
 export const SEED_MEETINGS: Meeting[] = [
@@ -53,8 +56,30 @@ export const SEED_MEETINGS: Meeting[] = [
   // ── 골프
   { id: 'm-glf-1', title: '주말 골프 모임',        groupName: '골프클럽',       sport: '골프',   image: 'img_meeting_golf_field1',    location: '남양주CC',         memberCount:  8, maxMembers: 12, level: '상급', date: '2026-05-30', time: '06:00', lastActiveMinutes: 30, description: '주말 라운딩 함께할 분! 스크린골프도 진행',           meetingTime: '매주 토 오전 6:00' },
   { id: 'm-glf-2', title: '골린이들 골프 모임',    groupName: '골린이골프',     sport: '골프',   image: 'img_meeting_golf_field1',    location: '미사 1동',         memberCount: 12, maxMembers: 16, level: '보통', date: '2026-05-28', time: '16:20', lastActiveMinutes: 12, description: '골린이들 모집합니다. 같이 배워요',                    meetingTime: '매주 목 오후 4:20' },
-  { id: 'm-glf-3', title: '남양주 골프 모임',      groupName: '남양주골프',     sport: '골프',   image: 'img_meeting_golf_field1',    location: '남양주CC',         memberCount:  8, maxMembers: 12, level: '상급', date: '2026-05-30', time: '06:00', lastActiveMinutes: 45, description: '주말 라운딩 동호회. 스크린 + 필드',                    meetingTime: '매주 토 오전 6:00' },
+  { id: 'm-glf-3', title: '남양주 골프 모임',     groupName: '남양주골프',     sport: '골프',   image: 'img_meeting_golf_field1',    location: '남양주CC',         memberCount:  8, maxMembers: 12, level: '상급', date: '2026-05-30', time: '06:00', lastActiveMinutes: 45, description: '주말 라운딩 동호회. 스크린 + 필드',                    meetingTime: '매주 토 오전 6:00' },
+
+  // ── 체험 — Android SampleData.trialMeetings t2/t3 (t1 = m-cyc-3)
+  { id: 'm-trial-hik-1', title: '싱글벙글 등산 크루 체험', groupName: '싱글벙글등산', sport: '등산', image: 'img_trial_hiking_group1', location: '여의도구', memberCount: 14, maxMembers: 30, lastActiveMinutes: 3, description: '함께 산을 오르면 더 즐거워요!', meetingTime: '매주 일 오전 8:00' },
+  { id: 'm-trial-hik-2', title: '북한산 초보 등산 체험',   groupName: '초보등산클럽', sport: '등산', image: 'img_trial_hiking_group2', location: '도봉구',   memberCount:  8, maxMembers: 20, lastActiveMinutes: 5, description: '처음 산행이라도 걱정 없어요!',  meetingTime: '매주 토 오전 9:00' },
+
+  // ── 게스트 추천 — Android SampleData.guestRecommended g1~g4
+  { id: 'm-guest-1', title: '싱글벙글 러닝 크루 모집',   groupName: '싱글벙글러닝', sport: '러닝', image: 'img_meeting_running_group1', location: '동작구', memberCount: 40, maxMembers: 50, lastActiveMinutes:  3, description: '초보자들도 환영합니다~',                   meetingTime: '매주 토 오전 8:00' },
+  { id: 'm-guest-2', title: '동작구 러닝 모임',          groupName: '동작러닝',     sport: '러닝', image: 'img_meeting_running_track',  location: '동작구', memberCount: 23, maxMembers: 30, lastActiveMinutes:  8, description: '누구나 편하게 참여하세요! 너무 재미있어요', meetingTime: '매주 수 오후 7:00' },
+  { id: 'm-guest-3', title: '한시간 달리는 러닝 크루',   groupName: '한시간러닝',   sport: '러닝', image: 'img_meeting_running_night',  location: '동작구', memberCount: 10, maxMembers: 20, lastActiveMinutes: 15, description: '초보자들도 환영합니다~',                   meetingTime: '매주 토 오전 7:00' },
+  { id: 'm-guest-4', title: '같이 달리자! 동작구 모집!', groupName: '동작크루',     sport: '러닝', image: 'img_meeting_running_beach',  location: '동작구', memberCount: 20, maxMembers: 30, lastActiveMinutes: 30, description: 'since 25.02.20 러닝 모임입니다',           meetingTime: '매주 일 오전 9:00' },
 ];
+
+/** 회원 홈 "추천 모임" — Android `SampleData.homeRecommended` id 1/2/3 대응. */
+export const HOME_RECOMMENDED_IDS = ['m-run-2', 'm-fut-1', 'm-hik-1'] as const;
+
+/** 게스트 홈 "추천 모임" — Android `SampleData.guestRecommended` g1~g4 (seed 하단 '게스트 추천' 블록). */
+export const GUEST_RECOMMENDED_IDS = ['m-guest-1', 'm-guest-2', 'm-guest-3', 'm-guest-4'] as const;
+
+/** 가입(활동 중)한 모임 — Android `SampleData.activeMeetings` id 4/5/6 대응. 채팅방 목록(/chat) 풀. */
+export const ACTIVE_MEETING_IDS = ['m-run-1', 'm-glf-1', 'm-cyc-1'] as const;
+
+/** 체험 가능 모임 — Android `SampleData.trialMeetings` 순서 그대로 (홈 섹션 + /trials 공용). */
+export const TRIAL_MEETING_IDS = ['m-cyc-3', 'm-trial-hik-1', 'm-trial-hik-2'] as const;
 
 // ────────────────────────────────────────────────────────────────────────
 // Reviews
@@ -76,7 +101,7 @@ export const SEED_REVIEWS: Review[] = [
 function todayPlus(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  return isoDate(d); // YYYY-MM-DD (로컬 — toISOString은 UTC라 KST 새벽에 하루 어긋남)
 }
 
 function dayKor(days: number): string {
@@ -96,8 +121,8 @@ export const SEED_SCHEDULES: ScheduleItem[] = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────
-// Chats — only a couple of meetings have seeded transcripts so empty
-// chat tabs still feel populated when reached from PostDetail.
+// Chats — 모든 모임이 Android 샘플 대화(sampleChat)로 시작. 저장본이 없으면
+// storage/chatRepo.loadChat이 sampleChat()을 돌려준다. m-run-1만 첫 실행 시 저장.
 // ────────────────────────────────────────────────────────────────────────
 
 function ts(daysAgo: number, hour: number, min: number): number {
@@ -107,27 +132,25 @@ function ts(daysAgo: number, hour: number, min: number): number {
   return d.getTime();
 }
 
+/**
+ * 기본 샘플 대화 — Android `PostDetailFragment.loadSampleMessages()` 8건 그대로(순서·역할·시각).
+ * Android는 모든 모임 채팅 탭에 이 대화를 표시한다. 저장된 대화(`chats:{id}`)가 없는 모임은
+ * 이 값을 초기값으로 쓴다(storage/chatRepo.loadChat). ChatList 미리보기 "운영진이 공지를 등록했어요"
+ * · "오후 3:40"은 마지막 시스템 메시지와 일치.
+ */
+export function sampleChat(): ChatMessage[] {
+  return [
+    { id: 'sample-1', senderName: '김상미', message: '안녕하세요! 이번 주 모임 참석 가능할까요?',                              timestamp: ts(0, 15, 20), isMe: false, isSystem: false, role: '모임장' },
+    { id: 'sample-2', senderName: '나',     message: '네! 저도 참가합니다 😊',                                                 timestamp: ts(0, 15, 22), isMe: true,  isSystem: false },
+    { id: 'sample-3', senderName: '박지훈', message: '저도요! 이번에 처음 참여해봅니다',                                       timestamp: ts(0, 15, 25), isMe: false, isSystem: false },
+    { id: 'sample-4', senderName: '김상미', message: '좋아요! 환영합니다~ 준비물은 편한 운동복이랑 물이면 충분해요',          timestamp: ts(0, 15, 27), isMe: false, isSystem: false, role: '모임장' },
+    { id: 'sample-5', senderName: '이현우', message: '오 새 멤버가! 반갑습니다 👋',                                             timestamp: ts(0, 15, 30), isMe: false, isSystem: false, role: '운영진' },
+    { id: 'sample-6', senderName: '나',     message: '감사합니다! 장소가 미사역 맞죠?',                                        timestamp: ts(0, 15, 32), isMe: true,  isSystem: false },
+    { id: 'sample-7', senderName: '김상미', message: '네 맞아요! 미사역 3번 출구 앞에서 만나요. 집합시간은 7시 50분입니다!',   timestamp: ts(0, 15, 35), isMe: false, isSystem: false, role: '모임장' },
+    { id: 'sample-8', senderName: '',       message: '운영진이 공지를 등록했어요\n핏플에서 배려하고, 존중하는 건강한 채팅 해요~', timestamp: ts(0, 15, 40), isMe: false, isSystem: true },
+  ];
+}
+
 export const SEED_CHATS: Record<string, ChatMessage[]> = {
-  'm-run-1': [
-    { id: 'c-1-1', senderName: '',         message: '운영진이 공지를 등록했어요\n핏플에서 배려하고, 존중하는 건강한 채팅 해요~', timestamp: ts(2, 22, 0),  isMe: false, isSystem: true  },
-    { id: 'c-1-2', senderName: '김상미',   message: '안녕하세요! 이번 주 모임 참석 가능할까요?',                                  timestamp: ts(2, 15, 20), isMe: false, isSystem: false },
-    { id: 'c-1-3', senderName: '나',       message: '네! 저도 참가합니다 😊',                                                     timestamp: ts(2, 15, 22), isMe: true,  isSystem: false },
-    { id: 'c-1-4', senderName: '박지훈',   message: '저도요! 이번에 처음 참여해봅니다',                                           timestamp: ts(2, 15, 25), isMe: false, isSystem: false },
-    { id: 'c-1-5', senderName: '김상미',   message: '좋아요! 환영합니다~ 준비물은 편한 운동복이랑 물이면 충분해요',              timestamp: ts(2, 15, 27), isMe: false, isSystem: false },
-    { id: 'c-1-6', senderName: '이현우',   message: '오 새 멤버가! 반갑습니다 👋',                                                 timestamp: ts(2, 15, 30), isMe: false, isSystem: false },
-    { id: 'c-1-7', senderName: '나',       message: '감사합니다! 장소가 미사역 맞죠?',                                            timestamp: ts(2, 15, 32), isMe: true,  isSystem: false },
-    { id: 'c-1-8', senderName: '김상미',   message: '네 맞아요! 미사역 3번 출구 앞에서 만나요. 집합시간은 7시 50분입니다!',       timestamp: ts(2, 15, 35), isMe: false, isSystem: false },
-  ],
-  'm-fut-1': [
-    { id: 'c-2-1', senderName: '',         message: '하남FC 풋살 매치 채팅방이 시작되었습니다.',                                  timestamp: ts(3, 20, 0),  isMe: false, isSystem: true  },
-    { id: 'c-2-2', senderName: '하남캡틴', message: '이번 주 토요일 풋살장 예약 완료했습니다!',                                   timestamp: ts(3, 20, 10), isMe: false, isSystem: false },
-    { id: 'c-2-3', senderName: '나',       message: '몇시에 모이나요?',                                                            timestamp: ts(3, 20, 12), isMe: true,  isSystem: false },
-    { id: 'c-2-4', senderName: '하남캡틴', message: '오후 8시 시작이라 7시 30분까지 모여요',                                       timestamp: ts(3, 20, 14), isMe: false, isSystem: false },
-  ],
-  'm-hik-1': [
-    { id: 'c-3-1', senderName: '',         message: '북한산 등산 동호회 채팅방이 시작되었습니다.',                                 timestamp: ts(4, 19, 0),  isMe: false, isSystem: true  },
-    { id: 'c-3-2', senderName: '등산왕',   message: '이번 주 일요일 날씨가 좋다네요!',                                             timestamp: ts(4, 19, 15), isMe: false, isSystem: false },
-    { id: 'c-3-3', senderName: '나',       message: '신발은 어떤 거 신고 가면 좋을까요?',                                          timestamp: ts(4, 19, 20), isMe: true,  isSystem: false },
-    { id: 'c-3-4', senderName: '등산왕',   message: '운동화도 괜찮지만 가능하면 등산화 추천드려요!',                                timestamp: ts(4, 19, 22), isMe: false, isSystem: false },
-  ],
+  'm-run-1': sampleChat(),
 };
